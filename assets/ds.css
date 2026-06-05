@@ -1,0 +1,299 @@
+/* ============================================================
+   CharacterHub — Design System
+   Neutral, editorial, portfolio-leaning. The user's character
+   colors are the stars; the UI stays quiet greys + one teal.
+   ============================================================ */
+
+:root {
+  /* --- Neutral UI palette --- */
+  --bg:        #FAFAF8;   /* warm off-white page bg */
+  --bg-tint:   #F4F2ED;   /* alt section bg */
+  --surface:   #FFFFFF;   /* cards */
+  --surface-2: #FBFAF7;
+  --border:    #E6E4DF;   /* hairlines */
+  --border-strong: #D8D5CD;
+  --text:      #1C1B19;   /* near-black */
+  --text-dim:  #6B6862;   /* secondary */
+  --text-faint:#A4A097;   /* tertiary / captions */
+  --accent:    #2E6F6A;   /* restrained brand teal */
+  --accent-soft: #E4EEEC;
+  --accent-ink:  #1E4B47;
+  --must:      #2F8F5B;   /* must-draw green */
+  --must-soft: #E6F2EB;
+  --avoid:     #C8463C;   /* common-mistake red */
+  --avoid-soft:#F8E9E7;
+
+  /* --- Type --- */
+  --font-sans: 'Inter', 'Huninn', 'Noto Sans TC', system-ui, sans-serif;
+  --font-round: 'Huninn', 'Inter', 'Noto Sans TC', sans-serif;
+  --font-serif: 'Shippori Mincho B1', 'Noto Serif TC', serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* --- Spacing scale (×4) --- */
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 20px;
+  --s6: 24px; --s7: 28px; --s8: 32px; --s9: 36px; --s10: 40px; --s11: 44px; --s12: 48px; --s16: 64px;
+
+  /* --- Radii --- */
+  --r-card: 14px;
+  --r-btn: 9px;
+  --r-pill: 999px;
+  --r-img: 10px;
+
+  /* --- Shadows (restrained) --- */
+  --sh-1: 0 1px 3px rgba(28,27,25,.06), 0 1px 2px rgba(28,27,25,.04);
+  --sh-2: 0 6px 24px rgba(28,27,25,.08), 0 2px 6px rgba(28,27,25,.05);
+  --sh-pop: 0 12px 40px rgba(28,27,25,.16);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+img { display: block; max-width: 100%; }
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; }
+
+/* ---- Typography helpers ---- */
+.display { font-family: var(--font-serif); font-weight: 700; letter-spacing: -.01em; line-height: 1.08; }
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--text-faint);
+}
+.mono { font-family: var(--font-mono); }
+.dim { color: var(--text-dim); }
+.faint { color: var(--text-faint); }
+.en { color: var(--text-faint); font-weight: 400; }   /* english gloss under zh */
+
+/* ---- Layout ---- */
+.wrap { max-width: 1200px; margin: 0 auto; padding: 0 var(--s8); }
+
+/* ---- Card ---- */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  box-shadow: var(--sh-1);
+}
+
+/* ---- Buttons ---- */
+.btn {
+  display: inline-flex; align-items: center; gap: var(--s2);
+  font-size: 14px; font-weight: 600;
+  padding: 10px 16px; border-radius: var(--r-btn);
+  border: 1px solid var(--border-strong);
+  background: var(--surface); color: var(--text);
+  transition: background .15s, border-color .15s, transform .05s;
+}
+.btn:hover { background: var(--bg-tint); }
+.btn:active { transform: translateY(1px); }
+.btn-primary {
+  background: var(--text); color: #fff; border-color: var(--text);
+}
+.btn-primary:hover { background: #000; }
+.btn-accent { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn-accent:hover { background: var(--accent-ink); }
+.btn-ghost { background: transparent; border-color: transparent; color: var(--text-dim); }
+.btn-ghost:hover { background: var(--bg-tint); color: var(--text); }
+.btn-sm { padding: 7px 12px; font-size: 13px; }
+
+/* ---- Pills / tags ---- */
+.pill {
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  font-size: 13px; font-weight: 500;
+  padding: 5px 12px; border-radius: var(--r-pill);
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+.pill:hover { border-color: var(--border-strong); color: var(--text); }
+
+/* ---- Section header ---- */
+.sec-head { display: flex; align-items: baseline; gap: var(--s3); margin-bottom: var(--s4); }
+.sec-head h2 { font-size: 15px; font-weight: 700; margin: 0; letter-spacing: -.01em; }
+.sec-head .en { font-size: 12px; }
+.sec-rule { flex: 1; height: 1px; background: var(--border); align-self: center; }
+
+/* ============================================================
+   Placeholder image box  (we never draw the character)
+   ============================================================ */
+.ph {
+  position: relative;
+  background:
+    repeating-linear-gradient(135deg, #EFEDE7 0 11px, #F5F3EE 11px 22px);
+  border: 1px solid var(--border);
+  border-radius: var(--r-img);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  color: var(--text-faint);
+}
+.ph::after {
+  content: attr(data-label);
+  font-family: var(--font-mono);
+  font-size: 11px; letter-spacing: .08em;
+  padding: 4px 10px; border-radius: var(--r-pill);
+  background: rgba(255,255,255,.82); border: 1px solid var(--border);
+  backdrop-filter: blur(2px);
+  text-align: center; line-height: 1.35;
+}
+.ph .ph-sub {
+  position: absolute; bottom: 8px; left: 8px;
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--text-faint);
+}
+
+/* ============================================================
+   Color swatch  (click-to-copy hex feel)
+   ============================================================ */
+.swatch {
+  display: flex; align-items: center; gap: var(--s3);
+  padding: var(--s3); border-radius: 10px;
+  border: 1px solid var(--border); background: var(--surface);
+  transition: border-color .15s, box-shadow .15s;
+}
+.swatch:hover { border-color: var(--border-strong); box-shadow: var(--sh-1); }
+.swatch .chip {
+  width: 40px; height: 40px; border-radius: 8px; flex: none;
+  border: 1px solid rgba(0,0,0,.08);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.25);
+}
+.swatch .meta { min-width: 0; flex: 1; }
+.swatch .nm { font-size: 13px; font-weight: 600; }
+.swatch .hex {
+  font-family: var(--font-mono); font-size: 12px; color: var(--text-dim);
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.swatch .copy-ic { opacity: 0; font-size: 11px; color: var(--accent); transition: opacity .15s; }
+.swatch:hover .copy-ic { opacity: 1; }
+.swatch .note { font-size: 11px; color: var(--text-faint); }
+
+/* ============================================================
+   Checklist — shared by must-draw & common-mistakes
+   ============================================================ */
+.check-list { display: flex; flex-direction: column; gap: var(--s2); }
+.check {
+  display: flex; align-items: flex-start; gap: var(--s3);
+  padding: 11px var(--s4); border-radius: 10px;
+  border: 1px solid var(--border); background: var(--surface);
+  font-size: 14.5px;
+}
+.check .ic {
+  flex: none; width: 22px; height: 22px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 13px; font-weight: 700;
+  margin-top: 1px;
+}
+.check.must  { border-color: #CDE8D8; background: var(--must-soft); }
+.check.must .ic  { background: var(--must); color: #fff; }
+.check.avoid { border-color: #F0CFCB; background: var(--avoid-soft); }
+.check.avoid .ic { background: var(--avoid); color: #fff; }
+.check .tx { line-height: 1.5; }
+.check .tx .en { display: block; font-size: 12px; line-height: 1.4; margin-top: 3px; }
+
+/* ============================================================
+   License chips
+   ============================================================ */
+.lic-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s4); }
+.lic-col .lic-h { font-size: 12px; font-weight: 700; letter-spacing: .04em; margin-bottom: var(--s3); display:flex; align-items:center; gap:6px; }
+.lic-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.lic {
+  display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
+  font-size: 13px; font-weight: 500; padding: 6px 12px; border-radius: var(--r-pill);
+  border: 1px solid var(--border);
+}
+.lic.yes { background: var(--must-soft); border-color: #CDE8D8; color: #1F6B43; }
+.lic.no  { background: var(--avoid-soft); border-color: #F0CFCB; color: #9E332B; }
+.lic .gl { font-weight: 700; }
+
+/* ---- privacy dot ---- */
+.priv { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--text-dim); white-space:nowrap; }
+.priv .d { width:8px; height:8px; border-radius:50%; }
+.priv.public .d  { background: var(--must); }
+.priv.unlisted .d{ background: var(--accent); }
+.priv.password .d{ background: #C99A2E; }
+.priv.private .d { background: var(--text-faint); }
+
+/* ---- mode toggle (general / commission) ---- */
+.modetoggle {
+  display: inline-flex; padding: 3px; gap: 2px;
+  background: var(--bg-tint); border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+}
+.modetoggle .opt {
+  display: inline-flex; align-items: center;
+  font-size: 13px; font-weight: 600; padding: 7px 15px; border-radius: var(--r-pill);
+  color: var(--text-dim); border: none; background: transparent; white-space: nowrap;
+}
+.modetoggle .opt.on { background: var(--surface); color: var(--text); box-shadow: var(--sh-1); }
+.modetoggle .opt.on.commission { background: var(--text); color: #fff; }
+.modetoggle .opt { cursor: pointer; transition: color .15s; }
+
+/* ============================================================
+   Shared interactive bits
+   ============================================================ */
+/* vertical CJK text (Nippon-Colors style) */
+.v-text { writing-mode: vertical-rl; text-orientation: upright; }
+.v-romaji { writing-mode: vertical-rl; letter-spacing: .28em; text-orientation: sideways; }
+
+/* toast (copy feedback) */
+#toast-host { position: fixed; left: 50%; bottom: 32px; transform: translateX(-50%); z-index: 9999;
+  display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
+.toast { background: var(--text); color: #fff; font-size: 13px; font-weight: 600;
+  padding: 10px 16px; border-radius: var(--r-pill); box-shadow: var(--sh-pop);
+  display: flex; align-items: center; gap: 9px; white-space: nowrap;
+  opacity: 0; transform: translateY(8px); transition: opacity .2s, transform .2s; }
+.toast.in { opacity: 1; transform: translateY(0); }
+.toast .sw { width: 14px; height: 14px; border-radius: 4px; border: 1px solid rgba(255,255,255,.3); }
+.toast .mono { font-family: var(--font-mono); color: rgba(255,255,255,.75); }
+
+/* lightbox */
+.lightbox { position: fixed; inset: 0; z-index: 9000; background: rgba(20,19,17,.86);
+  backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; }
+.lightbox.open { display: flex; }
+.lightbox .lb-stage { width: min(78vw, 720px); }
+.lightbox .lb-img { width: 100%; aspect-ratio: 4/5; border-radius: var(--r-img); }
+.lightbox .lb-cap { color: #fff; text-align: center; margin-top: 16px; font-size: 14px; }
+.lightbox .lb-cap .en { color: rgba(255,255,255,.55); }
+.lightbox .lb-arrow { position: fixed; top: 50%; transform: translateY(-50%); width: 48px; height: 48px;
+  border-radius: 50%; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
+  color: #fff; font-size: 22px; display: grid; place-items: center; cursor: pointer; }
+.lightbox .lb-arrow:hover { background: rgba(255,255,255,.22); }
+.lightbox .lb-arrow.l { left: 24px; } .lightbox .lb-arrow.r { right: 24px; }
+.lightbox .lb-close { position: fixed; top: 22px; right: 26px; width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2); color: #fff; font-size: 20px; cursor: pointer; }
+.lightbox .lb-close:hover { background: rgba(255,255,255,.22); }
+
+/* swatch index (nippon style) */
+.swatch .idx { font-family: var(--font-mono); font-size: 10px; color: var(--text-faint); align-self: flex-start; }
+.swatch { cursor: pointer; }
+.swatch.copied { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.cswatch { cursor: pointer; }
+.cswatch.copied { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* generic focusable hover for interactive ph */
+.ph.clickable { cursor: zoom-in; transition: filter .15s; }
+.ph.clickable:hover { filter: brightness(.97); }
+
+/* ============================================================
+   Touch ergonomics — on coarse pointers (phones/tablets), grow
+   the small tap targets (nav links, filter/scope chips, pills)
+   toward the ~44px comfortable minimum without changing the
+   desktop look. Applied globally so every page benefits.
+   ============================================================ */
+@media (hover: none) and (pointer: coarse) {
+  .nav a,
+  .scope-chip, .chpill, .ftab, .rchip, .pill,
+  .filters .pill, .chfilters .chpill {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+  .iconbtn { min-width: 44px; min-height: 44px; }
+}

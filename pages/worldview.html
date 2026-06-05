@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>世界觀 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/ds.css">
+<style>
+  .topbar { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 30; }
+  .topbar .inner { max-width: 1200px; margin: 0 auto; padding: 11px var(--s8); display: flex; align-items: center; gap: var(--s6); }
+  .brand { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 15px; }
+  .brand .mk { width: 24px; height: 24px; border-radius: 8px; background: var(--text); color: #fff; display: grid; place-items: center; font-family: var(--font-serif); font-size: 15px; }
+  .nav { display: flex; gap: var(--s2); }
+  .nav a { font-size: 14px; font-weight: 500; color: var(--text-dim); padding: 7px 12px; border-radius: var(--r-btn); cursor: pointer; }
+  .nav a.on { background: var(--bg-tint); color: var(--text); font-weight: 600; }
+  .topbar .spacer { flex: 1; }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg,#8FA3B0,#6B4A1E); }
+
+  .head { max-width: 1200px; margin: 0 auto; padding: var(--s12) var(--s8) var(--s5); }
+  .head .eyebrow { margin-bottom: 12px; }
+  .head h1 { font-family: var(--font-serif); font-size: 40px; margin: 0; font-weight: 800; }
+  .head p { color: var(--text-dim); margin: 10px 0 0; font-size: 15px; max-width: 60ch; }
+
+  .toolbar { max-width: 1200px; margin: 0 auto; padding: 0 var(--s8) var(--s5); display: flex; align-items: center; gap: var(--s4); flex-wrap: wrap; }
+  .ftabs { display: flex; gap: 6px; flex-wrap: wrap; flex: 1 1 auto; min-width: 0; }
+  .ftab { font-size: 13px; font-weight: 600; padding: 7px 13px; border-radius: var(--r-pill); border: 1px solid var(--border); background: var(--surface); color: var(--text-dim); cursor: pointer; transition: all .14s; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .ftab:hover { border-color: var(--border-strong); }
+  .ftab.on { background: var(--text); color: #fff; border-color: var(--text); }
+  .ftab .ct { font-family: var(--font-mono); font-size: 10px; opacity: .7; }
+  .toolbar .spacer { flex: 1; }
+  .addbtn { font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: var(--r-btn); border: 1px dashed var(--border-strong); background: var(--surface); color: var(--text-dim); cursor: pointer; white-space: nowrap; }
+  .addbtn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+  .wv-search { position: relative; display: flex; align-items: center; }
+  .wv-search svg { position: absolute; left: 11px; color: var(--text-faint); pointer-events: none; }
+  .wv-search input { font-family: inherit; font-size: 13.5px; padding: 8px 30px 8px 32px; width: 190px; border: 1px solid var(--border-strong); border-radius: var(--r-pill); background: var(--surface); color: var(--text); transition: border-color .15s, box-shadow .15s, width .2s; }
+  .wv-search input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); width: 220px; }
+  .wv-search input::placeholder { color: var(--text-faint); }
+  .wv-search .clr { position: absolute; right: 7px; width: 19px; height: 19px; border: none; background: var(--bg-tint); color: var(--text-dim); border-radius: 50%; cursor: pointer; display: none; place-items: center; font-size: 12px; line-height: 1; }
+  .wv-search .clr:hover { background: var(--border-strong); color: var(--text); }
+  .wv-search.has .clr { display: grid; }
+  .codex-empty { grid-column: 1 / -1; text-align: center; padding: var(--s12) var(--s4); color: var(--text-faint); }
+  .codex-empty .big { font-family: var(--font-serif); font-size: 19px; color: var(--text-dim); margin-bottom: 6px; }
+  .codex-empty b { color: var(--text); font-weight: 700; }
+
+  .scopebar { max-width: 1200px; margin: 0 auto; padding: 0 var(--s8) var(--s4); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .scope-lb { font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); }
+  .scope-chips { display: flex; gap: 7px; flex-wrap: wrap; }
+  .scope-chip { font-size: 13px; font-weight: 600; padding: 6px 13px; border-radius: var(--r-pill); border: 1px solid var(--border); background: var(--surface); color: var(--text-dim); cursor: pointer; white-space: nowrap; transition: all .14s; }
+  .scope-chip:hover { border-color: var(--border-strong); }
+  .scope-chip.on { background: var(--text); color: #fff; border-color: var(--text); }
+
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 var(--s8) var(--s16); }
+  .cols { display: grid; grid-template-columns: 1.3fr .7fr; gap: var(--s8); align-items: start; }
+
+  /* entity cards */
+  .codex { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s4); }
+  .ecard { position: relative; border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--sh-1); overflow: hidden; cursor: pointer; transition: box-shadow .15s, border-color .15s, transform .15s; display: flex; flex-direction: column; }
+  .ecard:hover { box-shadow: var(--sh-2); transform: translateY(-2px); border-color: var(--border-strong); }
+  .ecard.sel { border-color: var(--ec); box-shadow: 0 0 0 2px color-mix(in srgb, var(--ec) 26%, transparent), var(--sh-1); }
+  .ecard .strip { height: 6px; background: var(--ec); }
+  .ecard .pad { padding: 13px 14px 14px; display: flex; flex-direction: column; gap: 5px; flex: 1; }
+  .ecard .etype { font-size: 10.5px; font-weight: 700; letter-spacing: .03em; color: var(--ec); text-transform: uppercase; display: inline-flex; align-items: center; gap: 5px; }
+  .ecard .etype .gl { width: 7px; height: 7px; border-radius: 2px; background: var(--ec); }
+  .ecard .ename { font-family: var(--font-serif); font-size: 18px; font-weight: 700; line-height: 1.15; }
+  .ecard .een { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .12em; color: var(--text-faint); text-transform: uppercase; }
+  .ecard .eblurb { font-size: 12.5px; color: var(--text-dim); line-height: 1.55; margin-top: 2px; text-wrap: pretty; }
+  .ecard .emem { display: flex; align-items: center; margin-top: auto; padding-top: 10px; }
+  .ecard .emem .cav { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--surface); display: grid; place-items: center; font-family: var(--font-serif); font-size: 11px; font-weight: 700; color: #fff; margin-right: -7px; }
+  .ecard .emem .more { font-size: 11px; color: var(--text-faint); margin-left: 13px; }
+
+  /* detail panel */
+  .detail { position: sticky; top: 78px; border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--sh-1); overflow: hidden; }
+  .detail .d-strip { height: 10px; background: var(--ec, var(--text)); }
+  .detail .d-pad { padding: var(--s6); }
+  .d-type { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ec); display: inline-flex; align-items: center; gap: 6px; }
+  .d-type .gl { width: 9px; height: 9px; border-radius: 3px; background: var(--ec); }
+  .d-name { font-family: var(--font-serif); font-size: 27px; font-weight: 800; line-height: 1.12; margin: 9px 0 2px; }
+  .d-en { font-family: var(--font-mono); font-size: 11px; letter-spacing: .14em; color: var(--text-faint); text-transform: uppercase; }
+  .d-setting { font-size: 14px; line-height: 1.78; color: #2C2A27; margin: var(--s5) 0 0; text-wrap: pretty; }
+  .d-sec { margin-top: var(--s6); }
+  .d-sec .sub-h { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); margin: 0 0 10px; }
+  .d-chars { display: flex; flex-wrap: wrap; gap: 8px; }
+  .cchip { display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px 5px 5px; border: 1px solid var(--border); border-radius: var(--r-pill); background: var(--surface); text-decoration: none; color: var(--text); font-size: 13px; font-weight: 600; transition: border-color .14s, background .14s; }
+  .cchip:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .cchip .cav { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-serif); font-size: 12px; font-weight: 700; color: #fff; }
+  .cchip .csp { font-size: 11px; color: var(--text-faint); font-weight: 500; }
+  .d-rels { display: flex; flex-wrap: wrap; gap: 7px; }
+  .rchip { display: inline-flex; align-items: center; gap: 7px; padding: 6px 11px; border: 1px solid var(--border); border-radius: var(--r-pill); background: var(--surface); cursor: pointer; font-size: 12.5px; font-weight: 600; color: var(--text); transition: border-color .14s, background .14s; }
+  .rchip:hover { border-color: var(--border-strong); background: var(--bg-tint); }
+  .rchip .dot { width: 8px; height: 8px; border-radius: 2px; }
+  .rchip .kind { font-size: 10.5px; font-weight: 600; color: #fff; padding: 1px 7px; border-radius: var(--r-pill); }
+  .d-gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .d-gallery .ph { aspect-ratio: 1; border-radius: 8px; } .d-gallery .ph::after { font-size: 8px; padding: 2px 5px; }
+  .d-empty { font-size: 13px; color: var(--text-faint); }
+
+  /* draft inline edit */
+  .d-edit { display: none; }
+  .detail.draft .d-edit { display: block; }
+  .detail.draft .d-name, .detail.draft .d-setting { display: none; }
+  .d-edit .inp { width: 100%; font-family: inherit; font-size: 14px; padding: 9px 11px; border: 1px solid var(--border); border-radius: var(--r-btn); background: var(--surface); color: var(--text); box-sizing: border-box; }
+  .d-edit .inp.nm { font-family: var(--font-serif); font-size: 20px; font-weight: 700; margin-bottom: 9px; }
+  .d-edit textarea.inp { resize: vertical; line-height: 1.7; min-height: 90px; }
+  .d-edit .pick { display: flex; gap: 7px; flex-wrap: wrap; margin: 11px 0; }
+  .d-edit .pick button { font-size: 12px; font-weight: 600; padding: 5px 11px; border-radius: var(--r-pill); border: 1px solid var(--border); background: var(--surface); color: var(--text-dim); cursor: pointer; }
+  .d-edit .pick button.on { color: #fff; border-color: transparent; }
+
+  .hint { text-align: center; font-size: 13px; color: var(--text-faint); margin-top: var(--s5); }
+
+  /* detail edit affordances */
+  .detail .d-pad { position: relative; }
+  .d-editbtn { position: absolute; top: var(--s6); right: var(--s6); display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 6px 11px; border: 1px solid var(--border); border-radius: var(--r-pill); background: var(--surface); color: var(--text-dim); cursor: pointer; transition: all .14s; white-space: nowrap; }
+  .d-editbtn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+  .detail.draft .d-editbtn { display: none; }
+  .detail.draft .d-readonly { display: none; }
+  .d-edit-sec { margin-top: var(--s5); }
+  .d-edit-sec .sub-h { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); margin: 0 0 10px; }
+  .charpick { display: flex; flex-wrap: wrap; gap: 7px; }
+  .charpick .cp-tog { display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px 5px 5px; border: 1px solid var(--border); border-radius: var(--r-pill); background: var(--surface); color: var(--text-dim); font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all .14s; }
+  .charpick .cp-tog .cav { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-serif); font-size: 11px; font-weight: 700; color: #fff; opacity: .4; transition: opacity .14s; }
+  .charpick .cp-tog.on { border-color: var(--accent); background: var(--accent-soft); color: var(--text); }
+  .charpick .cp-tog.on .cav { opacity: 1; }
+  .reledit { display: flex; flex-direction: column; gap: 7px; margin-bottom: 10px; }
+  .reledit .rr { display: flex; align-items: center; gap: 8px; padding: 6px 8px 6px 11px; border: 1px solid var(--border); border-radius: 9px; font-size: 12.5px; font-weight: 600; }
+  .reledit .rr .dot { width: 8px; height: 8px; border-radius: 2px; flex: none; }
+  .reledit .rr .kind { font-size: 10px; font-weight: 600; color: #fff; padding: 1px 7px; border-radius: var(--r-pill); }
+  .reledit .rr .rdel { margin-left: auto; width: 24px; height: 24px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text-faint); display: grid; place-items: center; cursor: pointer; flex: none; }
+  .reledit .rr .rdel:hover { border-color: var(--avoid); color: var(--avoid); background: var(--avoid-soft); }
+  .reladd { display: grid; grid-template-columns: 1fr auto auto; gap: 7px; align-items: center; }
+  .reladd select { font-family: inherit; font-size: 12.5px; padding: 7px 9px; border: 1px solid var(--border-strong); border-radius: var(--r-btn); background: var(--surface); color: var(--text); }
+  .reladd .raddbtn { font-size: 12.5px; font-weight: 600; padding: 7px 12px; border: 1px solid var(--accent); border-radius: var(--r-btn); background: var(--accent-soft); color: var(--accent-ink); cursor: pointer; white-space: nowrap; }
+  .d-editdone { display: inline-flex; align-items: center; gap: 6px; margin-top: var(--s6); font-size: 13px; font-weight: 600; padding: 9px 16px; border-radius: var(--r-btn); background: var(--text); color: #fff; border: none; cursor: pointer; }
+  .d-editdone:hover { background: #000; }
+
+  @media (max-width: 900px) {
+    .topbar .inner, .head, .scopebar, .toolbar, .wrap { padding-left: var(--s4); padding-right: var(--s4); }
+    .topbar .inner { flex-wrap: wrap; row-gap: 0; }
+    .nav { display: flex; order: 9; width: 100%; overflow-x: auto; gap: 4px; margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--border); -webkit-overflow-scrolling: touch; }
+    .nav a { white-space: nowrap; flex: none; }
+    .cols { grid-template-columns: 1fr; gap: var(--s6); }
+    .detail { position: static; }
+    .head h1 { font-size: 30px; }
+  }
+  @media (max-width: 560px) {
+    .codex { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="inner">
+    <a class="brand" href="dashboard.html"><span class="mk">霧</span>CharacterHub</a>
+    <nav class="nav">
+      <a href="dashboard.html">我的角色</a>
+      <a href="commissions.html">委託</a>
+      <a href="relationships.html">關係圖</a>
+      <a href="height-compare.html">身高比較</a>
+      <a class="on">世界觀</a>
+      <a href="settings.html">設定</a>
+    </nav>
+    <div class="spacer"></div>
+    <button class="btn btn-ghost btn-sm js-soon" style="white-space:nowrap">＠yoi-studio</button>
+    <div class="avatar"></div>
+  </div>
+</div>
+
+<div class="head">
+  <div class="eyebrow">Worldview · 國家 / 組織 / 家族 / 地點 / 種族 / 事件</div>
+  <h1>世界觀</h1>
+  <p style="margin: 10px 0 11px">把角色背後的世界整理成設定集——每個條目可連結所屬角色，也可與其他條目互相牽連。點任一條目看詳情，或按右上「✎ 編輯」補連結。</p>
+</div>
+
+<div class="scopebar">
+  <span class="scope-lb">企劃</span>
+  <div class="scope-chips" id="scopeChips"></div>
+</div>
+
+<div class="toolbar">
+  <div class="ftabs" id="ftabs"></div>
+  <div class="spacer"></div>
+  <div class="wv-search" id="wvSearch">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    <input type="search" id="wvSearchInput" placeholder="搜尋條目…" autocomplete="off" aria-label="搜尋世界觀條目">
+    <button class="clr" id="wvSearchClr" type="button" aria-label="清除">✕</button>
+  </div>
+  <button class="addbtn" id="addBtn">＋ 新增條目</button>
+</div>
+
+<div class="wrap">
+  <div class="cols">
+    <div class="codex" id="codex"></div>
+    <div class="detail" id="detail"></div>
+  </div>
+  <div class="hint">提示：詳情裡的角色會連到角色頁，關聯條目可點選跳轉。</div>
+</div>
+
+<script src="../assets/app.js"></script>
+<script>
+  window.__autoInit = false;
+  document.querySelectorAll('.js-soon').forEach(el => el.addEventListener('click', e => { e.preventDefault(); toast('功能開發中 · Coming soon'); }));
+
+  // ---------- characters (link targets) ----------
+  const CHARS = {
+    yoi:   {name:'宵霧', rom:'YOIGIRI', sp:'妖狐',  c:'#8FA3B0', proj:'tokoyo'},
+    hiru:  {name:'晝',   rom:'HIRU',    sp:'半神',  c:'#E0A23B', proj:'day'},
+    tomori:{name:'燈守', rom:'TOMORI',  sp:'付喪神', c:'#C8463C', proj:'tokoyo'},
+    nozomi:{name:'望',   rom:'NOZOMI',  sp:'人類',  c:'#2E6F6A', proj:'tokoyo'},
+    aka:   {name:'緋',   rom:'AKA',     sp:'鬼',    c:'#9E332B', proj:'day'},
+    hai:   {name:'灰',   rom:'HAI',     sp:'未定',  c:'#8A857C', proj:'draft'},
+  };
+  // ---------- entity types ----------
+  const TYPES = {
+    nation: {t:'國家・勢力', en:'Nation', c:'#3B5E6B'},
+    org:    {t:'組織',       en:'Order',  c:'#B5654A'},
+    family: {t:'家族・血統', en:'Lineage',c:'#8A6FA0'},
+    place:  {t:'地點・城市', en:'Place',  c:'#5E7E55'},
+    race:   {t:'種族',       en:'Race',   c:'#C9A24B'},
+    event:  {t:'事件・歷史', en:'Event',  c:'#9E332B', proj:'day'},
+  };
+  const KIND_C = { '敵對':'#9E332B', '盟友':'#3E8E5A', '隸屬':'#3B5E6B', '分支':'#8A6FA0', '相關':'#A98B4E' };
+
+  // ---------- world entities ----------
+  const ENT = [
+    { id:'tokoyo', name:'常夜國', en:'Tokoyo', type:'nation', blurb:'妖與神棲息的永夜之國，宵霧的故鄉。',
+      setting:'被薄霧與長夜籠罩的國度，太陽終年不升。妖狐、付喪神與各路神祇在此共存，以「燈火」維繫秩序與道路。常夜國與司掌白晝的晝廷長年對立。',
+      chars:['yoi','tomori','hai'], rels:[{id:'hirutei',kind:'敵對'},{id:'tomoribito',kind:'隸屬'},{id:'kitsune3',kind:'隸屬'}], gallery:['常夜・遠景','霧之街','長夜天幕'] },
+    { id:'hirutei', name:'晝廷', en:'Day Court', type:'nation', blurb:'司掌白晝秩序的半神朝廷。',
+      setting:'位於黎明關之後、永晝照耀的朝廷。由半神統御，維繫白晝與時序的運行。視常夜國的妖為亂源，與其長年敵對，但偶有停戰。',
+      chars:['hiru'], rels:[{id:'tokoyo',kind:'敵對'},{id:'kaen',kind:'盟友'},{id:'dawnpass',kind:'相關'}], gallery:['晝廷・正殿','永晝','金階'] },
+    { id:'tomoribito', name:'守燈人', en:'Lantern Keepers', type:'org', blurb:'在夜路替迷途者點燈的結社。',
+      setting:'散居常夜國各地的結社，職責是替夜行的迷途者點燈引路。成員多為與燈火結緣的妖或神。宵霧與燈守皆屬此社。',
+      chars:['yoi','tomori'], rels:[{id:'tokoyo',kind:'隸屬'},{id:'pact',kind:'相關'}], gallery:['守燈人・徽','提燈','夜路'] },
+    { id:'kaen', name:'緋焰一門', en:'Crimson Flame', type:'org', blurb:'鬼族的火焰流派，緋所屬。',
+      setting:'以操火為業的鬼族門派，崇尚力量與焰之純粹。與晝廷結盟，共同維繫「火」與「晝」的秩序。',
+      chars:['aka'], rels:[{id:'hirutei',kind:'盟友'},{id:'oni',kind:'相關'}], gallery:['緋焰・紋','爐火','鬼面'] },
+    { id:'kitsune3', name:'三尾狐族', en:'Three-Tail Foxes', type:'family', blurb:'尾端雪白的三尾妖狐血脈，宵霧出身。',
+      setting:'常夜國古老的妖狐血脈，以三條尾端雪白的尾巴為記。擅化形與幻術，世代與燈火結緣。宵霧為此族後裔。',
+      chars:['yoi'], rels:[{id:'tokoyo',kind:'隸屬'},{id:'youko',kind:'相關'}], gallery:['狐族・家紋','三尾','雪尾'] },
+    { id:'nozomike', name:'望家', en:'Nozomi Family', type:'family', blurb:'代代為旅人指路的人類家系。',
+      setting:'居於常夜國邊境的人類家系，世代以替旅人指路為業。與守燈人理念相近，因而與宵霧結緣。',
+      chars:['nozomi'], rels:[{id:'tomoribito',kind:'相關'}], gallery:['望家・宅','路標','旅燈'] },
+    { id:'shrine', name:'廢稻荷神社', en:'Ruined Inari', type:'place', blurb:'宵霧與燈守初遇之地。',
+      setting:'常夜國深處一座荒廢的稻荷神社，鳥居傾頹、香火久絕。百年前宵霧在此拾起無主燈籠——化為付喪神的燈守，兩者就此結約。',
+      chars:['yoi','tomori'], rels:[{id:'pact',kind:'相關'},{id:'tokoyo',kind:'隸屬'}], gallery:['鳥居','荒社','燈籠'] },
+    { id:'yoichi', name:'常夜市', en:'Night Market', type:'place', blurb:'永夜中不眠的妖市集。',
+      setting:'常夜國最熱鬧的市集，永夜中燈火不滅。妖、神、人在此交易奇珍與情報。宵霧常於此提燈穿行。',
+      chars:['yoi'], rels:[{id:'tokoyo',kind:'隸屬'}], gallery:['夜市・攤','燈河','面具攤'] },
+    { id:'dawnpass', name:'黎明關', en:'Dawn Pass', type:'place', blurb:'晝與夜的交界，晝廷的前線。',
+      setting:'分隔常夜國與晝廷的關隘，晝夜在此交界。晝廷於此設防，是兩國對峙與停戰的舞台。月蝕停戰即發生於此。',
+      chars:['hiru'], rels:[{id:'hirutei',kind:'隸屬'},{id:'eclipse',kind:'相關'}], gallery:['關隘','晝夜界','哨'] },
+    { id:'youko', name:'妖狐', en:'Kitsune', type:'race', blurb:'化形與幻術見長的狐妖。',
+      setting:'能化人形、操幻術的狐之妖。尾數越多、修為越深。性情多疏離而念舊。三尾以上者，多與神格沾邊。',
+      chars:['yoi'], rels:[{id:'kitsune3',kind:'相關'}], gallery:['狐火','化形','尾'] },
+    { id:'tsukumo', name:'付喪神', en:'Tsukumogami', type:'race', blurb:'器物歷百年而成的神。',
+      setting:'器物歷經百年、承載人的情念而化成的神。燈守便是一盞無主燈籠所化，記性極佳，替人記路、記事、記火。',
+      chars:['tomori'], rels:[{id:'tomoribito',kind:'相關'}], gallery:['古燈','器靈','百年'] },
+    { id:'oni', name:'鬼', en:'Oni', type:'race', blurb:'操火與力的強橫一族。',
+      setting:'體魄強橫、多能操火的一族。重承諾、好爭強。緋焰一門即出於此族。',
+      chars:['aka'], rels:[{id:'kaen',kind:'相關'}], gallery:['鬼火','角','戰'] },
+    { id:'pact', name:'守燈之約', en:'The Lantern Pact', type:'event', blurb:'宵霧與燈守立下的守燈契約。',
+      setting:'百年前於廢稻荷神社，宵霧拾起化為付喪神的燈守，立下「守燈之約」：只要燈不滅，狐便不孤。緋繩繫腕為證。此約是兩者羈絆的起點。',
+      chars:['yoi','tomori'], rels:[{id:'shrine',kind:'相關'},{id:'fire',kind:'相關'},{id:'tomoribito',kind:'相關'}], gallery:['立約','緋繩','燈'] },
+    { id:'fire', name:'山火之災', en:'The Great Fire', type:'event', blurb:'燒損燈籠、幾乎斷約的一場山火。',
+      setting:'一場席捲山林的大火，燒損了燈守的燈籠之軀，守燈之約幾乎中斷。宵霧重鑄燈籠、重繫緋繩，約方得續。',
+      chars:['yoi','tomori'], rels:[{id:'pact',kind:'相關'}], gallery:['山火','焦土','重鑄'] },
+    { id:'eclipse', name:'月蝕停戰', en:'Eclipse Truce', type:'event', blurb:'宵霧與晝在月蝕夜的停戰。',
+      setting:'某個月蝕之夜，晝暫離永晝、踏入常夜，宵霧替其擋下一劫。自此兩者維持微妙的停戰——敵意之下，是少有人懂的相互理解。',
+      chars:['yoi','hiru'], rels:[{id:'dawnpass',kind:'相關'},{id:'hirutei',kind:'相關'}], gallery:['月蝕','停戰','黎明'] },
+  ];
+
+  // each entity carries its own project (worldbuilding often precedes characters);
+  // falls back to character-derived scope only when unset.
+  const ENT_PROJ = { tokoyo:'tokoyo', hirutei:'day', tomoribito:'tokoyo', kaen:'day', kitsune3:'tokoyo', nozomike:'tokoyo', shrine:'tokoyo', yoichi:'tokoyo', dawnpass:'day', youko:'tokoyo', tsukumo:'tokoyo', oni:'day', pact:'tokoyo', fire:'tokoyo', eclipse:['tokoyo','day'] };
+  ENT.forEach(e => { if (e.proj == null && ENT_PROJ[e.id] != null) e.proj = ENT_PROJ[e.id]; });
+
+  const codex = document.getElementById('codex');
+  const detail = document.getElementById('detail');
+  const ftabs = document.getElementById('ftabs');
+  let filter = '*';
+  let selId = ENT[0].id;
+  let draftN = 0;
+  let query = '';
+  function entHay(e){ return [e.name, e.en, e.blurb, e.setting, TYPES[e.type].t, TYPES[e.type].en, ...(e.chars||[]).map(id=>CHARS[id]&&CHARS[id].name)].filter(Boolean).join(' ').toLowerCase(); }
+  function matchQ(e){ return !query || entHay(e).includes(query); }
+
+  // filter tabs
+  function renderTabs(){
+    const scoped = ENT.filter(e=>inScope(e) && matchQ(e));
+    const counts = { '*': scoped.length };
+    Object.keys(TYPES).forEach(k => counts[k] = scoped.filter(e=>e.type===k).length);
+    const tabs = [['*','全部']].concat(Object.entries(TYPES).map(([k,v])=>[k,v.t]));
+    ftabs.innerHTML = tabs.map(([k,label])=>`<button class="ftab ${k===filter?'on':''}" data-k="${k}">${label}<span class="ct">${counts[k]||0}</span></button>`).join('');
+    ftabs.querySelectorAll('.ftab').forEach(b=>b.onclick=()=>{ filter=b.dataset.k; renderTabs(); renderCodex(); });
+  }
+
+  function memberAvs(chars){
+    const shown = chars.slice(0,4);
+    return `<div class="emem">${shown.map(id=>{const c=CHARS[id];return `<span class="cav" style="background:${c.c}">${c.name[0]}</span>`;}).join('')}${chars.length>4?`<span class="more">+${chars.length-4}</span>`:''}${chars.length?'':'<span class="more">尚無關聯角色</span>'}</div>`;
+  }
+
+  function renderCodex(){
+    const list = ENT.filter(e => (filter==='*'||e.type===filter) && inScope(e) && matchQ(e));
+    if(!list.some(e=>e.id===selId) && list[0]) selId = list[0].id;
+    if(!list.length){
+      codex.innerHTML = `<div class="codex-empty"><div class="big">找不到符合「<b>${query}</b>」的條目</div><div>試試其他關鍵字，或切換企劃、類型。</div></div>`;
+      return;
+    }
+    codex.innerHTML = list.map(e=>{
+      const ty = TYPES[e.type];
+      return `<div class="ecard ${e.id===selId?'sel':''}" data-id="${e.id}" style="--ec:${ty.c}">
+        <div class="strip"></div>
+        <div class="pad">
+          <span class="etype"><span class="gl"></span>${ty.t}</span>
+          <div class="ename">${e.name}</div>
+          <div class="een">${e.en}</div>
+          <div class="eblurb">${e.blurb||''}</div>
+          ${memberAvs(e.chars)}
+        </div>
+      </div>`;
+    }).join('');
+    codex.querySelectorAll('.ecard').forEach(c=>c.onclick=()=>{ selId=c.dataset.id; renderCodex(); renderDetail(); });
+  }
+
+  function updCard(e){ const card=document.querySelector(`.ecard[data-id="${e.id}"]`); if(!card) return; const nmEl=card.querySelector('.ename'); if(nmEl) nmEl.textContent=e.name||'新條目'; const bl=card.querySelector('.eblurb'); if(bl) bl.textContent=e.blurb||''; }
+  function jumpTo(id){ selId=id; const tgt=ENT.find(x=>x.id===selId); if(tgt && !inScope(tgt)){ scope='*'; renderScopeChips(); } if(tgt && filter!=='*' && tgt.type!==filter){ filter='*'; } renderTabs(); renderCodex(); renderDetail(); detail.scrollIntoView({block:'nearest'}); }
+  // keep connections symmetric across both entities
+  function mirror(fromId, toId, kind){ const t=ENT.find(x=>x.id===toId); if(!t) return; t.rels=t.rels||[]; if(!t.rels.some(r=>r.id===fromId)) t.rels.push({id:fromId, kind}); }
+  function unmirror(fromId, toId){ const t=ENT.find(x=>x.id===toId); if(!t||!t.rels) return; const i=t.rels.findIndex(r=>r.id===fromId); if(i>=0) t.rels.splice(i,1); }
+
+  function renderDetail(){
+    const e = ENT.find(x=>x.id===selId); if(!e){ detail.innerHTML=''; return; }
+    const ty = TYPES[e.type];
+    detail.style.setProperty('--ec', ty.c);
+    const editing = !!(e.draft || e._edit);
+    detail.classList.toggle('draft', editing);
+    const charsHTML = e.chars.length ? e.chars.map(id=>{const c=CHARS[id];return `<a class="cchip" href="character.html"><span class="cav" style="background:${c.c}">${c.name[0]}</span>${c.name}<span class="csp">${c.sp}</span></a>`;}).join('') : '<div class="d-empty">尚無關聯角色</div>';
+    const relsHTML = e.rels && e.rels.length ? e.rels.map(r=>{const t=ENT.find(x=>x.id===r.id); if(!t)return''; const tc=TYPES[t.type].c; const kc=KIND_C[r.kind]||'#A98B4E'; return `<button class="rchip" data-go="${t.id}"><span class="dot" style="background:${tc}"></span>${t.name}<span class="kind" style="background:${kc}">${r.kind}</span></button>`;}).join('') : '<div class="d-empty">尚無關聯條目</div>';
+    // editor pieces
+    const charPick = Object.entries(CHARS).map(([id,c])=>`<button type="button" class="cp-tog ${e.chars.includes(id)?'on':''}" data-cid="${id}"><span class="cav" style="background:${c.c}">${c.name[0]}</span>${c.name}</button>`).join('');
+    const relRows = (e.rels||[]).map((r,i)=>{ const t=ENT.find(x=>x.id===r.id); if(!t) return ''; const tc=TYPES[t.type].c; const kc=KIND_C[r.kind]||'#A98B4E'; return `<div class="rr"><span class="dot" style="background:${tc}"></span>${t.name}<span class="kind" style="background:${kc}">${r.kind}</span><button class="rdel" data-ri="${i}" title="移除">✕</button></div>`; }).join('') || '<div class="d-empty" style="margin-bottom:10px">尚無關聯條目</div>';
+    const relOpts = ENT.filter(x=>x.id!==e.id && !(e.rels||[]).some(r=>r.id===x.id)).map(x=>`<option value="${x.id}">${x.name}（${TYPES[x.type].t}）</option>`).join('');
+    const kindOpts = Object.keys(KIND_C).map(k=>`<option value="${k}">${k}</option>`).join('');
+    detail.innerHTML = `
+      <div class="d-strip"></div>
+      <div class="d-pad">
+        <span class="d-type"><span class="gl"></span>${ty.t} · ${ty.en}</span>
+        <button class="d-editbtn" id="dEditBtn">✎ 編輯</button>
+        <div class="d-name">${e.name}</div>
+        <div class="d-en">${e.en}</div>
+        <div class="d-edit">
+          <input class="inp nm" id="dNm" value="${(e.name||'').replace(/"/g,'&quot;')}" placeholder="條目名稱">
+          <div class="pick" id="dType">${Object.entries(TYPES).map(([k,v])=>`<button data-k="${k}" class="${e.type===k?'on':''}" style="${e.type===k?`background:${v.c}`:''}">${v.t}</button>`).join('')}</div>
+          <textarea class="inp" id="dSet" rows="4" placeholder="這個條目的設定…">${e.setting||''}</textarea>
+          <div class="d-edit-sec"><p class="sub-h">關聯角色 · Characters</p><div class="charpick" id="charPick">${charPick}</div></div>
+          <div class="d-edit-sec"><p class="sub-h">關聯條目 · Connections</p>
+            <div class="reledit" id="relEdit">${relRows}</div>
+            <div class="reladd">
+              <select id="relTarget">${relOpts||'<option value="">（沒有可加入的條目）</option>'}</select>
+              <select id="relKind">${kindOpts}</select>
+              <button class="raddbtn" id="relAdd">＋ 加入</button>
+            </div>
+          </div>
+          <button class="d-editdone" id="dDone">✓ 完成</button>
+        </div>
+        ${e.setting && !editing ? `<p class="d-setting">${e.setting}</p>` : ''}
+        <div class="d-readonly">
+          <div class="d-sec"><p class="sub-h">關聯角色 · Characters</p><div class="d-chars">${charsHTML}</div></div>
+          <div class="d-sec"><p class="sub-h">關聯條目 · Connections</p><div class="d-rels">${relsHTML}</div></div>
+          <div class="d-sec"><p class="sub-h">相簿 · Gallery</p><div class="d-gallery">${(e.gallery||[]).map(g=>`<div class="ph" data-label="${g}"></div>`).join('') || '<div class="d-empty">尚無圖片</div>'}</div></div>
+        </div>
+      </div>`;
+    detail.querySelectorAll('.rchip[data-go]').forEach(b=>b.onclick=()=>jumpTo(b.dataset.go));
+    const eb = detail.querySelector('#dEditBtn'); if(eb) eb.onclick=()=>{ e._edit=true; renderDetail(); };
+    if(editing){
+      const nm=detail.querySelector('#dNm'), set=detail.querySelector('#dSet');
+      nm.oninput=()=>{ e.name=nm.value; updCard(e); };
+      set.oninput=()=>{ e.setting=set.value; e.blurb=set.value.slice(0,40); updCard(e); };
+      detail.querySelectorAll('#dType button').forEach(b=>b.onclick=()=>{ e.type=b.dataset.k; renderTabs(); renderCodex(); renderDetail(); });
+      detail.querySelectorAll('#charPick .cp-tog').forEach(b=>b.onclick=()=>{ const id=b.dataset.cid; const i=e.chars.indexOf(id); if(i<0) e.chars.push(id); else e.chars.splice(i,1); renderCodex(); renderDetail(); });
+      detail.querySelectorAll('#relEdit .rdel').forEach(b=>b.onclick=()=>{ const i=+b.dataset.ri; const r=e.rels[i]; e.rels.splice(i,1); unmirror(e.id, r.id); renderDetail(); });
+      detail.querySelector('#relAdd').onclick=()=>{ const tg=detail.querySelector('#relTarget').value, kd=detail.querySelector('#relKind').value; if(!tg) return; e.rels=e.rels||[]; e.rels.push({id:tg,kind:kd}); mirror(e.id, tg, kd); renderTabs(); renderCodex(); renderDetail(); };
+      detail.querySelector('#dDone').onclick=()=>{ e._edit=false; e.draft=false; renderTabs(); renderCodex(); renderDetail(); toast('✓ 已儲存條目'); };
+    }
+  }
+
+  document.getElementById('addBtn').onclick=()=>{
+    draftN++;
+    const id='new'+draftN;
+    const type = filter==='*' ? 'nation' : filter;
+    ENT.push({ id, name:'新條目', en:'NEW ENTRY', type, blurb:'在右側補充設定…', setting:'', chars:[], rels:[], gallery:[], draft:true, proj: scope==='*'?null:scope });
+    selId=id; renderTabs(); renderCodex(); renderDetail();
+    detail.scrollIntoView({block:'nearest'});
+    toast('＋ 已新增條目（草稿），右側可編輯');
+    setTimeout(()=>{ const n=detail.querySelector('#dNm'); if(n){ n.focus(); n.select(); } }, 60);
+  };
+
+  // ---- project scope (企劃分組，與角色頁一致) ----
+  const PROJECTS = [{id:'tokoyo',name:'常夜物語'},{id:'day',name:'晝廷篇'},{id:'draft',name:'草稿匣'}];
+  let scope = '*';
+  const scopeChipsEl = document.getElementById('scopeChips');
+  function inScope(e){
+    if (scope==='*') return true;
+    if (e.proj != null) return Array.isArray(e.proj) ? e.proj.includes(scope) : e.proj===scope;
+    return (e.chars||[]).some(id=>CHARS[id] && CHARS[id].proj===scope);
+  }
+  function renderScopeChips(){
+    scopeChipsEl.innerHTML = [{id:'*',name:'全部'}].concat(PROJECTS).map(p=>`<button class="scope-chip${p.id===scope?' on':''}" data-p="${p.id}">${p.name}</button>`).join('');
+    scopeChipsEl.querySelectorAll('.scope-chip').forEach(c=>c.onclick=()=>{ scope=c.dataset.p; renderScopeChips(); renderTabs(); renderCodex(); renderDetail(); });
+  }
+
+  renderScopeChips(); renderTabs(); renderCodex(); renderDetail();
+
+  // ---- search ----
+  (function(){
+    const wrap = document.getElementById('wvSearch');
+    const input = document.getElementById('wvSearchInput');
+    input.addEventListener('input', () => {
+      query = input.value.trim().toLowerCase();
+      wrap.classList.toggle('has', query.length>0);
+      renderTabs(); renderCodex(); renderDetail();
+    });
+    document.getElementById('wvSearchClr').addEventListener('click', () => { input.value=''; query=''; wrap.classList.remove('has'); renderTabs(); renderCodex(); renderDetail(); input.focus(); });
+    document.addEventListener('keydown', e => {
+      if((e.key==='/'||((e.metaKey||e.ctrlKey)&&e.key==='k')) && document.activeElement!==input){ e.preventDefault(); input.focus(); }
+      if(e.key==='Escape' && document.activeElement===input){ input.value=''; query=''; wrap.classList.remove('has'); renderTabs(); renderCodex(); renderDetail(); }
+    });
+  })();
+  (function(){ const eid=new URLSearchParams(location.search).get('e'); if(eid && ENT.some(x=>x.id===eid)) jumpTo(eid); })();
+</script>
+</body>
+</html>

@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>關係系統 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/ds.css">
+<style>
+  .topbar { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 30; }
+  .topbar .inner { max-width: 1200px; margin: 0 auto; padding: 11px var(--s8); display: flex; align-items: center; gap: var(--s6); }
+  .brand { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 15px; }
+  .brand .mk { width: 24px; height: 24px; border-radius: 8px; background: var(--text); color: #fff; display: grid; place-items: center; font-family: var(--font-serif); font-size: 15px; }
+  .nav { display: flex; gap: var(--s2); }
+  .nav a { font-size: 14px; font-weight: 500; color: var(--text-dim); padding: 7px 12px; border-radius: var(--r-btn); cursor: pointer; }
+  .nav a.on { background: var(--bg-tint); color: var(--text); font-weight: 600; }
+  .topbar .spacer { flex: 1; }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg,#8FA3B0,#6B4A1E); }
+
+  .head { max-width: 1200px; margin: 0 auto; padding: var(--s12) var(--s8) var(--s6); }
+  .head .eyebrow { margin-bottom: 12px; }
+  .head h1 { font-family: var(--font-serif); font-size: 40px; margin: 0; font-weight: 800; }
+  .head p { color: var(--text-dim); margin: 10px 0 0; font-size: 15px; }
+
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 var(--s8) var(--s16); }
+  .maprow { display: grid; grid-template-columns: 1.25fr .75fr; gap: var(--s8); align-items: start; }
+
+  /* relationship map */
+  .map-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); box-shadow: var(--sh-1); padding: var(--s4); }
+  .map { position: relative; width: 100%; height: 460px;
+    background:
+      radial-gradient(circle at 1px 1px, var(--border) 1px, transparent 0) 0 0/22px 22px,
+      var(--surface-2); border-radius: 10px; overflow: hidden; }
+  .map svg.edges { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .map svg.edges path { fill: none; stroke: var(--border-strong); stroke-width: 1.5; vector-effect: non-scaling-stroke; transition: stroke .15s, stroke-width .15s; }
+  .map svg.edges path.hi { stroke: var(--accent); stroke-width: 2.5; }
+  .elabel { position: absolute; transform: translate(-50%,-50%); font-size: 11px; font-weight: 600; color: var(--text-dim);
+    background: rgba(255,255,255,.9); border: 1px solid var(--border); border-radius: var(--r-pill); padding: 2px 8px; white-space: nowrap; pointer-events: none; transition: color .15s, border-color .15s; }
+  .elabel.hi { color: var(--accent-ink); border-color: var(--accent); background: var(--accent-soft); }
+  .node { position: absolute; transform: translate(-50%,-50%); display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; z-index: 2; }
+  .node .av { width: 56px; height: 56px; border-radius: 50%; border: 2px solid #fff; box-shadow: var(--sh-1); display: grid; place-items: center; font-family: var(--font-serif); font-size: 22px; font-weight: 700; color: #fff; transition: transform .15s, box-shadow .15s; }
+  .node:hover .av { transform: scale(1.06); }
+  .node.sel .av { box-shadow: 0 0 0 4px var(--accent-soft), var(--sh-2); transform: scale(1.08); }
+  .node.center .av { width: 72px; height: 72px; font-size: 30px; }
+  .node .lab { font-size: 12px; font-weight: 600; } .node .lab .rom { display: block; font-family: var(--font-mono); font-size: 8.5px; letter-spacing: .1em; color: var(--text-faint); text-align: center; }
+  .node.dim { opacity: .32; } .node.dim:hover { opacity: 1; }
+
+  .map-legend { display: flex; flex-wrap: wrap; gap: 7px; margin-top: var(--s4); }
+  .rchip { font-size: 12.5px; font-weight: 600; padding: 6px 12px; border-radius: var(--r-pill); border: 1px solid var(--border); background: var(--surface); color: var(--text-dim); cursor: pointer; transition: all .15s; }
+  .rchip:hover { border-color: var(--border-strong); }
+  .rchip.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* featured pairing */
+  .pair-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); box-shadow: var(--sh-1); padding: var(--s6); }
+  .pair-head { display: flex; align-items: center; gap: 12px; }
+  .pair-avs { display: flex; }
+  .pair-avs .av { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--surface); display: grid; place-items: center; font-family: var(--font-serif); font-size: 18px; font-weight: 700; color: #fff; }
+  .pair-avs .av:last-child { margin-left: -12px; }
+  .pair-head h2 { font-family: var(--font-serif); font-size: 24px; margin: 0; font-weight: 700; }
+  .pair-head .rel { font-size: 12px; color: var(--accent-ink); background: var(--accent-soft); border: 1px solid var(--accent); padding: 3px 10px; border-radius: var(--r-pill); display: inline-block; margin-top: 4px; }
+  .pair-desc { font-size: 14.5px; line-height: 1.75; color: #2C2A27; margin: var(--s4) 0 var(--s6); text-wrap: pretty; }
+
+  .sub-h { font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); margin: 0 0 12px; }
+  .shared-album { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: var(--s6); }
+  .shared-album .ph { aspect-ratio: 1; border-radius: 8px; } .shared-album .ph::after { font-size: 8px; padding: 2px 5px; }
+
+  /* timeline */
+  .timeline { position: relative; padding-left: 24px; }
+  .timeline::before { content: ""; position: absolute; left: 7px; top: 4px; bottom: 4px; width: 2px; background: var(--border); }
+  .tl-item { position: relative; padding-bottom: 16px; }
+  .tl-item:last-child { padding-bottom: 0; }
+  .tl-item::before { content: ""; position: absolute; left: -21px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--accent); }
+  .tl-item .when { font-family: var(--font-serif); font-size: 13px; font-weight: 700; color: var(--accent-ink); }
+  .tl-item .what { font-size: 13px; color: var(--text-dim); line-height: 1.5; margin-top: 2px; }
+
+  .hint { text-align: center; font-size: 13px; color: var(--text-faint); margin-top: var(--s4); }
+  .hint a { color: var(--accent); cursor: pointer; }
+
+  .addrel { margin-top: var(--s4); display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: var(--r-btn); border: 1px dashed var(--border-strong); background: var(--surface); color: var(--text-dim); cursor: pointer; transition: all .14s; }
+  .addrel:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+  .addrel span { font-size: 15px; line-height: 1; }
+
+  /* pair-card editing */
+  .pair-card { position: relative; }
+  .pair-edit-btn { position: absolute; top: var(--s5); right: var(--s5); display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 6px 11px; border: 1px solid var(--border); border-radius: var(--r-pill); background: var(--surface); color: var(--text-dim); cursor: pointer; transition: all .14s; z-index: 2; }
+  .pair-edit-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+  .pe-field { margin-bottom: var(--s4); }
+  .pe-field .lbl { display: block; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 7px; }
+  .pe-inp { width: 100%; font-family: inherit; font-size: 14px; padding: 9px 11px; border: 1px solid var(--border-strong); border-radius: var(--r-btn); background: var(--surface); color: var(--text); box-sizing: border-box; }
+  .pe-inp:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  textarea.pe-inp { resize: vertical; line-height: 1.7; min-height: 90px; }
+  select.pe-inp { cursor: pointer; }
+  .pe-tl-row { display: grid; grid-template-columns: 100px 1fr auto; gap: 8px; align-items: center; margin-bottom: 7px; }
+  .pe-tl-row .pe-inp { padding: 7px 9px; font-size: 13px; }
+  .pe-del { width: 30px; height: 34px; flex: none; border-radius: 7px; border: 1px solid var(--border); background: var(--surface); color: var(--text-faint); display: grid; place-items: center; cursor: pointer; font-size: 13px; transition: all .12s; }
+  .pe-del:hover { border-color: var(--avoid); color: var(--avoid); background: var(--avoid-soft); }
+  .pe-add { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--accent); padding: 8px 11px; border: 1px dashed var(--border-strong); border-radius: var(--r-btn); background: var(--surface); cursor: pointer; margin-top: 3px; }
+  .pe-add:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .pe-foot { display: flex; align-items: center; gap: 10px; margin-top: var(--s6); padding-top: var(--s5); border-top: 1px solid var(--border); }
+  .pe-done { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; padding: 9px 18px; border-radius: var(--r-btn); background: var(--text); color: #fff; border: none; cursor: pointer; }
+  .pe-done:hover { background: #000; }
+  .pe-cancel { font-size: 13px; font-weight: 600; color: var(--text-dim); background: none; border: 1px solid var(--border); border-radius: var(--r-btn); padding: 9px 16px; cursor: pointer; }
+  .pe-cancel:hover { background: var(--bg-tint); }
+  .pe-remove { font-size: 12.5px; font-weight: 600; color: var(--avoid); background: none; border: none; cursor: pointer; margin-left: auto; }
+  .pe-remove:hover { text-decoration: underline; }
+
+  .scopebar { max-width: 1200px; margin: 0 auto; padding: 0 var(--s8) var(--s5); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .scope-lb { font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); }
+  .scope-chips { display: flex; gap: 7px; flex-wrap: wrap; }
+  .scope-chip { font-size: 13px; font-weight: 600; padding: 6px 13px; border-radius: var(--r-pill); border: 1px solid var(--border); background: var(--surface); color: var(--text-dim); cursor: pointer; white-space: nowrap; transition: all .14s; }
+  .scope-chip:hover { border-color: var(--border-strong); }
+  .scope-chip.on { background: var(--text); color: #fff; border-color: var(--text); }
+  .node.hide, .elabel.hide { display: none; }
+  .map svg.edges path.hide { display: none; }
+
+  @media (max-width: 900px) {
+    .topbar .inner, .head, .scopebar, .wrap { padding-left: var(--s4); padding-right: var(--s4); }
+    .topbar .inner { flex-wrap: wrap; row-gap: 0; }
+    .nav { display: flex; order: 9; width: 100%; overflow-x: auto; gap: 4px; margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--border); -webkit-overflow-scrolling: touch; }
+    .nav a { white-space: nowrap; flex: none; }
+    .maprow { grid-template-columns: 1fr; gap: var(--s6); }
+    .head h1 { font-size: 30px; }
+    .shared-album { grid-template-columns: repeat(4, 1fr); }
+    /* taller map + smaller nodes so the cast doesn't collide on a narrow screen */
+    .map { height: 560px; }
+    .node .av { width: 46px; height: 46px; font-size: 18px; }
+    .node.center .av { width: 58px; height: 58px; font-size: 24px; }
+    .node .lab { font-size: 11px; }
+    .node .lab .rom { display: none; }
+    .elabel { font-size: 10px; padding: 1px 6px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="inner">
+    <a class="brand" href="dashboard.html"><span class="mk">霧</span>CharacterHub</a>
+    <nav class="nav">
+      <a href="dashboard.html">我的角色</a>
+      <a href="commissions.html">委託</a>
+      <a class="on">關係圖</a>
+      <a href="height-compare.html">身高比較</a>
+      <a href="worldview.html">世界觀</a>
+      <a href="settings.html">設定</a>
+    </nav>
+    <div class="spacer"></div>
+    <button class="btn btn-ghost btn-sm js-soon" style="white-space:nowrap">＠yoi-studio</button>
+    <div class="avatar"></div>
+  </div>
+</div>
+
+<div class="head">
+  <div class="eyebrow">Relationships · 雙人 / 多人系統</div>
+  <h1>關係系統</h1>
+  <p>點選角色或下方關係，查看雙人設定、共同相簿與關係時間線。</p>
+</div>
+
+<div class="scopebar">
+  <span class="scope-lb">企劃</span>
+  <div class="scope-chips" id="scopeChips"></div>
+</div>
+
+<div class="wrap">
+  <div class="maprow">
+    <div>
+      <div class="map-card">
+        <div class="map" id="map">
+          <svg class="edges" id="edges" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+        </div>
+      </div>
+      <div class="map-legend" id="legend"></div>
+      <button class="addrel" id="addRelBtn"><span>＋</span>新增關係 Add relationship</button>
+    </div>
+
+    <div class="pair-card" id="pairCard"></div>
+  </div>
+  <div class="hint">提示：點地圖上的角色會聚焦其關係 · <a id="resetBtn">顯示全部</a></div>
+</div>
+
+<script src="../assets/app.js"></script>
+<script>
+  window.__autoInit = false;
+  document.querySelectorAll('.js-soon').forEach(el => el.addEventListener('click', e => { e.preventDefault(); toast('功能開發中 · Coming soon'); }));
+  const CAST = {
+    yoi:   {name:'宵霧', rom:'YOIGIRI', sp:'妖狐', c:'#8FA3B0', x:50, y:50, center:true, proj:'tokoyo'},
+    hiru:  {name:'晝',   rom:'HIRU',    sp:'半神', c:'#E0A23B', x:82, y:22, proj:'day'},
+    tomori:{name:'燈守', rom:'TOMORI',  sp:'付喪神',c:'#C8463C', x:18, y:28, proj:'tokoyo'},
+    nozomi:{name:'望',   rom:'NOZOMI',  sp:'人類', c:'#2E6F6A', x:84, y:76, proj:'tokoyo'},
+    aka:   {name:'緋',   rom:'AKA',     sp:'鬼',   c:'#9E332B', x:52, y:90, proj:'day'},
+    hai:   {name:'灰',   rom:'HAI',     sp:'未定', c:'#8A857C', x:16, y:74, proj:'draft'},
+  };
+  const EDGES = [
+    {id:'yoi-tomori', a:'yoi', b:'tomori', label:'守護 · 契約'},
+    {id:'yoi-hiru',   a:'yoi', b:'hiru',   label:'宿敵'},
+    {id:'yoi-nozomi', a:'yoi', b:'nozomi', label:'羈絆'},
+    {id:'yoi-hai',    a:'yoi', b:'hai',    label:'？ 謎'},
+    {id:'hiru-aka',   a:'hiru',b:'aka',    label:'同盟'},
+    {id:'tomori-nozomi', a:'tomori', b:'nozomi', label:'舊識'},
+  ];
+  const PAIRS = {
+    'yoi-tomori': { rel:'守護 · 契約 Guardian',
+      desc:'百年前，宵霧在廢棄神社拾起一盞無主燈籠——那是化為付喪神的燈守。兩者立下「守燈之約」：只要燈不滅，狐便不孤。燈守替宵霧記路，宵霧替燈守續火。',
+      album:['雙人 · 神社','燈守 · 燈籠形態','並肩 · 夜路','約定 · 緋繩'],
+      timeline:[['百年前','初遇於廢稻荷神社，拾起無主燈籠'],['立約','訂下「守燈之約」，緋繩繫腕'],['災','一場山火，燈籠燒損、約近斷'],['重鑄','重鑄燈籠，緋繩重新繫上'],['現在','同行夜路，替迷途者點燈']] },
+    'yoi-hiru': { rel:'宿敵 Rival',
+      desc:'晝是司掌白晝的半神，與夜行的宵霧天生對立。兩者立場相反卻彼此熟知——晝不只一次在黎明前替宵霧收尾，宵霧也曾在月蝕夜替晝擋下一劫。敵意之下，是少有人懂的相互理解。',
+      album:['對峙 · 黎明','晝 · 立繪','交手','停戰 · 月蝕'],
+      timeline:[['初遇','晝奉命驅逐神社妖狐'],['交手','數度交鋒，互不相讓'],['月蝕','宵霧替晝擋下一劫'],['現在','維持微妙的停戰']] },
+    'yoi-nozomi': { rel:'羈絆 Bond',
+      desc:'望是某個迷途的雪夜被宵霧點燈引路的人類旅人。多年後望重回神社，成為少數能與宵霧好好說話的人。對宵霧而言，望是「被點過燈、卻又回來」的稀有存在。',
+      album:['初遇 · 雪夜','望 · 立繪','重逢 · 神社','茶席'],
+      timeline:[['雪夜','迷途的望被宵霧點燈引路'],['多年後','望重回神社道謝'],['現在','少數能與宵霧對話的人']] },
+    'yoi-hai': { rel:'？ 未知 Unknown',
+      desc:'灰是一個尚未定稿的角色。與宵霧之間似乎有某種未言明的牽連——草稿裡只留下一行字：「他記得灰，灰卻不記得他。」',
+      album:['灰 · 未完成','？','？','？'],
+      timeline:[['草稿','關係尚未定稿'],['線索','「他記得灰，灰卻不記得他」']] },
+    'hiru-aka': { rel:'同盟 Allies',
+      desc:'晝與鬼族的緋締結同盟，共同維繫白晝與火的秩序。兩者皆為強者，立場一致時無往不利。',
+      album:['同盟 · 締約','緋 · 立繪','並肩','晝 · 緋'],
+      timeline:[['締約','晝與緋結為同盟'],['現在','共同維繫秩序']] },
+    'tomori-nozomi': { rel:'舊識 Acquaintance',
+      desc:'燈守與望在不同的時間都曾受宵霧照拂，因而相識。望會替燈守添油，燈守替望記得回家的路。',
+      album:['舊識','燈守 · 望','添油','夜路'],
+      timeline:[['因緣','皆受宵霧照拂而相識'],['現在','彼此照應']] },
+  };
+
+  const map = document.getElementById('map');
+  const edgesSvg = document.getElementById('edges');
+  const legend = document.getElementById('legend');
+  const pairCard = document.getElementById('pairCard');
+
+  // nodes
+  Object.entries(CAST).forEach(([id,c]) => {
+    const n = document.createElement('div');
+    n.className = 'node' + (c.center?' center':''); n.dataset.id = id;
+    n.style.left = c.x+'%'; n.style.top = c.y+'%';
+    n.innerHTML = `<div class="av" style="background:${c.c}">${c.name[0]}</div><div class="lab">${c.name}<span class="rom">${c.rom}</span></div>`;
+    n.addEventListener('click', () => focusNode(id));
+    map.appendChild(n);
+  });
+  // ---- edges + labels + legend (rebuilt whenever EDGES changes) ----
+  const SVGNS = 'http://www.w3.org/2000/svg';
+  function buildEdges(){
+    edgesSvg.querySelectorAll('path').forEach(p=>p.remove());
+    map.querySelectorAll('.elabel').forEach(l=>l.remove());
+    EDGES.forEach(e => {
+      const A = CAST[e.a], B = CAST[e.b]; if(!A||!B) return;
+      const mx = (A.x+B.x)/2, my = (A.y+B.y)/2;
+      const dx = B.x-A.x, dy = B.y-A.y;
+      const len = Math.hypot(dx,dy) || 1;
+      let px = -dy/len, py = dx/len;               // perpendicular to the chord
+      if (px*(50-mx) + py*(50-my) > 0) { px = -px; py = -py; }  // always bow away from centre
+      const h = Math.max(6, len*0.15);             // apex offset, proportional to length
+      const path = document.createElementNS(SVGNS,'path');
+      path.setAttribute('d', `M${A.x} ${A.y} Q${mx+px*2*h} ${my+py*2*h} ${B.x} ${B.y}`);
+      path.dataset.id = e.id; edgesSvg.appendChild(path);
+      const lab = document.createElement('div'); lab.className = 'elabel'; lab.dataset.id = e.id;
+      lab.style.left = (mx+px*h)+'%'; lab.style.top = (my+py*h)+'%'; lab.textContent = e.label;
+      map.appendChild(lab);
+    });
+    legend.innerHTML = EDGES.map(e => {
+      const A = CAST[e.a], B = CAST[e.b];
+      return `<span class="rchip" data-id="${e.id}">${A.name} × ${B.name} · ${e.label}</span>`;
+    }).join('');
+    legend.querySelectorAll('.rchip').forEach(ch => ch.addEventListener('click', () => selectPair(ch.dataset.id)));
+  }
+
+  const esc = s => (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  let editId = null;   // id of the pairing currently being edited
+
+  function pairViewHTML(id){
+    const e = EDGES.find(x => x.id === id); const p = PAIRS[id];
+    const A = CAST[e.a], B = CAST[e.b];
+    return `
+      <button class="pair-edit-btn" id="pairEditBtn">✎ 編輯</button>
+      <div class="pair-head">
+        <div class="pair-avs"><div class="av" style="background:${A.c}">${A.name[0]}</div><div class="av" style="background:${B.c}">${B.name[0]}</div></div>
+        <div><h2>${A.name} × ${B.name}</h2><span class="rel">${esc(p.rel)||'未命名關係'}</span></div>
+      </div>
+      ${p.desc?`<p class="pair-desc">${esc(p.desc)}</p>`:'<p class="pair-desc" style="color:var(--text-faint);font-style:italic">尚無關係描述——按右上「編輯」補上。</p>'}
+      <p class="sub-h">共同相簿 · Shared album</p>
+      <div class="shared-album">${(p.album||[]).length?p.album.map(a=>`<div class="ph" data-label="${esc(a)}"></div>`).join(''):'<div style="font-size:13px;color:var(--text-faint)">尚無共同相簿</div>'}</div>
+      <p class="sub-h">關係時間線 · Timeline</p>
+      ${(p.timeline||[]).length?`<div class="timeline">${p.timeline.map(([w,t])=>`<div class="tl-item"><div class="when">${esc(w)}</div><div class="what">${esc(t)}</div></div>`).join('')}</div>`:'<div style="font-size:13px;color:var(--text-faint)">尚無時間線</div>'}`;
+  }
+
+  function pairEditHTML(id){
+    const e = EDGES.find(x => x.id === id); const p = PAIRS[id];
+    const A = CAST[e.a], B = CAST[e.b];
+    const tlRows = (p.timeline||[]).map(([w,t],i)=>`
+      <div class="pe-tl-row" data-i="${i}">
+        <input class="pe-inp pe-when" value="${esc(w)}" placeholder="時點">
+        <input class="pe-inp pe-what" value="${esc(t)}" placeholder="發生了什麼">
+        <button class="pe-del" title="刪除">✕</button>
+      </div>`).join('');
+    return `
+      <div class="pair-head">
+        <div class="pair-avs"><div class="av" style="background:${A.c}">${A.name[0]}</div><div class="av" style="background:${B.c}">${B.name[0]}</div></div>
+        <div><h2>${A.name} × ${B.name}</h2></div>
+      </div>
+      <div class="pe-field" style="margin-top:var(--s5)">
+        <label class="lbl">關係名稱 · Label</label>
+        <input class="pe-inp" id="peLabel" value="${esc(p.rel)}" placeholder="如：守護 · 契約 Guardian">
+      </div>
+      <div class="pe-field">
+        <label class="lbl">關係描述 · Description</label>
+        <textarea class="pe-inp" id="peDesc" placeholder="這兩位角色之間的故事…">${esc(p.desc)}</textarea>
+      </div>
+      <div class="pe-field">
+        <label class="lbl">關係時間線 · Timeline</label>
+        <div id="peTl">${tlRows}</div>
+        <button class="pe-add" id="peAddTl">＋ 新增時點</button>
+      </div>
+      <div class="pe-foot">
+        <button class="pe-done" id="peDone">✓ 完成</button>
+        <button class="pe-remove" id="peRemove">刪除此關係</button>
+      </div>`;
+  }
+
+  function bindPairEdit(id){
+    const e = EDGES.find(x=>x.id===id); const p = PAIRS[id];
+    const labelI = pairCard.querySelector('#peLabel');
+    labelI.oninput = ()=>{ const v=labelI.value; p.rel=v; e.label=v; buildEdges(); applyHighlight(id); };
+    pairCard.querySelector('#peDesc').oninput = function(){ p.desc=this.value; };
+    const tl = pairCard.querySelector('#peTl');
+    function syncTl(){ p.timeline = [...tl.querySelectorAll('.pe-tl-row')].map(r=>[r.querySelector('.pe-when').value, r.querySelector('.pe-what').value]); }
+    function bindRow(row){ row.querySelectorAll('.pe-when,.pe-what').forEach(inp=>inp.oninput=syncTl); row.querySelector('.pe-del').onclick=()=>{ row.remove(); syncTl(); }; }
+    tl.querySelectorAll('.pe-tl-row').forEach(bindRow);
+    pairCard.querySelector('#peAddTl').onclick=()=>{
+      const row=document.createElement('div'); row.className='pe-tl-row';
+      row.innerHTML=`<input class="pe-inp pe-when" placeholder="時點"><input class="pe-inp pe-what" placeholder="發生了什麼"><button class="pe-del" title="刪除">✕</button>`;
+      tl.appendChild(row); bindRow(row); row.querySelector('.pe-when').focus(); syncTl();
+    };
+    pairCard.querySelector('#peDone').onclick=()=>{ syncTl(); editId=null; renderPair(id); applyHighlight(id); toast('✓ 已儲存關係'); };
+    pairCard.querySelector('#peRemove').onclick=()=>removePair(id);
+  }
+
+  function renderPair(id){
+    if(!PAIRS[id] || !EDGES.find(x=>x.id===id)){ pairCard.innerHTML=''; return; }
+    if(editId===id){ pairCard.innerHTML = pairEditHTML(id); bindPairEdit(id); }
+    else {
+      pairCard.innerHTML = pairViewHTML(id);
+      const eb = pairCard.querySelector('#pairEditBtn');
+      if(eb) eb.onclick = ()=>{ editId=id; renderPair(id); };
+    }
+  }
+
+  function removePair(id){
+    const i = EDGES.findIndex(x=>x.id===id); if(i>=0) EDGES.splice(i,1);
+    delete PAIRS[id];
+    editId=null; buildEdges();
+    map.querySelectorAll('.node').forEach(n => n.classList.remove('sel','dim'));
+    const ve = EDGES.filter(e=>inScope(e.a) && inScope(e.b));
+    if(ve[0]) selectPair(ve[0].id);
+    else pairCard.innerHTML = '<div style="padding:var(--s10);text-align:center;color:var(--text-faint);font-size:14px;line-height:1.7">這個範圍已沒有關係，<br>按「＋ 新增關係」建立。</div>';
+    toast('已刪除關係');
+  }
+
+  function applyHighlight(id){
+    const e = EDGES.find(x=>x.id===id); if(!e) return;
+    edgesSvg.querySelectorAll('path').forEach(l => l.classList.toggle('hi', l.dataset.id===id));
+    const hiPath = edgesSvg.querySelector(`path[data-id="${id}"]`); if (hiPath) edgesSvg.appendChild(hiPath); // raise highlighted edge above the rest
+    map.querySelectorAll('.elabel').forEach(l => l.classList.toggle('hi', l.dataset.id===id));
+    legend.querySelectorAll('.rchip').forEach(c => c.classList.toggle('on', c.dataset.id===id));
+    map.querySelectorAll('.node').forEach(n => n.classList.toggle('sel', n.dataset.id===e.a || n.dataset.id===e.b));
+  }
+
+  function selectPair(id) {
+    editId = null;
+    renderPair(id);
+    applyHighlight(id);
+  }
+
+  // ---- add a new relationship ----
+  function renderAddForm(){
+    editId = null;
+    const ids = Object.keys(CAST);
+    const opts = Object.entries(CAST).map(([id,c])=>`<option value="${id}">${c.name}（${c.sp}）</option>`).join('');
+    pairCard.innerHTML = `
+      <div class="pair-head"><div><h2>新增關係</h2><span class="rel" style="background:var(--bg-tint);color:var(--text-dim);border-color:var(--border)">選兩位角色，描述他們的關係</span></div></div>
+      <div class="pe-field" style="margin-top:var(--s5)"><label class="lbl">角色 A · Character A</label><select class="pe-inp" id="paA">${opts}</select></div>
+      <div class="pe-field"><label class="lbl">角色 B · Character B</label><select class="pe-inp" id="paB">${opts}</select></div>
+      <div class="pe-field"><label class="lbl">關係名稱 · Label</label><input class="pe-inp" id="paLabel" placeholder="如：同伴 · 摯友"></div>
+      <div class="pe-foot"><button class="pe-done" id="paCreate">建立關係</button><button class="pe-cancel" id="paCancel">取消</button></div>`;
+    const aSel=pairCard.querySelector('#paA'), bSel=pairCard.querySelector('#paB');
+    aSel.value = ids[0]; bSel.value = ids[1] || ids[0];
+    pairCard.querySelector('#paCancel').onclick=()=>{ const ve=EDGES.filter(e=>inScope(e.a)&&inScope(e.b)); if(ve[0]) selectPair(ve[0].id); else pairCard.innerHTML=''; };
+    pairCard.querySelector('#paCreate').onclick=()=>{
+      const a=aSel.value, b=bSel.value, label=(pairCard.querySelector('#paLabel').value||'').trim()||'關係';
+      if(a===b){ toast('請選擇兩位不同的角色'); return; }
+      if(EDGES.some(e=>(e.a===a&&e.b===b)||(e.a===b&&e.b===a))){ toast('這兩位角色已經有關係了'); return; }
+      let id=a+'-'+b, n=1; while(PAIRS[id]||EDGES.some(e=>e.id===id)){ id=a+'-'+b+'-'+(++n); }
+      EDGES.push({id, a, b, label});
+      PAIRS[id]={ rel:label, desc:'', album:[], timeline:[] };
+      buildEdges();
+      applyScope('*');          // reset scope so the new pair is always visible
+      editId=id; renderPair(id); applyHighlight(id);
+      toast('＋ 已新增關係，補上描述吧');
+    };
+  }
+  function focusNode(id) {
+    const related = EDGES.filter(e => e.a===id || e.b===id);
+    const ids = new Set([id]); related.forEach(e => { ids.add(e.a); ids.add(e.b); });
+    map.querySelectorAll('.node').forEach(n => n.classList.toggle('dim', !ids.has(n.dataset.id)));
+    const relIds = new Set(related.map(e=>e.id));
+    edgesSvg.querySelectorAll('path').forEach(l => l.classList.toggle('hi', relIds.has(l.dataset.id)));
+    map.querySelectorAll('.elabel').forEach(l => l.classList.toggle('hi', relIds.has(l.dataset.id)));
+    if (related[0]) selectPair(related[0].id);
+    // on touch (no hover), reveal the detail card that sits below the map
+    if (window.matchMedia('(hover: none), (max-width: 900px)').matches) {
+      const top = pairCard.getBoundingClientRect().top + window.scrollY - 64;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+  }
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    map.querySelectorAll('.node').forEach(n => n.classList.remove('dim'));
+    const ve = EDGES.filter(e => inScope(e.a) && inScope(e.b));
+    if (ve[0]) selectPair(ve[0].id);
+  });
+
+  // ---- project scope (企劃分組，與角色頁一致) ----
+  const PROJECTS = [{id:'tokoyo',name:'常夜物語'},{id:'day',name:'晝廷篇'},{id:'draft',name:'草稿匣'}];
+  const scopeChips = document.getElementById('scopeChips');
+  let scope = '*';
+  function inScope(id){ return scope==='*' || (CAST[id] && CAST[id].proj===scope); }
+  scopeChips.innerHTML = [{id:'*',name:'全部'}].concat(PROJECTS).map(p=>`<button class="scope-chip${p.id==='*'?' on':''}" data-p="${p.id}">${p.name}</button>`).join('');
+  function applyScope(p){
+    scope = p;
+    scopeChips.querySelectorAll('.scope-chip').forEach(c=>c.classList.toggle('on', c.dataset.p===p));
+    map.querySelectorAll('.node').forEach(n=>n.classList.toggle('hide', !inScope(n.dataset.id)));
+    const visEdges = EDGES.filter(e=>inScope(e.a)&&inScope(e.b));
+    const visIds = new Set(visEdges.map(e=>e.id));
+    edgesSvg.querySelectorAll('path').forEach(l=>l.classList.toggle('hide', !visIds.has(l.dataset.id)));
+    map.querySelectorAll('.elabel').forEach(l=>l.classList.toggle('hide', !visIds.has(l.dataset.id)));
+    legend.querySelectorAll('.rchip').forEach(c=>c.style.display = visIds.has(c.dataset.id)?'':'none');
+    map.querySelectorAll('.node').forEach(n=>n.classList.remove('dim'));
+    if (visEdges.length) { selectPair(visEdges[0].id); }
+    else {
+      pairCard.innerHTML = '<div style="padding:var(--s10);text-align:center;color:var(--text-faint);font-size:14px;line-height:1.7">這個企劃目前只有單一角色，<br>還沒有雙人關係。</div>';
+      edgesSvg.querySelectorAll('path').forEach(l=>l.classList.remove('hi'));
+      map.querySelectorAll('.elabel').forEach(l=>l.classList.remove('hi'));
+      legend.querySelectorAll('.rchip').forEach(c=>c.classList.remove('on'));
+    }
+  }
+  scopeChips.querySelectorAll('.scope-chip').forEach(c=>c.onclick=()=>applyScope(c.dataset.p));
+
+  // default
+  buildEdges();
+  document.getElementById('addRelBtn').onclick = renderAddForm;
+  applyScope('*');
+
+  // deep-link from character page: ?pair=<edgeId> focuses that relationship
+  (function(){ const pid=new URLSearchParams(location.search).get('pair'); if(pid && EDGES.some(e=>e.id===pid)) selectPair(pid); })();
+</script>
+</body>
+</html>

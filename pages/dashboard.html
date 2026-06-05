@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>我的角色 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/ds.css">
+<style>
+  .topbar { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 30; }
+  .topbar .inner { max-width: 1240px; margin: 0 auto; padding: 11px var(--s8); display: flex; align-items: center; gap: var(--s6); }
+  .brand { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 15px; letter-spacing: -.02em; }
+  .brand .mk { width: 22px; height: 22px; border-radius: 7px; background: var(--text); color: #fff; display: grid; place-items: center; font-family: var(--font-serif); font-size: 14px; }
+  .nav { display: flex; gap: var(--s2); }
+  .nav a { font-size: 14px; font-weight: 500; color: var(--text-dim); padding: 7px 12px; border-radius: var(--r-btn); }
+  .nav a.on { background: var(--bg-tint); color: var(--text); font-weight: 600; }
+  .topbar .spacer { flex: 1; }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg,#8FA3B0,#6B4A1E); border: 1px solid var(--border); }
+
+  .head { max-width: 1240px; margin: 0 auto; padding: var(--s12) var(--s8) var(--s6); }
+  .head .row { display: flex; align-items: flex-end; gap: var(--s4); }
+  .head h1 { font-family: var(--font-serif); font-size: 38px; margin: 0; font-weight: 700; }
+  .head .ct { font-family: var(--font-mono); font-size: 13px; color: var(--text-faint); padding-bottom: 8px; }
+  .head .spacer { flex: 1; }
+
+  .toolbar { max-width: 1240px; margin: 0 auto; padding: 0 var(--s8) var(--s6); display: flex; align-items: center; gap: var(--s3); }
+  .toolbar .filters { display: flex; gap: 7px; }
+  .toolbar .spacer { flex: 1; }
+  .seg { font-size: 13px; font-weight: 600; color: var(--text-dim); }
+  .search { position: relative; display: flex; align-items: center; }
+  .search svg { position: absolute; left: 11px; color: var(--text-faint); pointer-events: none; }
+  .search input { font-family: inherit; font-size: 13.5px; padding: 8px 30px 8px 32px; width: 210px; border: 1px solid var(--border-strong); border-radius: var(--r-pill); background: var(--surface); color: var(--text); transition: border-color .15s, box-shadow .15s, width .2s; }
+  .search input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); width: 240px; }
+  .search input::placeholder { color: var(--text-faint); }
+  .search .clr { position: absolute; right: 7px; width: 19px; height: 19px; border: none; background: var(--bg-tint); color: var(--text-dim); border-radius: 50%; cursor: pointer; display: none; place-items: center; font-size: 12px; line-height: 1; }
+  .search .clr:hover { background: var(--border-strong); color: var(--text); }
+  .search.has input { padding-right: 30px; }
+  .search.has .clr { display: grid; }
+  .noresults { max-width: 1240px; margin: 0 auto; padding: var(--s12) var(--s8); text-align: center; color: var(--text-faint); display: none; }
+  .noresults.on { display: block; }
+  .noresults .big { font-family: var(--font-serif); font-size: 20px; color: var(--text-dim); margin-bottom: 6px; }
+
+  .groups { max-width: 1240px; margin: 0 auto; padding: 0 var(--s8) var(--s16); display: flex; flex-direction: column; gap: var(--s10); }
+  .group-h { display: flex; align-items: center; gap: 10px; margin-bottom: var(--s4); }
+  .group-h .gname { font-family: var(--font-serif); font-size: 21px; font-weight: 700; }
+  .group-h .gsub { font-family: var(--font-mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); }
+  .group-h .gct { font-family: var(--font-mono); font-size: 12px; color: var(--text-faint); background: var(--bg-tint); border-radius: var(--r-pill); padding: 1px 9px; }
+  .group-h .grule { flex: 1; height: 1px; background: var(--border); }
+  .group-h .gadd { font-size: 12.5px; font-weight: 600; color: var(--text-dim); text-decoration: none; white-space: nowrap; }
+  .group-h .gadd:hover { color: var(--accent); }
+  #groupToggle { background: none; border: none; cursor: pointer; font: inherit; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s6); }
+
+  .ccard { position: relative; border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); overflow: hidden; box-shadow: var(--sh-1); transition: box-shadow .18s, transform .18s, border-color .18s; }
+  .ccard:hover { box-shadow: var(--sh-2); transform: translateY(-3px); border-color: var(--border-strong); }
+  .ccard { position: relative; display: block; border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); overflow: hidden; box-shadow: var(--sh-1); text-align: center; padding-bottom: 52px; transition: box-shadow .18s, transform .18s, border-color .18s; }
+  .ccard:hover { box-shadow: var(--sh-2); transform: translateY(-3px); border-color: var(--border-strong); }
+
+  .ccard .badges { position: absolute; top: 10px; left: 10px; right: 10px; z-index: 3; display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; pointer-events: none; }
+  .ccard .pbadge { background: rgba(255,255,255,.9); border: 1px solid var(--border); border-radius: var(--r-pill); padding: 3px 9px; backdrop-filter: blur(3px); }
+  .ccard .cmbadge { background: rgba(255,255,255,.92); border: 1px solid var(--border); border-radius: var(--r-pill); padding: 3px 9px; backdrop-filter: blur(3px); font-size: 11px; font-weight: 600; color: var(--text); display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .ccard .cmbadge .d { width: 6px; height: 6px; border-radius: 50%; flex: none; }
+
+  .ccard .pic { width: 116px; height: 116px; margin: 34px auto 16px; position: relative; border-radius: 50%; z-index: 1; }
+  .ccard .pic::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: var(--cc); z-index: -1; }
+  .ccard .pic .av { position: absolute; inset: 0; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-serif); font-size: 44px; font-weight: 700; color: #fff; background: var(--cc); transform: scale(1); transition: transform .5s ease, box-shadow .5s ease; }
+  .ccard:hover .pic .av { transform: scale(.72); box-shadow: 0 0 0 10px var(--surface); }
+  .ccard.is-draft .pic .av { opacity: .72; }
+
+  .ccard .info { padding: 0 var(--s4); }
+  .ccard .nm { font-family: var(--font-serif); font-size: 20px; font-weight: 700; line-height: 1.1; }
+  .ccard .rom { font-family: var(--font-mono); font-size: 10px; color: var(--text-faint); letter-spacing: .1em; margin-top: 4px; }
+  .ccard .meta { display: flex; justify-content: center; align-items: center; gap: 7px; margin-top: 11px; font-size: 11.5px; color: var(--text-faint); white-space: nowrap; }
+  .ccard .meta span { flex: none; }
+  .ccard .meta .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--text-faint); }
+
+  .ccard .acts { position: absolute; left: 0; right: 0; bottom: 0; height: 44px; display: flex; background: var(--cc); transform: translateY(100%); transition: transform .32s ease; }
+  .ccard:hover .acts { transform: translateY(0); }
+  .qbtn { flex: 1; font-size: 12.5px; font-weight: 600; color: #fff; background: none; border: none; border-right: 1px solid rgba(255,255,255,.2); cursor: pointer; transition: background .15s; }
+  .qbtn:last-child { border-right: none; }
+  .qbtn:hover { background: rgba(255,255,255,.16); }
+
+  .addcard { border: 1.5px dashed var(--border-strong); border-radius: var(--r-card); background: var(--surface-2); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--text-dim); min-height: 240px; transition: border-color .18s, color .18s, background .18s; }
+  .addcard:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+  .addcard .plus { width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid currentColor; display: grid; place-items: center; font-size: 22px; }
+  .addcard .t { font-size: 14px; font-weight: 600; }
+
+  @media (max-width: 1080px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 760px) {
+    .topbar .inner, .head, .toolbar, .groups { padding-left: var(--s4); padding-right: var(--s4); }
+    .grid { grid-template-columns: 1fr; gap: 10px; }
+    .topbar .inner { flex-wrap: wrap; row-gap: 0; }
+    .nav { display: flex; order: 9; width: 100%; overflow-x: auto; gap: 4px; margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--border); -webkit-overflow-scrolling: touch; }
+    .nav a { white-space: nowrap; flex: none; }
+    .head h1 { font-size: 30px; }
+    .toolbar { overflow-x: auto; }
+
+    /* mobile: list rows */
+    .group-h .gname { font-size: 18px; }
+    .ccard { display: flex; align-items: center; gap: 14px; text-align: left; padding: 12px 14px; }
+    .ccard:hover { transform: none; }
+    .ccard .badges { position: static; order: 3; margin-left: auto; flex-direction: column; align-items: flex-end; gap: 5px; pointer-events: auto; flex: none; }
+    .ccard .pic { width: 54px; height: 54px; margin: 0; order: 1; flex: none; }
+    .ccard .pic .av { font-size: 22px; }
+    .ccard:hover .pic .av { transform: scale(1); box-shadow: none; }
+    .ccard .info { order: 2; padding: 0; flex: 1; min-width: 0; }
+    .ccard .nm { font-size: 17px; }
+    .ccard .meta { justify-content: flex-start; margin-top: 5px; }
+    .ccard .acts { display: none; }
+    .addcard { min-height: 84px; flex-direction: row; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="inner">
+    <a class="brand" href="dashboard.html"><span class="mk">霧</span>CharacterHub</a>
+    <nav class="nav">
+      <a class="on">我的角色</a>
+      <a href="commissions.html">委託</a>
+      <a href="relationships.html">關係圖</a>
+      <a href="height-compare.html">身高比較</a>
+      <a href="worldview.html">世界觀</a>
+      <a href="settings.html">設定</a>
+    </nav>
+    <div class="spacer"></div>
+    <button class="btn btn-ghost btn-sm js-soon" style="white-space:nowrap">＠yoi-studio</button>
+    <div class="avatar"></div>
+  </div>
+</div>
+
+<div class="head">
+  <div class="row">
+    <h1>我的角色</h1>
+    <span class="ct">6 characters · My OCs</span>
+    <div class="spacer"></div>
+    <button class="btn btn-primary">＋ 新增角色 New character</button>
+  </div>
+</div>
+
+<div class="toolbar">
+  <div class="filters" id="filters">
+    <span class="pill on" data-f="*" style="background:var(--text);color:#fff;border-color:var(--text)">全部 6</span>
+    <span class="pill" data-f="public">公開 2</span>
+    <span class="pill" data-f="unlisted">限連結 2</span>
+    <span class="pill" data-f="password">密碼 1</span>
+    <span class="pill" data-f="private">草稿 1</span>
+  </div>
+  <div class="spacer"></div>
+  <div class="search" id="search">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    <input type="search" id="searchInput" placeholder="搜尋角色…" autocomplete="off" aria-label="搜尋角色">
+    <button class="clr" id="searchClr" type="button" aria-label="清除">✕</button>
+  </div>
+  <button class="seg dim" id="groupToggle" style="margin-left:14px">▦ 依企劃分組</button>
+  <span class="seg dim" style="margin-left:14px">排序：最近編輯 ▾</span>
+</div>
+
+<div class="noresults" id="noResults"><div class="big">找不到符合的角色</div><div>試試其他關鍵字，或清除搜尋。</div></div>
+
+<div class="groups" id="groups"></div>
+
+<script src="../assets/app.js"></script>
+<script>
+  window.__autoInit = false;
+
+  const PROJECTS = [
+    {id:'tokoyo', name:'常夜物語', sub:'Tokoyo Tale'},
+    {id:'day',    name:'晝廷篇',   sub:'Day Court Arc'},
+    {id:'draft',  name:'草稿匣',   sub:'Unsorted'},
+  ];
+  const OCS = [
+    {nm:'宵霧',rom:'YOIGIRI',sp:'妖狐', c:'#8FA3B0',priv:'public',  privL:'公開',  comm:{t:'進行中 1',c:'#3B6FB0'},meta:['5 標籤','18 圖','2 天前'], proj:'tokoyo'},
+    {nm:'燈守',rom:'TOMORI', sp:'付喪神',c:'#C8463C',priv:'unlisted',privL:'限連結',comm:{t:'洽談 1', c:'#A98B4E'},meta:['6 標籤','9 圖','1 週前'], proj:'tokoyo'},
+    {nm:'望',  rom:'NOZOMI', sp:'人類', c:'#2E6F6A',priv:'unlisted',privL:'限連結',comm:null,                    meta:['5 標籤','14 圖','3 週前'],proj:'tokoyo'},
+    {nm:'晝',  rom:'HIRU',   sp:'半神', c:'#E0A23B',priv:'public',  privL:'公開',  comm:{t:'進行中 2',c:'#3B6FB0'},meta:['4 標籤','11 圖','5 天前'], proj:'day'},
+    {nm:'緋',  rom:'AKA',    sp:'鬼',   c:'#9E332B',priv:'password',privL:'密碼',  comm:null,                    meta:['3 標籤','7 圖','2 週前'], proj:'day'},
+    {nm:'灰',  rom:'HAI',    sp:'未定', c:'#8A857C',priv:'private', privL:'草稿',  comm:null,                    meta:['草稿','2 圖','1 個月前'],proj:'draft', draft:true},
+  ];
+
+  const groupsEl = document.getElementById('groups');
+  const noResults = document.getElementById('noResults');
+  let grouped = true, curFilter = '*', query = '';
+  const PROJ_NAME = Object.fromEntries(PROJECTS.map(p=>[p.id, p.name+' '+p.sub]));
+  const addHTML = `<a class="addcard" href="editor.html"><span class="plus">＋</span><span class="t">新增角色</span><span class="faint" style="font-size:12px">10 分鐘做出委託設定頁</span></a>`;
+
+  function cardHTML(o){
+    const hay = [o.nm, o.rom, o.sp, o.privL, o.comm&&o.comm.t, PROJ_NAME[o.proj], ...o.meta].filter(Boolean).join(' ').toLowerCase();
+    return `<a class="ccard${o.draft?' is-draft':''}" href="character.html" data-priv="${o.priv}" data-proj="${o.proj}" data-search="${hay.replace(/"/g,'')}" style="--cc:${o.c}">
+      <div class="badges"><span class="pbadge priv ${o.priv}"><span class="d"></span>${o.privL}</span>${o.comm?`<span class="cmbadge"><span class="d" style="background:${o.comm.c}"></span>${o.comm.t}</span>`:'<span></span>'}</div>
+      <div class="pic"><div class="av">${o.nm[0]}</div></div>
+      <div class="info"><div class="nm"${o.draft?' style="color:var(--text-dim)"':''}>${o.nm}</div><div class="rom">${o.rom} · ${o.sp}</div><div class="meta">${o.meta.map((m,i)=>`${i?'<span class="dot"></span>':''}<span>${m}</span>`).join('')}</div></div>
+      <div class="acts"><button class="qbtn" type="button">編輯</button><button class="qbtn" type="button">複製連結</button><button class="qbtn" type="button">隱私</button></div>
+    </a>`;
+  }
+
+  function render(){
+    if(grouped){
+      groupsEl.innerHTML = PROJECTS.map(p=>{
+        const list = OCS.filter(o=>o.proj===p.id);
+        if(!list.length) return '';
+        return `<div class="group" data-proj="${p.id}">
+          <div class="group-h"><span class="gname">${p.name}</span><span class="gsub">${p.sub}</span><span class="gct">${list.length}</span><span class="grule"></span><a class="gadd" href="editor.html">＋ 角色</a></div>
+          <div class="grid">${list.map(cardHTML).join('')}</div>
+        </div>`;
+      }).join('') + `<div class="group"><div class="grid">${addHTML}</div></div>`;
+    } else {
+      groupsEl.innerHTML = `<div class="group"><div class="grid">${OCS.map(cardHTML).join('')}${addHTML}</div></div>`;
+    }
+    attach(); applyFilter(curFilter);
+  }
+
+  function matches(c){
+    const okPriv = (curFilter==='*' || c.dataset.priv===curFilter);
+    const okQ = (!query || c.dataset.search.includes(query));
+    return okPriv && okQ;
+  }
+  function applyFilter(f){
+    if(f!=null) curFilter = f;
+    let shown = 0;
+    groupsEl.querySelectorAll('.ccard').forEach(c=>{ const ok = matches(c); c.style.display = ok?'':'none'; if(ok) shown++; });
+    groupsEl.querySelectorAll('.group[data-proj]').forEach(g=>{
+      const any = [...g.querySelectorAll('.ccard')].some(c=>c.style.display!=='none');
+      g.style.display = any ? '' : 'none';
+    });
+    // hide the lone add-card group while searching so empty state reads cleanly
+    const addGroup = groupsEl.querySelector('.group:not([data-proj])');
+    if(addGroup) addGroup.style.display = query ? 'none' : '';
+    noResults.classList.toggle('on', shown===0);
+  }
+
+  // privacy counts reflect the data, not hardcoded
+  function refreshCounts(){
+    document.querySelectorAll('#filters .pill').forEach(p=>{
+      const f=p.dataset.f, n = f==='*' ? OCS.length : OCS.filter(o=>o.priv===f).length;
+      const label = p.textContent.replace(/\s*\d+\s*$/,'').trim();
+      p.textContent = label + ' ' + n;
+      if(p.classList.contains('on')) p.style.cssText='background:var(--text);color:#fff;border-color:var(--text)';
+    });
+  }
+
+  function attach(){
+    groupsEl.querySelectorAll('.qbtn').forEach(b => b.addEventListener('click', e => {
+      e.preventDefault();
+      const t = b.textContent.trim();
+      if (t==='編輯') { location.href = 'editor.html'; return; }
+      if (t==='複製連結') { copyText('https://characterhub.app/@yoi-studio/...'); toast('已複製分享連結 ↗'); }
+      if (t==='隱私') { toast('開啟隱私設定…'); }
+    }));
+  }
+
+  document.querySelectorAll('#filters .pill').forEach(pill => pill.addEventListener('click', () => {
+    document.querySelectorAll('#filters .pill').forEach(p => { p.classList.remove('on'); p.style.cssText=''; });
+    pill.classList.add('on'); pill.style.cssText = 'background:var(--text);color:#fff;border-color:var(--text)';
+    applyFilter(pill.dataset.f);
+  }));
+
+  const gt = document.getElementById('groupToggle');
+  gt.addEventListener('click', () => { grouped = !grouped; gt.textContent = grouped ? '▦ 依企劃分組' : '▤ 不分組'; render(); });
+
+  // search
+  const searchEl = document.getElementById('search');
+  const searchInput = document.getElementById('searchInput');
+  searchInput.addEventListener('input', () => {
+    query = searchInput.value.trim().toLowerCase();
+    searchEl.classList.toggle('has', query.length>0);
+    applyFilter();
+  });
+  document.getElementById('searchClr').addEventListener('click', () => { searchInput.value=''; query=''; searchEl.classList.remove('has'); applyFilter(); searchInput.focus(); });
+  document.addEventListener('keydown', e => {
+    if((e.key==='/'||((e.metaKey||e.ctrlKey)&&e.key==='k')) && document.activeElement!==searchInput){ e.preventDefault(); searchInput.focus(); }
+    if(e.key==='Escape' && document.activeElement===searchInput){ searchInput.value=''; query=''; searchEl.classList.remove('has'); applyFilter(); }
+  });
+
+  refreshCounts();
+  render();
+  document.querySelector('.btn-primary')?.addEventListener('click', () => location.href = 'editor.html');
+  // 次要功能：尚未實作 → 提示
+  document.querySelectorAll('.js-soon').forEach(el => el.addEventListener('click', e => { e.preventDefault(); toast('功能開發中 · Coming soon'); }));
+</script>
+
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>角色頁首屏 · 設定圖式探索 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/ds.css">
+<link rel="stylesheet" href="char-hero.css">
+<style>
+  html, body { margin: 0; }
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script>
+  // 初次開啟時給畫布一個適當的縮放/位置（已存過的不覆蓋）
+  try {
+    const k = 'dc-viewport:' + location.pathname;
+    if (!localStorage.getItem(k)) localStorage.setItem(k, JSON.stringify({ x: 52, y: 28, scale: 0.52 }));
+  } catch (e) {}
+</script>
+
+<script>window.__autoInit = false;</script>
+<script src="../assets/app.js"></script>
+<script src="char-hero.js"></script>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+
+<script type="text/babel">
+const { useEffect } = React;
+
+function Hero({ density, mode }) {
+  return <div style={{ width: '100%', height: '100%' }}
+    dangerouslySetInnerHTML={{ __html: window.renderHeroHTML(density, mode) }} />;
+}
+
+const FULL_H = 800;
+
+function App() {
+  useEffect(() => {
+    // DesignCanvas 把 children 卡在 ready 狀態後才掛載，所以這裡用 observer
+    // 等首屏節點真的進 DOM 再綁互動（色票複製 + pin↔必畫 hover）。
+    const bind = () => {
+      const heroes = document.querySelectorAll('.eh-hero, .eh-hero-av');
+      if (!heroes.length) return false;
+      if (window.initSwatchCopy) window.initSwatchCopy();
+      heroes.forEach(root => { if (window.initMarkerSync) window.initMarkerSync(root); });
+      return true;
+    };
+    if (bind()) return;
+    const root = document.getElementById('root');
+    const obs = new MutationObserver(() => { if (bind()) obs.disconnect(); });
+    obs.observe(root, { childList: true, subtree: true });
+    return () => obs.disconnect();
+  }, []);
+
+  return (
+    <DesignCanvas>
+      <DCSection id="full" title="完整立繪版" subtitle="有完整設定圖時 · 主圖置中、識別與規格左右環繞（同一套模組，密度遞增）">
+        <DCArtboard id="full-clean" label="A · 乾淨清爽" width={1180} height={FULL_H}><Hero density="clean" mode="full" /></DCArtboard>
+        <DCArtboard id="full-mid"   label="B · 中等編輯感" width={1180} height={FULL_H}><Hero density="mid" mode="full" /></DCArtboard>
+        <DCArtboard id="full-full"  label="C · 滿版設定圖" width={1180} height={FULL_H}><Hero density="full" mode="full" /></DCArtboard>
+      </DCSection>
+      <DCSection id="avatar" title="僅頭像版" subtitle="沒有完整立繪時 · 改用頂部識別帶 + 下方模組網格填滿，不留高立繪造成的空白">
+        <DCArtboard id="av-clean" label="A · 乾淨清爽" width={1180} height={640}><Hero density="clean" mode="avatar" /></DCArtboard>
+        <DCArtboard id="av-mid"   label="B · 中等編輯感" width={1180} height={620}><Hero density="mid" mode="avatar" /></DCArtboard>
+        <DCArtboard id="av-full"  label="C · 滿版設定圖" width={1180} height={720}><Hero density="full" mode="avatar" /></DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

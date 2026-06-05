@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CharacterHub · 設計總覽 Showroom</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/ds.css">
+<style>
+  body { background: #ECEAE4; }
+  .top { max-width: 1280px; margin: 0 auto; padding: var(--s16) var(--s8) var(--s8); }
+  .top .eyebrow { margin-bottom: 14px; }
+  .top h1 { font-family: var(--font-serif); font-size: 52px; font-weight: 900; margin: 0; letter-spacing: -.02em; }
+  .top .sub { font-size: 17px; color: var(--text-dim); margin: var(--s4) 0 0; max-width: 60ch; line-height: 1.6; text-wrap: pretty; }
+  .top .sub .en { color: var(--text-faint); }
+  .legend { display: flex; gap: var(--s4); flex-wrap: wrap; margin-top: var(--s6); font-size: 13px; color: var(--text-dim); }
+  .legend .it { display: flex; align-items: center; gap: 7px; }
+  .legend .sw { width: 22px; height: 14px; border-radius: 3px; border: 1px solid rgba(0,0,0,.12); }
+
+  .sect { max-width: 1280px; margin: 0 auto; padding: var(--s8); }
+  .sect-h { display: flex; align-items: baseline; gap: var(--s4); margin-bottom: var(--s6); border-top: 1px solid var(--border-strong); padding-top: var(--s8); }
+  .sect-h .ix { font-family: var(--font-mono); font-size: 13px; color: var(--text-faint); }
+  .sect-h h2 { font-family: var(--font-serif); font-size: 30px; font-weight: 700; margin: 0; }
+  .sect-h .en { font-size: 13px; color: var(--text-faint); }
+  .sect-h .desc { font-size: 14px; color: var(--text-dim); margin-left: auto; max-width: 40ch; text-align: right; }
+  .openbtn { font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: var(--r-btn); background: var(--text); color: #fff; white-space: nowrap; }
+  .openbtn:hover { background: #000; }
+
+  .devrow { display: flex; gap: var(--s8); align-items: flex-start; }
+  .devcol-label { font-family: var(--font-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 10px; display:flex; align-items:center; gap:8px; }
+
+  /* desktop browser chrome */
+  .browser { border-radius: 12px; overflow: hidden; box-shadow: var(--sh-2); border: 1px solid var(--border-strong); background: #fff; }
+  .browser .bar { height: 38px; background: #E9E7E1; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; padding: 0 13px; }
+  .browser .lights { display: flex; gap: 6px; }
+  .browser .lights i { width: 11px; height: 11px; border-radius: 50%; display:block; }
+  .browser .url { flex: 1; height: 23px; background: #fff; border: 1px solid var(--border); border-radius: 6px; display: flex; align-items: center; padding: 0 10px; font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
+
+  /* phone chrome */
+  .phone { border-radius: 30px; padding: 9px; background: #1C1B19; box-shadow: var(--sh-2); position: relative; }
+  .phone .notch { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); width: 78px; height: 19px; background: #1C1B19; border-radius: 12px; z-index: 5; }
+  .phone .pscreen { border-radius: 22px; overflow: hidden; background: #fff; }
+
+  /* scaler */
+  .viewport { overflow: hidden; }
+  .scaler { transform-origin: top left; }
+  .scaler iframe { border: 0; display: block; background: #fff; }
+
+  footer { max-width: 1280px; margin: 0 auto; padding: var(--s12) var(--s8) var(--s16); color: var(--text-faint); font-size: 13px; border-top: 1px solid var(--border-strong); }
+
+  @media (max-width: 900px) {
+    .top, .sect, footer { padding-left: var(--s4); padding-right: var(--s4); }
+    .top h1 { font-size: 34px; }
+    .sect-h { flex-wrap: wrap; } .sect-h .desc { margin-left: 0; text-align: left; flex-basis: 100%; }
+    .devrow { flex-direction: column; gap: var(--s6); }
+  }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="eyebrow">CharacterHub · Hi-fi design · 2026.05</div>
+  <h1>角色委託平台 · 設計總覽</h1>
+  <p class="sub">八個關鍵頁面，桌機與手機並排，且<b style="color:var(--text)">可直接互動</b>（切換模式、點色票複製、燈箱、即時預覽、關係圖、身高比較）。範例角色「宵霧 Yoigiri」貫穿全站。視覺取日本傳統色與直排明體的氣質，分享頁維持乾淨。
+    <span class="en">Six interactive screens, desktop + mobile. Nippon-color elegance, clean share pages.</span></p>
+  <div class="legend">
+    <span class="it"><span class="sw" style="background:#FAFAF8"></span>暖白底</span>
+    <span class="it"><span class="sw" style="background:#1C1B19"></span>近黑文字</span>
+    <span class="it"><span class="sw" style="background:#2E6F6A"></span>品牌點綴</span>
+    <span class="it"><span class="sw" style="background:#2F8F5B"></span>必畫綠</span>
+    <span class="it"><span class="sw" style="background:#C8463C"></span>易錯紅</span>
+    <span class="it" style="margin-left:8px">字體：明體 Shippori Mincho · 粉圓 Huninn · Inter · JetBrains Mono</span>
+  </div>
+</div>
+
+<!-- sections injected by JS for consistency -->
+<div id="sections"></div>
+
+<footer>每個區塊可點「開啟全畫面」獨立檢視（含完整響應式與互動）。所有角色圖皆為占位框。</footer>
+
+<script>
+  const PAGES = [
+    { ix:"01", title:"落地頁", en:"Landing", url:"pages/landing.html", w:1180, route:"characterhub.app", desc:"定位、三大差異化、核心迴圈。" },
+    { ix:"02", title:"角色公開頁 · 互動", en:"Character", url:"pages/character.html", w:1240, route:"characterhub.app/@yoi-studio/yoigiri", desc:"一鍵切換一般／委託 · 點色票複製 · 相簿燈箱 · 標記連動。" },
+    { ix:"03", title:"角色編輯器", en:"Editor", url:"pages/editor.html", w:1280, route:"characterhub.app/edit/yoigiri", desc:"左編輯 / 右即時預覽（即時綁定）· 圖上放置標記。", h:820 },
+    { ix:"04", title:"我的角色 Dashboard", en:"Dashboard", url:"pages/dashboard.html", w:1240, route:"characterhub.app/dashboard", desc:"角色網格、隱私狀態、hover 快速動作、即時篩選。" },
+    { ix:"05", title:"關係系統", en:"Relationships", url:"pages/relationships.html", w:1200, route:"characterhub.app/relationships", desc:"互動關係圖 · 雙人設定、共同相簿、關係時間線。" },
+    { ix:"06", title:"身高比較", en:"Height compare", url:"pages/height-compare.html", w:1200, route:"characterhub.app/tools/height", desc:"勾選角色、改身高，自動生成等比例剪影。" },
+    { ix:"07", title:"世界觀", en:"Worldview", url:"pages/worldview.html", w:1200, route:"characterhub.app/worldview", desc:"國家／組織／家族／地點／種族／事件 · 條目互相牽連、可連角色、可編輯。" },
+    { ix:"08", title:"登入 / 註冊", en:"Login", url:"pages/login.html", w:1240, route:"characterhub.app/login", desc:"社群登入 + email · 登入／註冊一鍵切換。", h:860 },
+    { ix:"09", title:"委託收件匣", en:"Commissions", url:"pages/commissions.html", w:1280, route:"characterhub.app/commissions", desc:"跨角色的委託管線：洽談／進行中／已完成三欄看板，待回覆一目了然。", h:900 },
+    { ix:"10", title:"設定", en:"Settings", url:"pages/settings.html", w:1180, route:"characterhub.app/settings", desc:"個人檔案／委託預設／隱私／通知／外觀／帳號，含未儲存提示與即時預覽。", h:920 },
+  ];
+
+  const DESKTOP_W = 720, MOBILE_W = 250, MOBILE_DESIGN = 390;
+  const root = document.getElementById('sections');
+
+  PAGES.forEach(p => {
+    const dScale = DESKTOP_W / p.w;
+    const mScale = MOBILE_W / MOBILE_DESIGN;
+    const sect = document.createElement('div');
+    sect.className = 'sect';
+    sect.innerHTML = `
+      <div class="sect-h">
+        <span class="ix">${p.ix}</span>
+        <h2>${p.title}</h2>
+        <span class="en">${p.en}</span>
+        <span class="desc">${p.desc}</span>
+        <a class="openbtn" href="${p.url}" target="_blank">開啟全畫面 ↗</a>
+      </div>
+      <div class="devrow">
+        <div>
+          <div class="devcol-label"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8.5 20h7M12 17v3"/></svg>Desktop · ${p.w}px</div>
+          <div class="browser" style="width:${DESKTOP_W}px">
+            <div class="bar">
+              <div class="lights"><i style="background:#ED6A5E"></i><i style="background:#F4BF50"></i><i style="background:#61C554"></i></div>
+              <div class="url"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px"><rect x="5" y="11" width="14" height="9.5" rx="2"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/></svg>${p.route}</div>
+            </div>
+            <div class="viewport" data-kind="desktop" data-w="${p.w}" data-scale="${dScale}" ${p.h?`data-h="${p.h}"`:''}>
+              <div class="scaler" style="transform:scale(${dScale})">
+                <iframe src="${p.url}" style="width:${p.w}px;height:${p.h||1200}px"></iframe>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="devcol-label"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px"><rect x="7" y="3" width="10" height="18" rx="2.2"/><path d="M11 18.2h2"/></svg>Mobile · ${MOBILE_DESIGN}px</div>
+          <div class="phone" style="width:${MOBILE_W + 18}px">
+            <div class="notch"></div>
+            <div class="pscreen">
+              <div class="viewport" data-kind="mobile" data-w="${MOBILE_DESIGN}" data-scale="${mScale}" ${p.mh?`data-h="${p.mh}"`:''}>
+                <div class="scaler" style="transform:scale(${mScale})">
+                  <iframe src="${p.url}" style="width:${MOBILE_DESIGN}px;height:${p.mh||1600}px"></iframe>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    root.appendChild(sect);
+  });
+
+  // size viewports to scaled iframe dimensions; auto-measure height unless data-h set
+  function sizeOne(vp) {
+    const scale = parseFloat(vp.dataset.scale);
+    const w = parseFloat(vp.dataset.w);
+    const iframe = vp.querySelector('iframe');
+    let h = parseFloat(vp.dataset.h || 0);
+    if (!h) {
+      try {
+        const doc = iframe.contentDocument;
+        h = Math.max(doc.body.scrollHeight, doc.documentElement.scrollHeight);
+      } catch(e) { h = 1200; }
+    }
+    iframe.style.height = h + 'px';
+    vp.style.width = (w * scale) + 'px';
+    vp.style.height = (h * scale) + 'px';
+  }
+  document.querySelectorAll('.viewport').forEach(vp => {
+    const iframe = vp.querySelector('iframe');
+    const run = () => { sizeOne(vp); setTimeout(()=>sizeOne(vp), 600); };
+    if (iframe.contentDocument && iframe.contentDocument.readyState === 'complete') run();
+    iframe.addEventListener('load', run);
+  });
+  window.addEventListener('load', () => document.querySelectorAll('.viewport').forEach(sizeOne));
+</script>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#1C1B19"/>
+    <text x="50" y="62" font-family="serif" font-size="44" fill="#FAFAF8" text-anchor="middle">霧</text>
+  </svg>
+</template>
+
+</body>
+</html>

@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>設定 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/ds.css">
+<style>
+  .topbar { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 30; }
+  .topbar .inner { max-width: 1180px; margin: 0 auto; padding: 11px var(--s8); display: flex; align-items: center; gap: var(--s6); }
+  .brand { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 15px; letter-spacing: -.02em; }
+  .brand .mk { width: 22px; height: 22px; border-radius: 7px; background: var(--text); color: #fff; display: grid; place-items: center; font-family: var(--font-serif); font-size: 14px; }
+  .nav { display: flex; gap: var(--s2); }
+  .nav a { font-size: 14px; font-weight: 500; color: var(--text-dim); padding: 7px 12px; border-radius: var(--r-btn); cursor: pointer; }
+  .nav a.on { background: var(--bg-tint); color: var(--text); font-weight: 600; }
+  .nav a .nbar { margin-left: 5px; font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: #fff; background: var(--accent); border-radius: 8px; padding: 1px 5px; }
+  .topbar .spacer { flex: 1; }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg,#8FA3B0,#6B4A1E); border: 1px solid var(--border); }
+
+  .head { max-width: 1180px; margin: 0 auto; padding: var(--s12) var(--s8) var(--s6); }
+  .head h1 { font-family: var(--font-serif); font-size: 38px; margin: 0; font-weight: 700; }
+  .head p { color: var(--text-dim); margin: 9px 0 0; font-size: 15px; }
+
+  .layout { max-width: 1180px; margin: 0 auto; padding: 0 var(--s8) 120px; display: grid; grid-template-columns: 218px 1fr; gap: var(--s10); align-items: start; }
+
+  /* section nav */
+  .secnav { position: sticky; top: 78px; display: flex; flex-direction: column; gap: 2px; }
+  .secnav button { display: flex; align-items: center; gap: 11px; text-align: left; font-family: inherit; font-size: 14px; font-weight: 600; color: var(--text-dim); background: none; border: none; padding: 10px 12px; border-radius: var(--r-btn); cursor: pointer; transition: background .14s, color .14s; }
+  .secnav button .ic { width: 18px; height: 18px; flex: none; color: var(--text-faint); transition: color .14s; }
+  .secnav button:hover { background: var(--bg-tint); color: var(--text); }
+  .secnav button.on { background: var(--text); color: #fff; }
+  .secnav button.on .ic { color: #fff; }
+  .secnav .divider { height: 1px; background: var(--border); margin: var(--s3) 8px; }
+
+  /* panels */
+  .panel { display: none; flex-direction: column; gap: var(--s5); }
+  .panel.on { display: flex; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); box-shadow: var(--sh-1); overflow: hidden; }
+  .card-h { padding: var(--s5) var(--s6) 0; }
+  .card-h h2 { font-family: var(--font-serif); font-size: 19px; font-weight: 700; margin: 0; }
+  .card-h .desc { font-size: 13px; color: var(--text-dim); margin: 5px 0 0; max-width: 60ch; text-wrap: pretty; }
+  .card-body { padding: var(--s5) var(--s6) var(--s6); display: flex; flex-direction: column; }
+
+  /* generic field row */
+  .row { display: grid; grid-template-columns: 200px 1fr; gap: var(--s5); padding: var(--s5) 0; border-top: 1px solid var(--border); align-items: start; }
+  .row:first-child { border-top: none; padding-top: var(--s4); }
+  .row.compact { align-items: center; }
+  .row .lab { font-size: 14px; font-weight: 600; color: var(--text); }
+  .row .lab .sub { display: block; font-size: 12.5px; font-weight: 400; color: var(--text-faint); margin-top: 3px; line-height: 1.5; text-wrap: pretty; }
+  .row .ctl { min-width: 0; }
+
+  .inp { width: 100%; font-family: inherit; font-size: 14px; padding: 10px 12px; border: 1px solid var(--border-strong); border-radius: var(--r-btn); background: var(--surface); color: var(--text); box-sizing: border-box; transition: border-color .15s, box-shadow .15s; }
+  .inp:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  textarea.inp { resize: vertical; line-height: 1.65; min-height: 84px; }
+  .inp::placeholder { color: var(--text-faint); }
+  .hint { font-size: 12px; color: var(--text-faint); margin-top: 7px; }
+  .hint.ok { color: var(--must); }
+
+  .handlewrap { display: flex; align-items: stretch; border: 1px solid var(--border-strong); border-radius: var(--r-btn); overflow: hidden; transition: border-color .15s, box-shadow .15s; }
+  .handlewrap:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .handlewrap .pfx { display: flex; align-items: center; padding: 0 4px 0 12px; font-family: var(--font-mono); font-size: 12.5px; color: var(--text-faint); background: var(--bg-tint); border-right: 1px solid var(--border); white-space: nowrap; }
+  .handlewrap .inp { border: none; box-shadow: none; }
+
+  /* avatar uploader */
+  .avset { display: flex; align-items: center; gap: var(--s5); }
+  .avset .big { width: 76px; height: 76px; border-radius: 50%; background: linear-gradient(135deg,#8FA3B0,#6B4A1E); border: 1px solid var(--border); display: grid; place-items: center; font-family: var(--font-serif); color: #fff; font-size: 30px; font-weight: 700; flex: none; }
+  .avset .av-actions { display: flex; gap: 8px; }
+
+  /* toggle switch */
+  .sw { position: relative; display: inline-flex; align-items: center; cursor: pointer; }
+  .sw input { position: absolute; opacity: 0; pointer-events: none; }
+  .sw .track { width: 42px; height: 24px; border-radius: var(--r-pill); background: var(--border-strong); transition: background .18s; flex: none; }
+  .sw .track::after { content: ""; position: absolute; left: 3px; top: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: var(--sh-1); transition: transform .18s; }
+  .sw input:checked + .track { background: var(--accent); }
+  .sw input:checked + .track::after { transform: translateX(18px); }
+  .sw input:focus-visible + .track { box-shadow: 0 0 0 3px var(--accent-soft); }
+
+  /* segmented control */
+  .seg { display: inline-flex; gap: 3px; background: var(--bg-tint); border: 1px solid var(--border); border-radius: var(--r-btn); padding: 3px; flex-wrap: wrap; }
+  .seg button { font-family: inherit; font-size: 13px; font-weight: 600; color: var(--text-dim); background: none; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; transition: background .14s, color .14s; white-space: nowrap; }
+  .seg button.on { background: var(--surface); color: var(--text); box-shadow: var(--sh-1); }
+  .seg.status button.on[data-v="open"] { color: var(--must); }
+  .seg.status button.on[data-v="paused"] { color: var(--avoid); }
+
+  /* permission toggles (license defaults) */
+  .perms { display: flex; flex-direction: column; gap: 9px; }
+  .perm { display: flex; align-items: center; gap: 12px; padding: 11px 13px; border: 1px solid var(--border); border-radius: var(--r-btn); }
+  .perm .px { width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; font-size: 13px; flex: none; }
+  .perm.allow .px { background: var(--must-soft); color: var(--must); }
+  .perm.deny .px { background: var(--avoid-soft); color: var(--avoid); }
+  .perm .pt { font-size: 13.5px; font-weight: 600; }
+  .perm .pt .en { font-family: var(--font-mono); font-size: 10px; color: var(--text-faint); margin-left: 6px; text-transform: uppercase; letter-spacing: .04em; }
+  .perm .sw { margin-left: auto; }
+
+  /* notification grid */
+  .notif { width: 100%; }
+  .notif .nrow { display: grid; grid-template-columns: 1fr 64px 64px; gap: var(--s3); align-items: center; padding: 12px 0; border-top: 1px solid var(--border); }
+  .notif .nhead { font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint); text-align: center; }
+  .notif .nhead.l { text-align: left; }
+  .notif .nlabel { font-size: 13.5px; font-weight: 600; }
+  .notif .nlabel .sub { display: block; font-size: 12px; font-weight: 400; color: var(--text-faint); margin-top: 2px; }
+  .notif .cell { display: flex; justify-content: center; }
+
+  /* accent swatches */
+  .swatches { display: flex; gap: 10px; flex-wrap: wrap; }
+  .swatches button { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--border-strong); cursor: pointer; position: relative; transition: transform .14s; }
+  .swatches button:hover { transform: scale(1.08); }
+  .swatches button.on { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--text); }
+  .swatches button.on::after { content: "✓"; position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font-size: 14px; font-weight: 700; }
+
+  /* connected accounts */
+  .conns { display: flex; flex-direction: column; gap: 10px; }
+  .conn { display: flex; align-items: center; gap: 13px; padding: 13px; border: 1px solid var(--border); border-radius: var(--r-btn); }
+  .conn .ci { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; flex: none; }
+  .conn .cn { font-size: 14px; font-weight: 600; }
+  .conn .cs { font-size: 12.5px; color: var(--text-faint); margin-top: 1px; }
+  .conn .ca { margin-left: auto; }
+  .conn .badge-on { font-size: 12px; font-weight: 600; color: var(--must); display: inline-flex; align-items: center; gap: 6px; margin-right: 4px; }
+  .conn .badge-on .d { width: 7px; height: 7px; border-radius: 50%; background: var(--must); }
+
+  /* danger zone */
+  .danger { border-color: color-mix(in srgb, var(--avoid) 30%, var(--border)); }
+  .danger .card-h h2 { color: var(--avoid); }
+  .danger .drow { display: flex; align-items: center; gap: var(--s4); padding: var(--s4) 0; border-top: 1px solid var(--border); }
+  .danger .drow:first-child { border-top: none; }
+  .danger .drow .dt { font-size: 13.5px; font-weight: 600; }
+  .danger .drow .dt .sub { display: block; font-size: 12.5px; font-weight: 400; color: var(--text-faint); margin-top: 2px; }
+  .danger .drow .da { margin-left: auto; }
+  .btn-danger { background: var(--surface); color: var(--avoid); border: 1px solid color-mix(in srgb, var(--avoid) 40%, transparent); }
+  .btn-danger:hover { background: var(--avoid-soft); border-color: var(--avoid); }
+
+  /* save bar */
+  .savebar { position: fixed; left: 50%; bottom: 22px; transform: translate(-50%, 130%); max-width: 660px; width: calc(100% - 40px); background: var(--text); color: #fff; border-radius: var(--r-card); box-shadow: var(--sh-pop); padding: 13px 16px 13px 20px; display: flex; align-items: center; gap: var(--s4); z-index: 50; transition: transform .26s cubic-bezier(.2,.8,.2,1); }
+  .savebar.show { transform: translate(-50%, 0); }
+  .savebar .msg { font-size: 14px; font-weight: 500; }
+  .savebar .msg .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-right: 9px; vertical-align: middle; }
+  .savebar .spacer { flex: 1; }
+  .savebar .btn-ghost { color: rgba(255,255,255,.8); border-color: transparent; }
+  .savebar .btn-ghost:hover { background: rgba(255,255,255,.12); color: #fff; }
+
+  .links-list { display: flex; flex-direction: column; gap: 9px; }
+  .link-item { display: flex; align-items: center; gap: 10px; }
+  .link-item .lkpfx { font-family: var(--font-mono); font-size: 12px; color: var(--text-faint); width: 66px; flex: none; }
+  .addlink { align-self: flex-start; margin-top: 3px; }
+
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; gap: var(--s5); }
+    .secnav { position: static; flex-direction: row; overflow-x: auto; gap: 4px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+    .secnav button { white-space: nowrap; flex: none; }
+    .secnav button .ic, .secnav .divider { display: none; }
+    .row { grid-template-columns: 1fr; gap: var(--s3); }
+    .topbar .inner, .head, .layout { padding-left: var(--s4); padding-right: var(--s4); }
+    /* keep global nav reachable on mobile (consistent with other pages) */
+    .topbar .inner { flex-wrap: wrap; row-gap: 0; }
+    .nav { display: flex; order: 9; width: 100%; overflow-x: auto; gap: 4px; margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--border); -webkit-overflow-scrolling: touch; }
+    .nav a { white-space: nowrap; flex: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="inner">
+    <a class="brand" href="dashboard.html"><span class="mk">霧</span>CharacterHub</a>
+    <nav class="nav">
+      <a href="dashboard.html">我的角色</a>
+      <a href="commissions.html">委託<span class="nbar">2</span></a>
+      <a href="relationships.html">關係圖</a>
+      <a href="height-compare.html">身高比較</a>
+      <a href="worldview.html">世界觀</a>
+      <a class="on">設定</a>
+    </nav>
+    <div class="spacer"></div>
+    <button class="btn btn-ghost btn-sm" id="topHandle" style="white-space:nowrap">＠yoi-studio</button>
+    <div class="avatar"></div>
+  </div>
+</div>
+
+<div class="head">
+  <h1>設定</h1>
+  <p>管理你的個人檔案、委託預設、隱私與帳號。</p>
+</div>
+
+<div class="layout">
+  <!-- ===== SECTION NAV ===== -->
+  <nav class="secnav" id="secnav">
+    <button class="on" data-sec="profile"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>個人檔案</button>
+    <button data-sec="commission"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/></svg>委託設定</button>
+    <button data-sec="privacy"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6z"/></svg>隱私與分享</button>
+    <button data-sec="notif"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>通知</button>
+    <button data-sec="appearance"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 3a4 4 0 0 0 0 8 3 3 0 0 1 0 6 5 5 0 0 0 0-14z" fill="currentColor" stroke="none" opacity=".25"/><circle cx="9" cy="9" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="9" r="1" fill="currentColor" stroke="none"/></svg>外觀</button>
+    <div class="divider"></div>
+    <button data-sec="account"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.3 1a7 7 0 0 0-1.7-1l-.3-2.5H9.4l-.3 2.5a7 7 0 0 0-1.7 1l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 1.7 1l.3 2.5h4.9l.3-2.5a7 7 0 0 0 1.7-1l2.3 1 2-3.4-2-1.5a7 7 0 0 0 .1-1z"/></svg>帳號</button>
+  </nav>
+
+  <!-- ===== PANELS ===== -->
+  <div class="panels" id="panels">
+
+    <!-- PROFILE -->
+    <section class="panel on" data-sec="profile">
+      <div class="card">
+        <div class="card-h"><h2>個人檔案</h2><p class="desc">這些資訊會顯示在你的公開角色頁與委託名片上。</p></div>
+        <div class="card-body">
+          <div class="row compact">
+            <div class="lab">頭像</div>
+            <div class="ctl avset">
+              <div class="big">霧</div>
+              <div class="av-actions"><button class="btn btn-sm" data-toast="開啟上傳…">上傳新頭像</button><button class="btn btn-ghost btn-sm" data-toast="已移除頭像">移除</button></div>
+            </div>
+          </div>
+          <div class="row compact">
+            <div class="lab">顯示名稱</div>
+            <div class="ctl"><input class="inp dirty" value="Yoi Studio" maxlength="40"></div>
+          </div>
+          <div class="row compact">
+            <div class="lab">使用者代號<span class="sub">公開頁面網址的一部分。</span></div>
+            <div class="ctl">
+              <div class="handlewrap"><span class="pfx">characterhub.app/@</span><input class="inp dirty" id="handleInput" value="yoi-studio"></div>
+              <div class="hint ok" id="handleHint">✓ 此代號可使用</div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="lab">自我介紹<span class="sub">最多 160 字，支援換行。</span></div>
+            <div class="ctl"><textarea class="inp dirty" id="bio" maxlength="160" placeholder="介紹你自己與你的角色…">常夜國的造物者。畫宵霧與他的夥伴們。委託相關請先看委託設定，謝謝。</textarea><div class="hint" id="bioCount">38 / 160</div></div>
+          </div>
+          <div class="row">
+            <div class="lab">外部連結<span class="sub">顯示在公開檔案的社群圖示。</span></div>
+            <div class="ctl">
+              <div class="links-list" id="linksList">
+                <div class="link-item"><span class="lkpfx">X / Twitter</span><input class="inp dirty" value="@yoi_studio"></div>
+                <div class="link-item"><span class="lkpfx">Pixiv</span><input class="inp dirty" value="users/00000"></div>
+                <div class="link-item"><span class="lkpfx">Discord</span><input class="inp dirty" value="yoi.studio"></div>
+              </div>
+              <button class="btn btn-ghost btn-sm addlink" id="addLink">＋ 新增連結</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMMISSION -->
+    <section class="panel" data-sec="commission">
+      <div class="card">
+        <div class="card-h"><h2>接案狀態</h2><p class="desc">顯示在你的公開檔案與每個角色的委託名片上。</p></div>
+        <div class="card-body">
+          <div class="row compact">
+            <div class="lab">目前狀態</div>
+            <div class="ctl"><div class="seg status" data-seg="commStatus" data-val="open">
+              <button data-v="open" class="on">接案中</button><button data-v="waitlist">候補中</button><button data-v="paused">暫停接案</button>
+            </div></div>
+          </div>
+          <div class="row compact">
+            <div class="lab">狀態短語<span class="sub">附在狀態旁的一句話。</span></div>
+            <div class="ctl"><input class="inp dirty" value="7 月檔期額滿，8 月開放候補" maxlength="40"></div>
+          </div>
+          <div class="row compact">
+            <div class="lab">同時進行上限<span class="sub">超過時新洽談自動進候補。</span></div>
+            <div class="ctl"><div class="seg" data-seg="cap" data-val="3"><button data-v="2">2 件</button><button data-v="3" class="on">3 件</button><button data-v="5">5 件</button><button data-v="0">不限</button></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h2>新委託預設</h2><p class="desc">建立新委託名片時自動帶入這些預設，仍可逐筆調整。</p></div>
+        <div class="card-body">
+          <div class="row compact">
+            <div class="lab">預設用途</div>
+            <div class="ctl"><div class="seg" data-seg="usage" data-val="personal"><button data-v="personal" class="on">個人用途</button><button data-v="commercial">商業用途</button></div></div>
+          </div>
+          <div class="row">
+            <div class="lab">預設授權<span class="sub">繪師打開委託即看到的授權重點。</span></div>
+            <div class="ctl perms" id="perms">
+              <div class="perm allow"><span class="px">✓</span><span class="pt">標註出處後可轉載<span class="en">Repost w/ credit</span></span><label class="sw"><input type="checkbox" class="dirty" checked><span class="track"></span></label></div>
+              <div class="perm allow"><span class="px">✓</span><span class="pt">允許個人二改<span class="en">Personal edits</span></span><label class="sw"><input type="checkbox" class="dirty" checked><span class="track"></span></label></div>
+              <div class="perm deny"><span class="px">✕</span><span class="pt">用於 AI 訓練<span class="en">AI training</span></span><label class="sw"><input type="checkbox" class="dirty"><span class="track"></span></label></div>
+              <div class="perm deny"><span class="px">✕</span><span class="pt">商業 / 營利用途<span class="en">Commercial</span></span><label class="sw"><input type="checkbox" class="dirty"><span class="track"></span></label></div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="lab">自動回覆範本<span class="sub">收到新委託洽談時自動回覆。</span></div>
+            <div class="ctl"><textarea class="inp dirty" placeholder="收到委託訊息時的自動回覆…">謝謝你的來信！我會在 3 個工作天內回覆。在這之前，麻煩先確認角色頁的「必畫／避免」重點，以及授權範圍，謝謝 🙏</textarea></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRIVACY -->
+    <section class="panel" data-sec="privacy">
+      <div class="card">
+        <div class="card-h"><h2>隱私與分享</h2><p class="desc">控制新角色的預設可見範圍，以及公開頁面的呈現。</p></div>
+        <div class="card-body">
+          <div class="row compact">
+            <div class="lab">新角色預設隱私</div>
+            <div class="ctl"><div class="seg" data-seg="defPriv" data-val="unlisted"><button data-v="public">公開</button><button data-v="unlisted" class="on">限連結</button><button data-v="password">密碼</button><button data-v="private">草稿</button></div></div>
+          </div>
+          <div class="row compact">
+            <div class="lab">圖片浮水印<span class="sub">在公開角色圖右下角加上代號。</span></div>
+            <div class="ctl"><label class="sw"><input type="checkbox" class="dirty" checked><span class="track"></span></label></div>
+          </div>
+          <div class="row compact">
+            <div class="lab">允許搜尋引擎索引<span class="sub">關閉後，公開頁不會出現在 Google。</span></div>
+            <div class="ctl"><label class="sw"><input type="checkbox" class="dirty"><span class="track"></span></label></div>
+          </div>
+          <div class="row compact">
+            <div class="lab">顯示「Made with CharacterHub」<span class="sub">公開頁頁尾的小標。</span></div>
+            <div class="ctl"><label class="sw"><input type="checkbox" class="dirty" checked><span class="track"></span></label></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- NOTIFICATIONS -->
+    <section class="panel" data-sec="notif">
+      <div class="card">
+        <div class="card-h"><h2>通知</h2><p class="desc">選擇要在哪裡收到提醒。重要的委託訊息建議至少開一個。</p></div>
+        <div class="card-body">
+          <div class="notif" id="notif">
+            <div class="nrow"><span class="nhead l">類型</span><span class="nhead">Email</span><span class="nhead">Discord</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- APPEARANCE -->
+    <section class="panel" data-sec="appearance">
+      <div class="card">
+        <div class="card-h"><h2>外觀</h2><p class="desc">調整介面主題與強調色，立即預覽。</p></div>
+        <div class="card-body">
+          <div class="row compact">
+            <div class="lab">介面主題</div>
+            <div class="ctl"><div class="seg" data-seg="theme" data-val="light"><button data-v="light" class="on">暖白</button><button data-v="sepia">羊皮紙</button><button data-v="system">跟隨系統</button></div></div>
+          </div>
+          <div class="row compact">
+            <div class="lab">強調色<span class="sub">用於按鈕、連結與重點標示。</span></div>
+            <div class="ctl"><div class="swatches" id="swatches"></div></div>
+          </div>
+          <div class="row compact">
+            <div class="lab">介面密度<span class="sub">影響卡片與列表的間距。</span></div>
+            <div class="ctl"><div class="seg" data-seg="density" data-val="cozy"><button data-v="cozy" class="on">舒適</button><button data-v="compact">緊湊</button></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ACCOUNT -->
+    <section class="panel" data-sec="account">
+      <div class="card">
+        <div class="card-h"><h2>帳號</h2><p class="desc">登入方式與基本帳號資訊。</p></div>
+        <div class="card-body">
+          <div class="row compact">
+            <div class="lab">電子信箱</div>
+            <div class="ctl" style="display:flex;gap:10px;align-items:center"><input class="inp" value="yoi@example.com" readonly style="background:var(--bg-tint)"><button class="btn btn-sm" data-toast="寄出驗證信…">變更</button></div>
+          </div>
+          <div class="row compact">
+            <div class="lab">密碼<span class="sub">上次變更：3 個月前</span></div>
+            <div class="ctl"><button class="btn btn-sm" data-toast="開啟變更密碼…">變更密碼</button></div>
+          </div>
+          <div class="row compact">
+            <div class="lab">介面語言</div>
+            <div class="ctl"><div class="seg" data-seg="lang" data-val="zh"><button data-v="zh" class="on">繁體中文</button><button data-v="en">English</button><button data-v="ja">日本語</button></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h2>已連結帳號</h2><p class="desc">用於快速登入。</p></div>
+        <div class="card-body">
+          <div class="conns">
+            <div class="conn"><span class="ci" style="background:#fff;box-shadow:0 0 0 1px var(--border)"><svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.71-1.57 2.68-3.89 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.97 10.72a5.4 5.4 0 0 1 0-3.44V4.95H.96a9 9 0 0 0 0 8.1z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.46 3.44 1.35l2.58-2.58C13.46.9 11.43 0 9 0A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"/></svg></span><div><div class="cn">Google</div><div class="cs">yoi@example.com</div></div><div class="ca"><span class="badge-on"><span class="d"></span>已連結</span></div></div>
+            <div class="conn"><span class="ci" style="background:var(--text)"><svg width="15" height="15" viewBox="0 0 24 24" fill="#fff"><path d="M18.9 1.7h3.5l-7.6 8.7 9 11.9h-7l-5.5-7.2-6.3 7.2H1.5l8.2-9.3L1 1.7h7.2l5 6.6 5.7-6.6Zm-1.2 18.4h1.9L6.4 3.6H4.3l13.4 16.5Z"/></svg></span><div><div class="cn">X / Twitter</div><div class="cs">@yoi_studio</div></div><div class="ca"><span class="badge-on"><span class="d"></span>已連結</span></div></div>
+            <div class="conn"><span class="ci" style="background:#5865F2"><svg width="19" height="19" viewBox="0 0 24 24" fill="#fff"><path d="M20.3 4.4A19.8 19.8 0 0 0 15.4 3l-.2.4a18.3 18.3 0 0 1 4.3 1.4 17 17 0 0 0-5.8-1c-2 0-3.9.3-5.8 1A18.3 18.3 0 0 1 12 3.4L11.8 3a19.8 19.8 0 0 0-4.9 1.4C3.6 9.4 2.7 14.2 3.2 19a20 20 0 0 0 6 3l.6-1a13 13 0 0 1-2-1c.2-.1.3-.2.5-.3a14.3 14.3 0 0 0 12.2 0l.5.3c-.6.4-1.3.7-2 1l.6 1a20 20 0 0 0 6-3c.6-5.6-.9-10.4-4-14.6ZM9.3 16c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Zm5.4 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Z"/></svg></span><div><div class="cn">Discord</div><div class="cs">尚未連結</div></div><div class="ca"><button class="btn btn-ghost btn-sm" data-toast="前往 Discord 授權…">連結</button></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card danger">
+        <div class="card-h"><h2>危險區</h2><p class="desc">這些動作無法復原，請謹慎操作。</p></div>
+        <div class="card-body">
+          <div class="drow"><div class="dt">匯出我的資料<span class="sub">下載所有角色、設定與委託紀錄（JSON + 圖片）。</span></div><div class="da"><button class="btn btn-sm" data-toast="開始匯出，完成後寄到信箱">匯出</button></div></div>
+          <div class="drow"><div class="dt">刪除帳號<span class="sub">永久刪除帳號與全部角色資料。</span></div><div class="da"><button class="btn btn-sm btn-danger" id="delBtn">刪除帳號</button></div></div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<!-- SAVE BAR -->
+<div class="savebar" id="savebar">
+  <span class="msg"><span class="dot"></span>你有未儲存的變更</span>
+  <div class="spacer"></div>
+  <button class="btn btn-ghost btn-sm" id="discardBtn">捨棄</button>
+  <button class="btn btn-primary btn-sm" id="saveBtn">儲存變更</button>
+</div>
+
+<script src="../assets/app.js"></script>
+<script>
+  window.__autoInit = false;
+
+  // ---------- section nav ----------
+  const secnav = document.getElementById('secnav');
+  const panels = document.getElementById('panels');
+  function showSec(sec){
+    secnav.querySelectorAll('button').forEach(b=>b.classList.toggle('on', b.dataset.sec===sec));
+    panels.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on', p.dataset.sec===sec));
+    try{ history.replaceState(null,'','#'+sec); }catch(e){}
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+  secnav.querySelectorAll('button').forEach(b=>b.onclick=()=>showSec(b.dataset.sec));
+  if(location.hash){ const s=location.hash.slice(1); if(secnav.querySelector(`[data-sec="${s}"]`)) showSec(s); }
+
+  // ---------- dirty state / save bar ----------
+  const savebar = document.getElementById('savebar');
+  let dirty = false;
+  function markDirty(){ if(dirty) return; dirty=true; savebar.classList.add('show'); }
+  function clearDirty(){ dirty=false; savebar.classList.remove('show'); }
+  document.querySelectorAll('.dirty').forEach(el=>{
+    el.addEventListener('input', markDirty);
+    el.addEventListener('change', markDirty);
+  });
+  document.getElementById('saveBtn').onclick = ()=>{ clearDirty(); toast('✓ 設定已儲存'); };
+  document.getElementById('discardBtn').onclick = ()=>{ clearDirty(); toast('已捨棄變更'); };
+
+  // ---------- segmented controls ----------
+  document.querySelectorAll('.seg[data-seg]').forEach(seg=>{
+    seg.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+      seg.querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on'); seg.dataset.val=b.dataset.v; markDirty();
+      if(seg.dataset.seg==='theme') applyTheme(b.dataset.v);
+    });
+  });
+
+  // ---------- bio counter ----------
+  const bio=document.getElementById('bio'), bioCount=document.getElementById('bioCount');
+  const updBio=()=>bioCount.textContent=`${bio.value.length} / 160`;
+  bio.addEventListener('input', updBio); updBio();
+
+  // ---------- handle availability (mock) ----------
+  const hi=document.getElementById('handleInput'), hh=document.getElementById('handleHint');
+  const taken=['admin','yoi','studio','support'];
+  hi.addEventListener('input', ()=>{
+    const v=hi.value.trim().toLowerCase().replace(/[^a-z0-9-]/g,'');
+    if(hi.value!==v) hi.value=v;
+    document.getElementById('topHandle').textContent='＠'+(v||'…');
+    if(!v){ hh.className='hint'; hh.textContent='請輸入代號'; }
+    else if(taken.includes(v)){ hh.className='hint'; hh.style.color='var(--avoid)'; hh.textContent='✕ 此代號已被使用'; }
+    else { hh.className='hint ok'; hh.style.color=''; hh.textContent='✓ 此代號可使用'; }
+  });
+
+  // ---------- add link ----------
+  const PLATFORMS=['Bluesky','Plurk','Misskey','個人網站','Patreon','其他'];
+  let linkN=0;
+  document.getElementById('addLink').onclick=()=>{
+    const wrap=document.getElementById('linksList');
+    const item=document.createElement('div'); item.className='link-item';
+    const pfx=PLATFORMS[linkN%PLATFORMS.length]; linkN++;
+    item.innerHTML=`<span class="lkpfx">${pfx}</span><input class="inp dirty" placeholder="貼上連結或帳號">`;
+    wrap.appendChild(item);
+    const inp=item.querySelector('input');
+    inp.addEventListener('input', markDirty); inp.focus(); markDirty();
+  };
+
+  // ---------- notifications grid ----------
+  const NOTIF=[
+    {t:'新委託訊息', s:'有人寄來委託洽談或回覆', email:true, discord:true},
+    {t:'委託狀態變更', s:'委託進入下一階段時', email:true, discord:false},
+    {t:'截止日提醒', s:'委託到期前 3 天', email:true, discord:true},
+    {t:'有人收藏你的角色', s:'公開角色被加入收藏', email:false, discord:false},
+    {t:'產品更新', s:'新功能與公告', email:false, discord:false},
+  ];
+  const nEl=document.getElementById('notif');
+  nEl.insertAdjacentHTML('beforeend', NOTIF.map((n,i)=>`
+    <div class="nrow">
+      <span class="nlabel">${n.t}<span class="sub">${n.s}</span></span>
+      <span class="cell"><label class="sw"><input type="checkbox" class="dirty" data-n="${i}-e" ${n.email?'checked':''}><span class="track"></span></label></span>
+      <span class="cell"><label class="sw"><input type="checkbox" class="dirty" data-n="${i}-d" ${n.discord?'checked':''}><span class="track"></span></label></span>
+    </div>`).join(''));
+  nEl.querySelectorAll('input').forEach(el=>{ el.addEventListener('change', markDirty); });
+
+  // ---------- accent swatches (live preview) ----------
+  const ACCENTS=[
+    {name:'霧夜青', c:'#2E6F6A', soft:'#E4EEEC', ink:'#1E4B47'},
+    {name:'燈火橘', c:'#C2702C', soft:'#F6E9DA', ink:'#8A4E18'},
+    {name:'緋紅',   c:'#B0413A', soft:'#F6E2E0', ink:'#7E2A24'},
+    {name:'夜紫',   c:'#6B5B95', soft:'#EAE6F1', ink:'#473C66'},
+    {name:'稻青',   c:'#5E7E55', soft:'#E8EFE4', ink:'#3F5739'},
+  ];
+  const swEl=document.getElementById('swatches');
+  let curAccent='#2E6F6A';
+  swEl.innerHTML=ACCENTS.map(a=>`<button data-c="${a.c}" data-soft="${a.soft}" data-ink="${a.ink}" class="${a.c===curAccent?'on':''}" style="background:${a.c}" title="${a.name}"></button>`).join('');
+  swEl.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+    swEl.querySelectorAll('button').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+    const r=document.documentElement.style;
+    r.setProperty('--accent', b.dataset.c); r.setProperty('--accent-soft', b.dataset.soft); r.setProperty('--accent-ink', b.dataset.ink);
+    curAccent=b.dataset.c; markDirty();
+  });
+
+  // ---------- theme (live preview) ----------
+  function applyTheme(t){
+    const r=document.documentElement.style;
+    if(t==='sepia'){ r.setProperty('--bg','#F3ECDD'); r.setProperty('--bg-tint','#EBE2CE'); r.setProperty('--surface','#FBF6EA'); r.setProperty('--surface-2','#F6EFDF'); r.setProperty('--border','#E0D5BE'); }
+    else { r.setProperty('--bg','#FAFAF8'); r.setProperty('--bg-tint','#F4F2ED'); r.setProperty('--surface','#FFFFFF'); r.setProperty('--surface-2','#FBFAF7'); r.setProperty('--border','#E6E4DF'); }
+  }
+
+  // ---------- misc buttons ----------
+  document.querySelectorAll('[data-toast]').forEach(b=>b.addEventListener('click', e=>{ e.preventDefault(); toast(b.dataset.toast); }));
+  document.getElementById('delBtn').onclick=()=>toast('需要二次確認才能刪除帳號（示意）');
+</script>
+
+</body>
+</html>

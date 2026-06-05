@@ -1,0 +1,119 @@
+/* ============================================================
+   CharacterHub — 角色頁「一般」首屏 設定圖式排版
+   依賴 ds.css 的 token 與 .ph / .pill / .priv / .modetoggle
+   ============================================================ */
+
+/* ============ 首屏外殼 ============ */
+.eh-root { width: 100%; height: 100%; display: flex; flex-direction: column; background: var(--bg); overflow: hidden; }
+
+.eh-top { flex: none; display: flex; align-items: center; gap: 16px; padding: 12px 28px; background: var(--surface); border-bottom: 1px solid var(--border); }
+.eh-brand { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 15px; letter-spacing: -.02em; }
+.eh-mk { width: 24px; height: 24px; border-radius: 8px; background: var(--text); color: #fff; display: grid; place-items: center; font-family: var(--font-serif); font-size: 15px; }
+.eh-crumb { color: var(--text-faint); font-size: 14px; } .eh-crumb b { color: var(--text-dim); font-weight: 600; }
+.eh-sp { flex: 1; }
+.eh-mode-note { font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; color: var(--text-faint); padding: 4px 10px; border: 1px solid var(--border); border-radius: var(--r-pill); }
+.eh-top .modetoggle { transform: scale(.94); transform-origin: right; }
+
+/* ============ 立繪模式：左識別 / 中立繪 / 右規格 ============ */
+.eh-hero { flex: 1; position: relative; display: grid; align-items: start; gap: var(--s8); padding: var(--s12) var(--s8); }
+.eh-hero.clean { grid-template-columns: 1fr 332px .95fr; gap: var(--s12); padding: var(--s16) var(--s12); }
+.eh-hero.mid   { grid-template-columns: .95fr 336px 1.05fr; }
+.eh-hero.full  { grid-template-columns: .9fr 312px 1.1fr; gap: var(--s8); }
+.eh-hero.full > .eh-identity, .eh-hero.full > .eh-stage, .eh-hero.full > .eh-specs { position: relative; z-index: 1; }
+
+.eh-identity { display: flex; flex-direction: column; gap: var(--s6); }
+.eh-namerow { display: flex; gap: 12px; align-items: flex-start; }
+.eh-name { writing-mode: vertical-rl; font-family: var(--font-serif); font-weight: 800; font-size: 82px; line-height: 1; letter-spacing: .05em; }
+.eh-romaji { writing-mode: vertical-rl; text-orientation: sideways; letter-spacing: .34em; font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+.eh-idmeta { display: flex; flex-direction: column; gap: var(--s4); }
+.eh-kicker { display: flex; flex-wrap: wrap; gap: 9px; align-items: center; }
+.eh-species { border-color: var(--accent) !important; color: var(--accent-ink) !important; background: var(--accent-soft) !important; }
+.eh-aka { font-size: 13px; color: var(--text-faint); }
+.eh-tagline { font-family: var(--font-serif); font-size: 22px; line-height: 1.6; font-weight: 500; max-width: 22ch; text-wrap: pretty; margin: 0; }
+.eh-tagline .en { display: block; font-family: var(--font-sans); font-size: 13px; color: var(--text-faint); margin-top: 10px; font-style: italic; line-height: 1.5; }
+.eh-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.eh-stats-mini { margin-top: var(--s2); }
+
+.eh-stage { display: flex; flex-direction: column; gap: 12px; }
+.eh-illu { aspect-ratio: 3/4; width: 100%; position: relative; }
+.eh-thumbs { display: flex; gap: 8px; }
+.eh-thumbs .ph { flex: 1; aspect-ratio: 1; }
+.eh-thumbs .ph::after { font-size: 9px; padding: 2px 6px; }
+.eh-dots { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; padding: 6px 9px; border-radius: var(--r-pill); background: rgba(255,255,255,.82); border: 1px solid var(--border); backdrop-filter: blur(4px); }
+.eh-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--border-strong); display: block; }
+.eh-dots i.on { background: var(--text); width: 18px; border-radius: 3px; }
+.eh-co-pin { position: absolute; transform: translate(-50%,-50%); width: 24px; height: 24px; border-radius: 50%; background: var(--text); color: #fff; display: grid; place-items: center; font-size: 11px; font-weight: 700; border: 2px solid #fff; box-shadow: var(--sh-2); font-family: var(--font-mono); cursor: pointer; transition: transform .12s; z-index: 4; }
+.eh-co-pin.hi { transform: translate(-50%,-50%) scale(1.3); }
+
+.eh-specs { display: flex; flex-direction: column; gap: var(--s2); }
+.eh-mh { display: flex; align-items: baseline; gap: 10px; margin: var(--s3) 0 var(--s2); }
+.eh-mh:first-child { margin-top: 0; }
+.eh-mh h3 { font-size: 15px; font-weight: 700; margin: 0; white-space: nowrap; letter-spacing: -.01em; }
+.eh-mh .en { font-size: 12px; color: var(--text-faint); }
+.eh-ix { font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); }
+.eh-rule { flex: 1; height: 1px; background: var(--border); align-self: center; }
+.eh-note { font-size: 11px; color: var(--text-faint); white-space: nowrap; }
+
+.eh-stats { display: flex; flex-direction: column; }
+.eh-field { display: flex; justify-content: space-between; gap: 16px; padding: 11px 0; border-bottom: 1px solid var(--border); }
+.eh-field:last-child { border-bottom: none; }
+.eh-stats.compact .eh-field { padding: 8px 0; }
+.eh-field .k { color: var(--text-dim); font-size: 14px; white-space: nowrap; } .eh-field .k .en { font-size: 11px; color: var(--text-faint); margin-left: 6px; }
+.eh-field .v { font-weight: 600; font-size: 14.5px; text-align: right; white-space: nowrap; }
+
+.eh-swstrip { display: flex; gap: 9px; flex-wrap: wrap; }
+.eh-swcell { display: flex; flex-direction: column; gap: 5px; cursor: pointer; }
+.eh-swcell .chip { width: 46px; height: 56px; border-radius: 8px; border: 1px solid rgba(0,0,0,.08); transition: box-shadow .15s; }
+.eh-swcell:hover .chip { box-shadow: 0 0 0 3px var(--accent-soft); }
+.eh-swcell .hx { font-family: var(--font-mono); font-size: 9.5px; color: var(--text-dim); }
+
+.eh-swgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.eh-swchip { display: flex; gap: 10px; padding: 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+.eh-swchip:hover { border-color: var(--border-strong); box-shadow: var(--sh-1); }
+.eh-swchip.copied { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.eh-swchip .chip { width: 36px; height: 48px; border-radius: 6px; flex: none; border: 1px solid rgba(0,0,0,.08); }
+.eh-swchip .meta { display: flex; flex-direction: column; min-width: 0; }
+.eh-swchip .idx { font-family: var(--font-mono); font-size: 9px; color: var(--text-faint); }
+.eh-swchip .nm { font-family: var(--font-serif); font-size: 15px; font-weight: 600; line-height: 1.2; }
+.eh-swchip .hx { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); margin-top: auto; }
+
+.eh-exprs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.eh-exprs.col { grid-template-columns: repeat(3, 1fr); }
+.eh-exprs .ph { aspect-ratio: 3/4; }
+.eh-exprs .ph::after { font-size: 9px; padding: 2px 6px; }
+
+.eh-must { display: flex; flex-direction: column; gap: 6px; }
+.eh-must-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); transition: border-color .12s, background .12s; }
+.eh-must-row.hi { border-color: var(--accent); background: var(--accent-soft); }
+.eh-must-row .n { width: 20px; height: 20px; border-radius: 50%; background: var(--text); color: #fff; display: grid; place-items: center; font-size: 11px; font-weight: 700; font-family: var(--font-mono); flex: none; }
+.eh-must-row .t { font-size: 13.5px; font-weight: 500; } .eh-must-row .t .en { font-size: 11px; color: var(--text-faint); margin-left: 6px; }
+
+/* full-mode 裝飾 */
+.eh-bigtype { position: absolute; top: 46%; left: 50%; transform: translate(-50%,-50%) rotate(-4deg); font-family: var(--font-serif); font-weight: 800; font-size: 124px; letter-spacing: .03em; color: rgba(28,27,25,.04); white-space: nowrap; pointer-events: none; z-index: 0; text-transform: uppercase; }
+.eh-corner { position: absolute; width: 26px; height: 26px; border: 1.5px solid var(--border-strong); z-index: 0; }
+.eh-corner.tl { top: 16px; left: 16px; border-right: none; border-bottom: none; }
+.eh-corner.br { bottom: 14px; right: 16px; border-left: none; border-top: none; }
+.eh-credit { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); font-family: var(--font-mono); font-size: 10px; letter-spacing: .12em; color: var(--text-faint); z-index: 1; }
+.eh-credit b { color: var(--text-dim); }
+
+/* ============ 頭像模式：頂部識別帶 + 模組網格 ============ */
+.eh-hero-av { flex: 1; position: relative; display: flex; flex-direction: column; gap: var(--s8); padding: var(--s12) var(--s12); }
+.eh-hero-av.full > .eh-av-head, .eh-hero-av.full > .eh-av-grid { position: relative; z-index: 1; }
+.eh-av-head { display: flex; gap: var(--s8); }
+.eh-av-head.center { flex-direction: column; align-items: center; text-align: center; }
+.eh-av-head.left { align-items: flex-start; }
+.eh-avatar { width: 160px; height: 160px; border-radius: 50%; flex: none; }
+.eh-av-id { display: flex; flex-direction: column; gap: var(--s3); min-width: 0; }
+.eh-av-head.center .eh-av-id { align-items: center; }
+.eh-av-head.center .eh-tagline { text-align: center; }
+.eh-av-head.center .eh-tags, .eh-av-head.center .eh-kicker { justify-content: center; }
+.eh-av-name { font-family: var(--font-serif); font-size: 40px; font-weight: 800; margin: 0; line-height: 1.05; display: flex; align-items: baseline; gap: 14px; }
+.eh-av-head.center .eh-av-name { flex-direction: column; gap: 5px; align-items: center; }
+.eh-av-name .rom { font-family: var(--font-mono); font-size: 12px; letter-spacing: .2em; color: var(--text-dim); font-weight: 400; }
+.eh-av-name.big { font-size: 66px; letter-spacing: .04em; }
+.eh-romaji-h { font-family: var(--font-mono); font-size: 12px; letter-spacing: .28em; color: var(--text-dim); }
+.eh-av-stamp { position: relative; flex: none; }
+.eh-av-tape { position: absolute; top: -11px; left: 50%; transform: translateX(-50%) rotate(-3deg); width: 64px; height: 18px; background: rgba(224,162,59,.26); border: 1px dashed rgba(180,120,40,.4); }
+.eh-av-grid { display: grid; gap: var(--s8); }
+.eh-av-grid.two { grid-template-columns: 1fr 1fr; }
+.eh-av-grid.three { grid-template-columns: 1fr 1fr 1fr; }
