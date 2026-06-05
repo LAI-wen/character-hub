@@ -1,0 +1,23 @@
+name = "oc-tools-api"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "oc-tools-db"
+database_id = ""
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "oc-tools-media"
+
+[[kv_namespaces]]
+binding = "KV"
+id = ""
+
+[vars]
+FRONTEND_URL = "https://oc-tools.pages.dev"
+
+[dev]
+port = 8787
