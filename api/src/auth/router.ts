@@ -24,7 +24,7 @@ const loginSchema = z.object({
 });
 
 function refreshCookie(token: string, maxAge: number) {
-  return `refresh_token=${token}; HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth/refresh; Max-Age=${maxAge}`;
+  return `refresh_token=${token}; HttpOnly; Secure; SameSite=None; Path=/api/v1/auth/refresh; Max-Age=${maxAge}`;
 }
 
 authRouter.post('/register', async (c) => {

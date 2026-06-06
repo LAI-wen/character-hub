@@ -127,15 +127,15 @@
       <a href="settings.html">設定</a>
     </nav>
     <div class="spacer"></div>
-    <button class="btn btn-ghost btn-sm js-soon" style="white-space:nowrap">＠yoi-studio</button>
-    <div class="avatar"></div>
+    <button class="btn btn-ghost btn-sm" id="headerUser" onclick="location.href='settings.html'" style="white-space:nowrap">＠…</button>
+    <div class="avatar" id="headerAvatar"></div>
   </div>
 </div>
 
 <div class="head">
   <div class="row">
     <h1>我的角色</h1>
-    <span class="ct">6 characters · My OCs</span>
+    <span class="ct" id="ocCount">…</span>
     <div class="spacer"></div>
     <button class="btn btn-primary">＋ 新增角色 New character</button>
   </div>
@@ -143,11 +143,11 @@
 
 <div class="toolbar">
   <div class="filters" id="filters">
-    <span class="pill on" data-f="*" style="background:var(--text);color:#fff;border-color:var(--text)">全部 6</span>
-    <span class="pill" data-f="public">公開 2</span>
-    <span class="pill" data-f="unlisted">限連結 2</span>
-    <span class="pill" data-f="password">密碼 1</span>
-    <span class="pill" data-f="private">草稿 1</span>
+    <span class="pill on" data-f="*" style="background:var(--text);color:#fff;border-color:var(--text)">全部 0</span>
+    <span class="pill" data-f="public">公開 0</span>
+    <span class="pill" data-f="unlisted">限連結 0</span>
+    <span class="pill" data-f="password">密碼 0</span>
+    <span class="pill" data-f="private">草稿 0</span>
   </div>
   <div class="spacer"></div>
   <div class="search" id="search">
@@ -191,7 +191,21 @@
     await CharHub.requireAuth('login.html');
     const [me, projects] = await Promise.all([CharHub.getMe(), CharHub.listProjects()]);
     if (!me) return;
+
+    // fill header
+    const headerUser = document.getElementById('headerUser');
+    const headerAvatar = document.getElementById('headerAvatar');
+    if (headerUser) headerUser.textContent = '＠' + me.username;
+    if (headerAvatar && me.avatar_url) {
+      headerAvatar.style.backgroundImage = `url(${me.avatar_url})`;
+      headerAvatar.style.backgroundSize = 'cover';
+    }
+
+    // fill OC count subtitle
     const ocs = await CharHub.getMyOCs(me.username);
+    const ocCountEl = document.getElementById('ocCount');
+    if (ocCountEl) ocCountEl.textContent = `${ocs.length} characters · My OCs`;
+
     PROJECTS = [
       ...projects.map(p => ({ id: p.id, name: p.name, sub: p.sub_name || '' })),
       { id: '__none__', name: '未分類', sub: 'Unsorted' },
