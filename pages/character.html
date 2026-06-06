@@ -458,6 +458,7 @@
 </footer>
 
 <script src="../assets/app.js"></script>
+<script src="../assets/api.js"></script>
 <script>
   window.__autoInit = false; // we init manually after rendering
   const ED = (function(){ try{ return JSON.parse(localStorage.getItem('ch:character')||'null'); }catch(e){ return null; } })();
@@ -749,6 +750,76 @@
   if (cparams.get('mode')==='commission' || cparams.get('commission')){
     document.querySelector('#modetoggle .opt[data-mode="commission"]').click();
   }
+
+  // ── load from API if ?id= present ─────────────────────────────────────────
+  (async function loadFromAPI() {
+    const ocId = new URLSearchParams(location.search).get('id');
+    if (!ocId) return;
+    const oc = await CharHub.getOC(ocId);
+    if (!oc) return;
+
+    const p = CharHub.parseJSON;
+    const d = {
+      name: oc.name, rom: oc.rom || '', species: oc.species || '',
+      tagline: oc.tagline || '', display: oc.display_mode,
+      fields: p(oc.profile_fields, []),
+      swatches: p(oc.swatches, []),
+      checklist: p(oc.checklist, []),
+      license: p(oc.license, []),
+    };
+
+    // identity
+    if (d.name) {
+      document.querySelectorAll('.namecol .name').forEach(e=>e.textContent=d.name);
+      document.querySelectorAll('.av-name').forEach(e=>{ if(e.firstChild&&e.firstChild.nodeType===3) e.firstChild.nodeValue=d.name; });
+      document.title = d.name + (d.rom?' '+d.rom.toUpperCase():'') + ' · CharacterHub';
+    }
+    if (d.rom) {
+      const romU = d.rom.toUpperCase();
+      document.querySelectorAll('.namecol .romaji').forEach(e=>e.textContent=romU+(d.name?(' · '+d.name):''));
+      document.querySelectorAll('.av-name .rom').forEach(e=>e.textContent=romU);
+    }
+    if (d.species) document.querySelectorAll('.identmeta .kick>.pill:first-child,.av-id .kick>.pill:first-child').forEach(e=>e.textContent=d.species);
+    if (d.tagline) document.querySelectorAll('.tagline').forEach(e=>{ const en=e.querySelector('.en'); e.textContent=d.tagline+' '; if(en)e.appendChild(en); });
+
+    // profile fields
+    if (d.fields.length) {
+      const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      document.querySelectorAll('.hero-specs .field-list,.av-profile-wrap .field-list').forEach(list=>{
+        list.innerHTML = d.fields.map(f=>`<div class="field"><span class="k">${esc(f.k)}</span><span class="v">${esc(f.v)}</span></div>`).join('');
+      });
+    }
+
+    // swatches dots
+    if (d.swatches.length) {
+      const html = d.swatches.map(s=>`<span class="pdot" data-hex="${s.hex}" title="${s.hex}" style="background:${s.hex}"></span>`).join('');
+      document.querySelectorAll('.pdeck').forEach(c=>c.innerHTML=html);
+      initSwatchCopy();
+    }
+
+    // checklist
+    if (d.checklist.length) {
+      const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
+      document.querySelectorAll('.must-list').forEach(el=>{
+        el.innerHTML = d.checklist.filter(x=>x.type==='must').map(x=>`<div class="check must"><span class="ic">✓</span><span class="tx">${esc(x.t)}</span></div>`).join('');
+      });
+      document.querySelectorAll('.avoid-list').forEach(el=>{
+        el.innerHTML = d.checklist.filter(x=>x.type==='avoid').map(x=>`<div class="check avoid"><span class="ic">✕</span><span class="tx">${esc(x.t)}</span></div>`).join('');
+      });
+    }
+
+    // add edit button if token available
+    CharHub.getToken().then(t => {
+      if (!t) return;
+      const topbar = document.querySelector('.topbar .inner');
+      if (!topbar || topbar.querySelector('.api-edit-btn')) return;
+      const btn = document.createElement('a');
+      btn.href = `editor.html?id=${ocId}`;
+      btn.className = 'btn btn-primary btn-sm api-edit-btn';
+      btn.textContent = '編輯';
+      topbar.appendChild(btn);
+    });
+  })();
 
   // 顯示模式（完整立繪 / 僅頭像）— 由編輯器「顯示模式」設定，經 ?display= 或 localStorage 傳入
   (function(){

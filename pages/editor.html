@@ -347,6 +347,7 @@
 </div>
 
 <script src="../assets/app.js"></script>
+<script src="../assets/api.js"></script>
 <script>
 window.__autoInit = false;
 const $ = s => document.querySelector(s);
@@ -1050,8 +1051,61 @@ function setDisplay(mode){
 $('#pvDisp').querySelectorAll('button').forEach(b=>b.onclick=()=>setDisplay(b.dataset.d));
 $('#pvToggle').querySelectorAll('button').forEach(b=>b.onclick=()=>{ pvMode=b.dataset.m; $('#pvToggle').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); renderPreview(); });
 $('#privTop').onclick=()=>jumpToSection('privacy');
-$('#saveBtn')?.addEventListener('click',()=>{ saveSnapshot(); toast('✓ 已儲存，已同步至公開頁'); });
-$('#publishBtn').addEventListener('click',()=>{ saveSnapshot(); toast('✓ 已發佈分享頁'); });
+// ── API save ──────────────────────────────────────────────────────────────
+let _ocId = new URLSearchParams(location.search).get('id');
+
+function sToApiPayload() {
+  return {
+    name: S.name, rom: S.rom, species: S.species, tagline: S.tagline,
+    card_color: S.accent, display_mode: S.display, visibility: S.privacy,
+    profile_fields: S.fields || [],
+    swatches: S.swatches || [],
+    checklist: S.checklist || [],
+    license: S.license || [],
+    markers: S.markers || [],
+  };
+}
+
+async function apiSave() {
+  const btn = $('#saveBtn');
+  btn.disabled = true; btn.textContent = '儲存中…';
+  try {
+    const payload = sToApiPayload();
+    if (_ocId) {
+      await CharHub.updateOC(_ocId, payload);
+    } else {
+      const created = await CharHub.createOC(payload);
+      _ocId = created.id;
+      try { history.replaceState(null, '', '?id=' + _ocId); } catch(e) {}
+    }
+    saveSnapshot();
+    toast('✓ 已儲存並同步');
+  } catch(err) {
+    toast('⚠ ' + err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = '儲存 Save';
+  }
+}
+
+// Load existing OC if ?id= present
+async function loadOC() {
+  await CharHub.requireAuth('login.html');
+  if (!_ocId) return;
+  const oc = await CharHub.getOC(_ocId);
+  if (!oc) return;
+  S.name = oc.name; S.rom = oc.rom || ''; S.species = oc.species || '';
+  S.tagline = oc.tagline || ''; S.accent = oc.card_color; S.display = oc.display_mode;
+  S.privacy = oc.visibility;
+  S.fields = CharHub.parseJSON(oc.profile_fields, []);
+  S.swatches = CharHub.parseJSON(oc.swatches, []);
+  S.checklist = CharHub.parseJSON(oc.checklist, []);
+  S.license = CharHub.parseJSON(oc.license, []);
+  S.markers = CharHub.parseJSON(oc.markers, []);
+}
+
+$('#saveBtn')?.addEventListener('click', apiSave);
+$('#publishBtn').addEventListener('click', async () => { await apiSave(); toast('✓ 已發佈分享頁'); });
+loadOC();
 [$('#previewBtn'),$('#previewBtn2')].forEach(b=>b&&b.addEventListener('click',()=>{ window.open('character.html?display='+S.display,'_blank'); }));
 // mobile tabs
 const mt=document.querySelectorAll('.mtabs button');

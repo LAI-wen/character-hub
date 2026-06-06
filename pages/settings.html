@@ -397,6 +397,7 @@
 </div>
 
 <script src="../assets/app.js"></script>
+<script src="../assets/api.js"></script>
 <script>
   window.__autoInit = false;
 
@@ -421,8 +422,67 @@
     el.addEventListener('input', markDirty);
     el.addEventListener('change', markDirty);
   });
-  document.getElementById('saveBtn').onclick = ()=>{ clearDirty(); toast('✓ 設定已儲存'); };
-  document.getElementById('discardBtn').onclick = ()=>{ clearDirty(); toast('已捨棄變更'); };
+  // ── API load + save ────────────────────────────────────────────────────────
+  let _origData = {};
+
+  async function loadProfile() {
+    await CharHub.requireAuth('login.html');
+    const me = await CharHub.getMe();
+    if (!me) return;
+    _origData = me;
+
+    const hi = document.getElementById('handleInput');
+    const bio = document.getElementById('bio');
+    if (hi && me.username) { hi.value = me.username; document.getElementById('topHandle').textContent = '＠' + me.username; }
+    if (bio && me.bio) { bio.value = me.bio; updBio(); }
+
+    // display name
+    const dnEl = document.getElementById('displayNameInput');
+    if (dnEl && me.display_name) dnEl.value = me.display_name;
+
+    // accent color
+    if (me.accent_color) {
+      const swatches = document.querySelectorAll('#swatches button');
+      swatches.forEach(b => b.classList.toggle('on', b.dataset.c === me.accent_color));
+    }
+
+    // social links
+    const links = CharHub.parseJSON(me.social_links, []);
+    const wrap = document.getElementById('linksList');
+    if (wrap && links.length) {
+      wrap.innerHTML = links.map(l => `<div class="link-item"><span class="lkpfx">${l.platform}</span><input class="inp dirty" value="${l.url}" placeholder="連結" data-platform="${l.platform}"></div>`).join('');
+      wrap.querySelectorAll('input').forEach(inp => inp.addEventListener('input', markDirty));
+    }
+  }
+
+  async function saveProfile() {
+    const hi = document.getElementById('handleInput');
+    const bio = document.getElementById('bio');
+    const dnEl = document.getElementById('displayNameInput');
+    const activeAccent = document.querySelector('#swatches button.on');
+    const links = [...document.querySelectorAll('#linksList .link-item')].map(item => ({
+      platform: item.querySelector('.lkpfx')?.textContent || '其他',
+      url: item.querySelector('input')?.value || '',
+    })).filter(l => l.url);
+
+    const payload = {
+      bio: bio?.value || undefined,
+      display_name: dnEl?.value || undefined,
+      accent_color: activeAccent?.dataset.c || undefined,
+      social_links: links,
+    };
+
+    try {
+      await CharHub.updateMe(payload);
+      clearDirty();
+      toast('✓ 設定已儲存');
+    } catch (err) {
+      toast('⚠ ' + err.message);
+    }
+  }
+
+  document.getElementById('saveBtn').onclick = saveProfile;
+  document.getElementById('discardBtn').onclick = ()=>{ clearDirty(); location.reload(); };
 
   // ---------- segmented controls ----------
   document.querySelectorAll('.seg[data-seg]').forEach(seg=>{
@@ -508,6 +568,8 @@
   // ---------- misc buttons ----------
   document.querySelectorAll('[data-toast]').forEach(b=>b.addEventListener('click', e=>{ e.preventDefault(); toast(b.dataset.toast); }));
   document.getElementById('delBtn').onclick=()=>toast('需要二次確認才能刪除帳號（示意）');
+
+  loadProfile();
 </script>
 
 </body>

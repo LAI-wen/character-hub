@@ -244,9 +244,17 @@
 </div>
 
 <script src="../assets/app.js"></script>
+<script src="../assets/api.js"></script>
 <script>
   window.__autoInit = false;
   const body = document.body;
+
+  // If already logged in → go straight to dashboard
+  CharHub.getToken().then(t => { if (t) location.href = 'dashboard.html'; });
+
+  // OAuth token in fragment (from Google/GitHub redirect)
+  if (CharHub.checkFragmentToken()) location.href = 'dashboard.html';
+
   function setMode(m){
     body.classList.toggle('mode-signup', m==='signup');
     body.classList.toggle('mode-login', m!=='signup');
@@ -263,20 +271,49 @@
   const pwd = document.getElementById('inPwd');
   document.getElementById('togglePwd').onclick = ()=>{ pwd.type = pwd.type==='password'?'text':'password'; };
 
-  // social → demo
-  document.querySelectorAll('.sbtn').forEach(b=>b.onclick=()=>{ toast('使用 '+b.dataset.provider+' 繼續…（示意）'); setTimeout(()=>location.href='dashboard.html', 650); });
-  document.getElementById('forgotLink').onclick = e=>{ e.preventDefault(); toast('已寄出重設密碼連結（示意）'); };
+  // social OAuth
+  document.querySelectorAll('.sbtn').forEach(b => {
+    b.onclick = () => {
+      const p = b.dataset.provider;
+      if (p === 'Google') { CharHub.loginWithGoogle(); return; }
+      toast(p + ' 登入即將開放');
+    };
+  });
+  document.getElementById('forgotLink').onclick = e=>{ e.preventDefault(); toast('密碼重設功能即將開放'); };
 
-  // submit → dashboard
-  document.getElementById('authForm').addEventListener('submit', e=>{
+  // form submit
+  function setLoading(on) {
+    const btn = document.querySelector('#authForm .btn-primary');
+    btn.disabled = on;
+    btn.style.opacity = on ? '.6' : '';
+  }
+
+  document.getElementById('authForm').addEventListener('submit', async e => {
     e.preventDefault();
     const signup = body.classList.contains('mode-signup');
-    toast(signup ? '✓ 帳號建立成功，歡迎！' : '✓ 登入成功');
-    setTimeout(()=>location.href='dashboard.html', 600);
+    const email = document.getElementById('inEmail').value.trim();
+    const password = document.getElementById('inPwd').value;
+
+    setLoading(true);
+    try {
+      if (signup) {
+        const username = document.getElementById('inHandle').value.trim();
+        if (!username) { toast('請填寫使用者代號'); setLoading(false); return; }
+        await CharHub.register(email, username, password, username);
+        toast('✓ 帳號建立成功，歡迎！');
+      } else {
+        await CharHub.login(email, password);
+        toast('✓ 登入成功');
+      }
+      setTimeout(() => location.href = 'dashboard.html', 400);
+    } catch (err) {
+      toast('⚠ ' + err.message);
+      setLoading(false);
+    }
   });
 
   // deep-link ?signup
-  if (location.search.replace('?','')==='signup') setMode('signup');
+  if (location.search.replace('?','') === 'signup') setMode('signup');
 </script>
 </body>
 </html>

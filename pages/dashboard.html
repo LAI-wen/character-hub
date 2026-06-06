@@ -164,22 +164,40 @@
 <div class="groups" id="groups"></div>
 
 <script src="../assets/app.js"></script>
+<script src="../assets/api.js"></script>
 <script>
   window.__autoInit = false;
 
-  const PROJECTS = [
-    {id:'tokoyo', name:'常夜物語', sub:'Tokoyo Tale'},
-    {id:'day',    name:'晝廷篇',   sub:'Day Court Arc'},
-    {id:'draft',  name:'草稿匣',   sub:'Unsorted'},
-  ];
-  const OCS = [
-    {nm:'宵霧',rom:'YOIGIRI',sp:'妖狐', c:'#8FA3B0',priv:'public',  privL:'公開',  comm:{t:'進行中 1',c:'#3B6FB0'},meta:['5 標籤','18 圖','2 天前'], proj:'tokoyo'},
-    {nm:'燈守',rom:'TOMORI', sp:'付喪神',c:'#C8463C',priv:'unlisted',privL:'限連結',comm:{t:'洽談 1', c:'#A98B4E'},meta:['6 標籤','9 圖','1 週前'], proj:'tokoyo'},
-    {nm:'望',  rom:'NOZOMI', sp:'人類', c:'#2E6F6A',priv:'unlisted',privL:'限連結',comm:null,                    meta:['5 標籤','14 圖','3 週前'],proj:'tokoyo'},
-    {nm:'晝',  rom:'HIRU',   sp:'半神', c:'#E0A23B',priv:'public',  privL:'公開',  comm:{t:'進行中 2',c:'#3B6FB0'},meta:['4 標籤','11 圖','5 天前'], proj:'day'},
-    {nm:'緋',  rom:'AKA',    sp:'鬼',   c:'#9E332B',priv:'password',privL:'密碼',  comm:null,                    meta:['3 標籤','7 圖','2 週前'], proj:'day'},
-    {nm:'灰',  rom:'HAI',    sp:'未定', c:'#8A857C',priv:'private', privL:'草稿',  comm:null,                    meta:['草稿','2 圖','1 個月前'],proj:'draft', draft:true},
-  ];
+  let PROJECTS = [];
+  let OCS = [];
+
+  function ocToCard(oc) {
+    return {
+      id: oc.id,
+      nm: oc.name,
+      rom: oc.rom || '',
+      sp: oc.species || '',
+      c: oc.card_color || '#8FA3B0',
+      priv: oc.visibility,
+      privL: CharHub.PRIV_LABEL[oc.visibility] || oc.visibility,
+      comm: null,
+      meta: [CharHub.timeAgo(oc.updated_at)],
+      proj: oc.project_id || '__none__',
+      draft: oc.visibility === 'private',
+    };
+  }
+
+  async function loadData() {
+    await CharHub.requireAuth('../pages/login.html');
+    const [projects, ocs] = await Promise.all([CharHub.listProjects(), CharHub.listOCs()]);
+    PROJECTS = [
+      ...projects.map(p => ({ id: p.id, name: p.name, sub: p.sub_name || '' })),
+      { id: '__none__', name: '未分類', sub: 'Unsorted' },
+    ];
+    OCS = ocs.map(ocToCard);
+    refreshCounts();
+    render();
+  }
 
   const groupsEl = document.getElementById('groups');
   const noResults = document.getElementById('noResults');
@@ -189,11 +207,11 @@
 
   function cardHTML(o){
     const hay = [o.nm, o.rom, o.sp, o.privL, o.comm&&o.comm.t, PROJ_NAME[o.proj], ...o.meta].filter(Boolean).join(' ').toLowerCase();
-    return `<a class="ccard${o.draft?' is-draft':''}" href="character.html" data-priv="${o.priv}" data-proj="${o.proj}" data-search="${hay.replace(/"/g,'')}" style="--cc:${o.c}">
+    return `<a class="ccard${o.draft?' is-draft':''}" href="character.html?id=${o.id}" data-id="${o.id}" data-priv="${o.priv}" data-proj="${o.proj}" data-search="${hay.replace(/"/g,'')}" style="--cc:${o.c}">
       <div class="badges"><span class="pbadge priv ${o.priv}"><span class="d"></span>${o.privL}</span>${o.comm?`<span class="cmbadge"><span class="d" style="background:${o.comm.c}"></span>${o.comm.t}</span>`:'<span></span>'}</div>
       <div class="pic"><div class="av">${o.nm[0]}</div></div>
       <div class="info"><div class="nm"${o.draft?' style="color:var(--text-dim)"':''}>${o.nm}</div><div class="rom">${o.rom} · ${o.sp}</div><div class="meta">${o.meta.map((m,i)=>`${i?'<span class="dot"></span>':''}<span>${m}</span>`).join('')}</div></div>
-      <div class="acts"><button class="qbtn" type="button">編輯</button><button class="qbtn" type="button">複製連結</button><button class="qbtn" type="button">隱私</button></div>
+      <div class="acts"><button class="qbtn" type="button" data-act="edit">編輯</button><button class="qbtn" type="button" data-act="copy">複製連結</button><button class="qbtn" type="button" data-act="priv">隱私</button></div>
     </a>`;
   }
 
@@ -245,10 +263,15 @@
   function attach(){
     groupsEl.querySelectorAll('.qbtn').forEach(b => b.addEventListener('click', e => {
       e.preventDefault();
-      const t = b.textContent.trim();
-      if (t==='編輯') { location.href = 'editor.html'; return; }
-      if (t==='複製連結') { copyText('https://characterhub.app/@yoi-studio/...'); toast('已複製分享連結 ↗'); }
-      if (t==='隱私') { toast('開啟隱私設定…'); }
+      const card = b.closest('.ccard');
+      const id = card?.dataset.id;
+      const act = b.dataset.act;
+      if (act === 'edit') { location.href = `editor.html?id=${id}`; return; }
+      if (act === 'copy') {
+        const url = `${location.origin}${location.pathname.replace('dashboard.html','character.html')}?id=${id}`;
+        copyText(url); toast('已複製分享連結 ↗');
+      }
+      if (act === 'priv') { location.href = `editor.html?id=${id}#privacy`; }
     }));
   }
 
@@ -275,11 +298,10 @@
     if(e.key==='Escape' && document.activeElement===searchInput){ searchInput.value=''; query=''; searchEl.classList.remove('has'); applyFilter(); }
   });
 
-  refreshCounts();
-  render();
   document.querySelector('.btn-primary')?.addEventListener('click', () => location.href = 'editor.html');
-  // 次要功能：尚未實作 → 提示
   document.querySelectorAll('.js-soon').forEach(el => el.addEventListener('click', e => { e.preventDefault(); toast('功能開發中 · Coming soon'); }));
+
+  loadData();
 </script>
 
 </body>
