@@ -167,6 +167,10 @@
   </div>
 </div>
 
+<div id="demoBanner" style="background:#FEF3C7;border-bottom:1px solid #F59E0B;padding:10px var(--s8);font-size:13px;color:#92400E;display:none">
+  ⚠ 目前顯示的是<b>示範資料</b>。建立世界觀條目後，這裡會顯示你的真實資料。
+</div>
+
 <div class="head">
   <div class="eyebrow">Worldview · 國家 / 組織 / 家族 / 地點 / 種族 / 事件</div>
   <h1>世界觀</h1>
@@ -198,6 +202,7 @@
 </div>
 
 <script src="../assets/app.js"></script>
+<script src="../assets/api.js"></script>
 <script>
   window.__autoInit = false;
   document.querySelectorAll('.js-soon').forEach(el => el.addEventListener('click', e => { e.preventDefault(); toast('功能開發中 · Coming soon'); }));
@@ -429,6 +434,11 @@
     });
   })();
   (function(){ const eid=new URLSearchParams(location.search).get('e'); if(eid && ENT.some(x=>x.id===eid)) jumpTo(eid); })();
+
+  // show demo banner when logged in
+  CharHub.getToken().then(t => {
+    if (t) document.getElementById('demoBanner').style.display = '';
+  });
 </script>
 </body>
 </html>

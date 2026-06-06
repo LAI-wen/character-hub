@@ -260,10 +260,10 @@
       const any = [...g.querySelectorAll('.ccard')].some(c=>c.style.display!=='none');
       g.style.display = any ? '' : 'none';
     });
-    // hide the lone add-card group while searching so empty state reads cleanly
     const addGroup = groupsEl.querySelector('.group:not([data-proj])');
     if(addGroup) addGroup.style.display = query ? 'none' : '';
-    noResults.classList.toggle('on', shown===0);
+    // only show "no results" when user has OCs but none match the filter
+    noResults.classList.toggle('on', shown===0 && OCS.length > 0);
   }
 
   // privacy counts reflect the data, not hardcoded

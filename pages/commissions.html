@@ -121,6 +121,10 @@
   </div>
 </div>
 
+<div id="demoBanner" style="background:#FEF3C7;border-bottom:1px solid #F59E0B;padding:10px var(--s8);font-size:13px;color:#92400E;display:none">
+  ⚠ 目前顯示的是<b>示範資料</b>，不屬於你的帳號。委託功能將在下一版本串接至後端。
+</div>
+
 <div class="head">
   <div class="row">
     <h1>委託收件匣</h1>
@@ -139,6 +143,7 @@
 <div class="board" id="board"></div>
 
 <script src="../assets/app.js"></script>
+<script src="../assets/api.js"></script>
 <script>
   window.__autoInit = false;
   document.querySelectorAll('.js-soon').forEach(el => el.addEventListener('click', e => { e.preventDefault(); toast('功能開發中 · Coming soon'); }));
@@ -330,6 +335,11 @@
   renderSummary();
   renderChips();
   renderBoard();
+
+  // show demo banner when logged in (so user knows this isn't their data)
+  CharHub.getToken().then(t => {
+    if (t) document.getElementById('demoBanner').style.display = '';
+  });
 </script>
 
 </body>
