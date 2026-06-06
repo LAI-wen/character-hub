@@ -9,7 +9,7 @@ export const corsMiddleware = createMiddleware<{ Bindings: Env; Variables: Varia
     c.header('Access-Control-Allow-Methods', 'GET,POST,PATCH,DELETE,OPTIONS');
     c.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-OC-Password');
     c.header('Access-Control-Allow-Credentials', 'true');
-    if (c.req.method === 'OPTIONS') return c.text('', 204);
+    if (c.req.method === 'OPTIONS') return new Response(null, { status: 204, headers: c.res.headers });
     await next();
   }
 );
