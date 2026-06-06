@@ -5,18 +5,36 @@
 
   // ── token management ──────────────────────────────────────────────────────
 
+  const SS_KEY = 'ch_token';
+
+  function saveToken(t) {
+    _token = t;
+    try { sessionStorage.setItem(SS_KEY, t); } catch (e) {}
+  }
+
+  function loadToken() {
+    if (_token) return _token;
+    try { const t = sessionStorage.getItem(SS_KEY); if (t) { _token = t; return t; } } catch (e) {}
+    return null;
+  }
+
+  function clearToken() {
+    _token = null;
+    try { sessionStorage.removeItem(SS_KEY); } catch (e) {}
+  }
+
   async function refreshToken() {
     try {
       const r = await fetch(`${API}/auth/refresh`, { method: 'POST', credentials: 'include' });
-      if (!r.ok) return null;
+      if (!r.ok) { clearToken(); return null; }
       const d = await r.json();
-      _token = d.access_token;
+      saveToken(d.access_token);
       return _token;
     } catch { return null; }
   }
 
   async function getToken() {
-    return _token || await refreshToken();
+    return loadToken() || await refreshToken();
   }
 
   function checkFragmentToken() {
@@ -24,13 +42,12 @@
     if (!hash.includes('token=')) return null;
     const token = new URLSearchParams(hash.slice(1)).get('token');
     if (!token) return null;
-    _token = token;
+    saveToken(token);
     try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
     return token;
   }
 
   async function requireAuth(loginPath) {
-    // Check if OAuth just redirected here with a token in the fragment
     checkFragmentToken();
     const t = await getToken();
     if (!t) {
@@ -50,7 +67,7 @@
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
     const r = await fetch(`${API}${path}`, { ...opts, headers, credentials: 'include' });
-    if (r.status === 401) { _token = null; location.href = 'login.html'; return null; }
+    if (r.status === 401) { clearToken(); location.href = 'login.html'; return null; }
     return r;
   }
 
@@ -64,7 +81,7 @@
     });
     const d = await r.json();
     if (!r.ok) throw new Error(d.error?.message || '登入失敗');
-    _token = d.access_token;
+    saveToken(d.access_token);
     return d;
   }
 
@@ -76,13 +93,13 @@
     });
     const d = await r.json();
     if (!r.ok) throw new Error(d.error?.message || '註冊失敗');
-    _token = d.access_token;
+    saveToken(d.access_token);
     return d;
   }
 
   async function logout() {
     await apiFetch('/auth/logout', { method: 'POST' });
-    _token = null;
+    clearToken();
   }
 
   function loginWithGoogle() { location.href = `${API}/auth/google`; }
