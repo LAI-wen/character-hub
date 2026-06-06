@@ -6,7 +6,7 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "DB"
 database_name = "oc-tools-db"
-database_id = ""
+database_id = "cce5bca7-fa53-45f4-8523-09b953c88360"
 
 [[r2_buckets]]
 binding = "BUCKET"
@@ -14,7 +14,7 @@ bucket_name = "oc-tools-media"
 
 [[kv_namespaces]]
 binding = "KV"
-id = ""
+id = "2c05fc09df2c4619ba0531ba62e355ce"
 
 [vars]
 FRONTEND_URL = "https://oc-tools.pages.dev"
