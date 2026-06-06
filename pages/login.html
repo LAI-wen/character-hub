@@ -249,12 +249,6 @@
   window.__autoInit = false;
   const body = document.body;
 
-  // If already logged in → go straight to dashboard
-  CharHub.getToken().then(t => { if (t) location.href = 'dashboard.html'; });
-
-  // OAuth token in fragment (from Google/GitHub redirect)
-  if (CharHub.checkFragmentToken()) location.href = 'dashboard.html';
-
   function setMode(m){
     body.classList.toggle('mode-signup', m==='signup');
     body.classList.toggle('mode-login', m!=='signup');
@@ -266,6 +260,11 @@
   document.querySelectorAll('#authtabs button').forEach(b=>b.onclick=()=>setMode(b.dataset.m));
   document.getElementById('toSignup').onclick = e=>{ e.preventDefault(); setMode('signup'); };
   document.getElementById('toLogin').onclick  = e=>{ e.preventDefault(); setMode('login'); };
+
+  // initialize mode + check existing session
+  setMode(location.search.replace('?','') === 'signup' ? 'signup' : 'login');
+  if (CharHub.checkFragmentToken()) { location.href = 'dashboard.html'; }
+  else { CharHub.getToken().then(t => { if (t) location.href = 'dashboard.html'; }); }
 
   // password reveal
   const pwd = document.getElementById('inPwd');
@@ -312,8 +311,7 @@
     }
   });
 
-  // deep-link ?signup
-  if (location.search.replace('?','') === 'signup') setMode('signup');
+
 </script>
 </body>
 </html>

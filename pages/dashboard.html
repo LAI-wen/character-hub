@@ -188,8 +188,10 @@
   }
 
   async function loadData() {
-    await CharHub.requireAuth('../pages/login.html');
-    const [projects, ocs] = await Promise.all([CharHub.listProjects(), CharHub.listOCs()]);
+    await CharHub.requireAuth('login.html');
+    const [me, projects] = await Promise.all([CharHub.getMe(), CharHub.listProjects()]);
+    if (!me) return;
+    const ocs = await CharHub.getMyOCs(me.username);
     PROJECTS = [
       ...projects.map(p => ({ id: p.id, name: p.name, sub: p.sub_name || '' })),
       { id: '__none__', name: '未分類', sub: 'Unsorted' },

@@ -97,6 +97,14 @@
     return r.json();
   }
 
+  async function getMyOCs(username, projectId) {
+    const params = new URLSearchParams({ user: username });
+    if (projectId) params.set('project', projectId);
+    const r = await apiFetch(`/ocs?${params}`);
+    if (!r || !r.ok) return [];
+    return r.json();
+  }
+
   async function getOC(id) {
     const r = await apiFetch(`/ocs/${id}`);
     if (!r || !r.ok) return null;
@@ -183,7 +191,7 @@
   window.CharHub = {
     getToken, requireAuth, checkFragmentToken,
     login, register, logout, loginWithGoogle, loginWithGitHub,
-    listOCs, getOC, createOC, updateOC, deleteOC,
+    listOCs, getMyOCs, getOC, createOC, updateOC, deleteOC,
     listProjects, createProject, deleteProject,
     getMe, updateMe,
     parseJSON, timeAgo, PRIV_LABEL,
