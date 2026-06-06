@@ -142,17 +142,11 @@
 </div>
 
 <script src="../assets/app.js"></script>
+<script src="../assets/api.js"></script>
 <script>
   window.__autoInit = false;
   document.querySelectorAll('.js-soon').forEach(el => el.addEventListener('click', e => { e.preventDefault(); toast('功能開發中 · Coming soon'); }));
-  const CAST = [
-    {id:'yoi',   name:'宵霧', rom:'YOIGIRI', sp:'妖狐', h:168, c:'#8FA3B0', proj:'tokoyo', on:true},
-    {id:'hiru',  name:'晝',   rom:'HIRU',    sp:'半神', h:182, c:'#E0A23B', proj:'day', on:true},
-    {id:'tomori',name:'燈守', rom:'TOMORI',  sp:'付喪神',h:152, c:'#C8463C', proj:'tokoyo', on:true},
-    {id:'nozomi',name:'望',   rom:'NOZOMI',  sp:'人類', h:163, c:'#2E6F6A', proj:'tokoyo', on:false},
-    {id:'aka',   name:'緋',   rom:'AKA',     sp:'鬼',   h:175, c:'#9E332B', proj:'day', on:false},
-    {id:'hai',   name:'灰',   rom:'HAI',     sp:'未定', h:158, c:'#8A857C', proj:'draft', on:false},
-  ];
+  let CAST = [];
   const MAXCM = 190;
   const rows = document.getElementById('rows');
   const chart = document.getElementById('chart');
@@ -218,17 +212,62 @@
   document.getElementById('exportBtn').addEventListener('click', ()=> toast('✓ 已輸出比較圖（PNG）'));
   window.addEventListener('resize', renderChart);
 
-  // ---- project scope (企劃分組，與角色頁一致) ----
-  const PROJECTS = [{id:'tokoyo',name:'常夜物語'},{id:'day',name:'晝廷篇'},{id:'draft',name:'草稿匣'}];
+  // ---- project scope ----
+  let PROJECTS = [];
   const scopeChips = document.getElementById('scopeChips');
-  scopeChips.innerHTML = [{id:'*',name:'全部'}].concat(PROJECTS).map(p=>`<button class="scope-chip${p.id==='*'?' on':''}" data-p="${p.id}">${p.name}</button>`).join('');
-  scopeChips.querySelectorAll('.scope-chip').forEach(c=>c.onclick=()=>{
-    scope = c.dataset.p;
-    scopeChips.querySelectorAll('.scope-chip').forEach(x=>x.classList.toggle('on', x===c));
-    renderAll();
-  });
 
-  renderAll();
+  function buildScopeChips() {
+    scopeChips.innerHTML = [{id:'*',name:'全部'}].concat(PROJECTS).map(p=>`<button class="scope-chip${p.id==='*'?' on':''}" data-p="${p.id}">${p.name}</button>`).join('');
+    scopeChips.querySelectorAll('.scope-chip').forEach(c=>c.onclick=()=>{
+      scope = c.dataset.p;
+      scopeChips.querySelectorAll('.scope-chip').forEach(x=>x.classList.toggle('on', x===c));
+      renderAll();
+    });
+  }
+
+  // ---- load from API ----
+  function extractHeight(profileFields) {
+    const fields = CharHub.parseJSON(profileFields, []);
+    const f = fields.find(f => f.k && (f.k.includes('身高') || f.k.toLowerCase().includes('height')));
+    if (!f) return null;
+    const n = parseFloat(String(f.v).replace(/[^0-9.]/g, ''));
+    return isNaN(n) ? null : n;
+  }
+
+  (async function loadFromAPI() {
+    const token = await CharHub.getToken();
+    if (!token) { renderAll(); return; }
+
+    const me = await CharHub.getMe();
+    if (!me) { renderAll(); return; }
+
+    const [ocs, projects] = await Promise.all([
+      CharHub.getMyOCs(me.username),
+      CharHub.listProjects(),
+    ]);
+
+    PROJECTS = projects.map(p => ({ id: p.id, name: p.name }));
+
+    if (ocs.length === 0) {
+      rows.innerHTML = `<div style="padding:var(--s8);color:var(--text-faint);font-size:14px">還沒有角色。先在「我的角色」建立 OC 並填入身高。</div>`;
+      buildScopeChips();
+      return;
+    }
+
+    CAST = ocs.map((oc, i) => ({
+      id: oc.id,
+      name: oc.name,
+      rom: oc.rom || '',
+      sp: oc.species || '',
+      h: extractHeight(oc.profile_fields) || 160,
+      c: oc.card_color || '#8FA3B0',
+      proj: oc.project_id || '__none__',
+      on: i < 3,
+    }));
+
+    buildScopeChips();
+    renderAll();
+  })();
 </script>
 </body>
 </html>

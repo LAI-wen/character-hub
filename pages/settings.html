@@ -213,27 +213,23 @@
           </div>
           <div class="row compact">
             <div class="lab">顯示名稱</div>
-            <div class="ctl"><input class="inp dirty" value="Yoi Studio" maxlength="40"></div>
+            <div class="ctl"><input class="inp dirty" id="displayNameInput" value="" maxlength="40" placeholder="你的名稱"></div>
           </div>
           <div class="row compact">
             <div class="lab">使用者代號<span class="sub">公開頁面網址的一部分。</span></div>
             <div class="ctl">
-              <div class="handlewrap"><span class="pfx">characterhub.app/@</span><input class="inp dirty" id="handleInput" value="yoi-studio"></div>
+              <div class="handlewrap"><span class="pfx">characterhub.app/@</span><input class="inp" id="handleInput" value="" readonly style="background:var(--bg-tint)"></div>
               <div class="hint ok" id="handleHint">✓ 此代號可使用</div>
             </div>
           </div>
           <div class="row">
             <div class="lab">自我介紹<span class="sub">最多 160 字，支援換行。</span></div>
-            <div class="ctl"><textarea class="inp dirty" id="bio" maxlength="160" placeholder="介紹你自己與你的角色…">常夜國的造物者。畫宵霧與他的夥伴們。委託相關請先看委託設定，謝謝。</textarea><div class="hint" id="bioCount">38 / 160</div></div>
+            <div class="ctl"><textarea class="inp dirty" id="bio" maxlength="160" placeholder="介紹你自己與你的角色…"></textarea><div class="hint" id="bioCount">0 / 160</div></div>
           </div>
           <div class="row">
             <div class="lab">外部連結<span class="sub">顯示在公開檔案的社群圖示。</span></div>
             <div class="ctl">
-              <div class="links-list" id="linksList">
-                <div class="link-item"><span class="lkpfx">X / Twitter</span><input class="inp dirty" value="@yoi_studio"></div>
-                <div class="link-item"><span class="lkpfx">Pixiv</span><input class="inp dirty" value="users/00000"></div>
-                <div class="link-item"><span class="lkpfx">Discord</span><input class="inp dirty" value="yoi.studio"></div>
-              </div>
+              <div class="links-list" id="linksList"></div>
               <button class="btn btn-ghost btn-sm addlink" id="addLink">＋ 新增連結</button>
             </div>
           </div>
@@ -352,7 +348,7 @@
         <div class="card-body">
           <div class="row compact">
             <div class="lab">電子信箱</div>
-            <div class="ctl" style="display:flex;gap:10px;align-items:center"><input class="inp" value="yoi@example.com" readonly style="background:var(--bg-tint)"><button class="btn btn-sm" data-toast="寄出驗證信…">變更</button></div>
+            <div class="ctl" style="display:flex;gap:10px;align-items:center"><input class="inp" id="emailDisplay" value="" readonly style="background:var(--bg-tint)"><button class="btn btn-sm" data-toast="寄出驗證信…">變更</button></div>
           </div>
           <div class="row compact">
             <div class="lab">密碼<span class="sub">上次變更：3 個月前</span></div>
@@ -423,57 +419,88 @@
     el.addEventListener('change', markDirty);
   });
   // ── API load + save ────────────────────────────────────────────────────────
-  let _origData = {};
 
   async function loadProfile() {
     await CharHub.requireAuth('login.html');
     const me = await CharHub.getMe();
     if (!me) return;
-    _origData = me;
 
+    // identity
     const hi = document.getElementById('handleInput');
-    const bio = document.getElementById('bio');
-    if (hi && me.username) { hi.value = me.username; document.getElementById('topHandle').textContent = '＠' + me.username; }
-    if (bio && me.bio) { bio.value = me.bio; updBio(); }
+    const topH = document.getElementById('topHandle');
+    if (hi) hi.value = me.username || '';
+    if (topH) topH.textContent = '＠' + (me.username || '');
 
-    // display name
     const dnEl = document.getElementById('displayNameInput');
-    if (dnEl && me.display_name) dnEl.value = me.display_name;
+    if (dnEl) dnEl.value = me.display_name || '';
+
+    const bio = document.getElementById('bio');
+    if (bio) { bio.value = me.bio || ''; updBio(); }
+
+    const emailEl = document.getElementById('emailDisplay');
+    if (emailEl) emailEl.value = me.email || '';
+
+    // avatar initials
+    const avEl = document.querySelector('.avset .big');
+    if (avEl) avEl.textContent = (me.display_name || me.username || '?')[0];
+
+    // social links — always clear first, then populate from API
+    const wrap = document.getElementById('linksList');
+    if (wrap) {
+      const links = CharHub.parseJSON(me.social_links, []);
+      wrap.innerHTML = links.map(l =>
+        `<div class="link-item"><span class="lkpfx">${l.platform}</span><input class="inp dirty" value="${l.url || ''}" placeholder="連結"></div>`
+      ).join('');
+      wrap.querySelectorAll('input').forEach(inp => inp.addEventListener('input', markDirty));
+    }
 
     // accent color
     if (me.accent_color) {
-      const swatches = document.querySelectorAll('#swatches button');
-      swatches.forEach(b => b.classList.toggle('on', b.dataset.c === me.accent_color));
+      document.querySelectorAll('#swatches button').forEach(b =>
+        b.classList.toggle('on', b.dataset.c === me.accent_color)
+      );
     }
 
-    // social links
-    const links = CharHub.parseJSON(me.social_links, []);
-    const wrap = document.getElementById('linksList');
-    if (wrap && links.length) {
-      wrap.innerHTML = links.map(l => `<div class="link-item"><span class="lkpfx">${l.platform}</span><input class="inp dirty" value="${l.url}" placeholder="連結" data-platform="${l.platform}"></div>`).join('');
-      wrap.querySelectorAll('input').forEach(inp => inp.addEventListener('input', markDirty));
-    }
+    // notification prefs
+    const prefs = CharHub.parseJSON(me.notification_prefs, {});
+    document.querySelectorAll('#notif .sw-toggle').forEach(toggle => {
+      const key = toggle.dataset.prefKey;
+      const ch = toggle.dataset.prefCh;
+      if (key && ch && prefs[key]) {
+        const input = toggle.querySelector('input');
+        if (input) input.checked = !!prefs[key][ch];
+      }
+    });
   }
 
   async function saveProfile() {
-    const hi = document.getElementById('handleInput');
     const bio = document.getElementById('bio');
     const dnEl = document.getElementById('displayNameInput');
     const activeAccent = document.querySelector('#swatches button.on');
     const links = [...document.querySelectorAll('#linksList .link-item')].map(item => ({
-      platform: item.querySelector('.lkpfx')?.textContent || '其他',
-      url: item.querySelector('input')?.value || '',
+      platform: item.querySelector('.lkpfx')?.textContent?.trim() || '其他',
+      url: item.querySelector('input')?.value?.trim() || '',
     })).filter(l => l.url);
 
-    const payload = {
-      bio: bio?.value || undefined,
-      display_name: dnEl?.value || undefined,
-      accent_color: activeAccent?.dataset.c || undefined,
-      social_links: links,
-    };
+    // collect notification prefs from toggle switches
+    const notification_prefs = {};
+    document.querySelectorAll('#notif .sw-toggle').forEach(toggle => {
+      const key = toggle.dataset.prefKey;
+      const ch = toggle.dataset.prefCh;
+      if (key && ch) {
+        if (!notification_prefs[key]) notification_prefs[key] = {};
+        notification_prefs[key][ch] = toggle.querySelector('input')?.checked ?? false;
+      }
+    });
 
     try {
-      await CharHub.updateMe(payload);
+      await CharHub.updateMe({
+        bio: bio?.value ?? undefined,
+        display_name: dnEl?.value || undefined,
+        accent_color: activeAccent?.dataset.c || undefined,
+        social_links: links,
+        notification_prefs,
+      });
       clearDirty();
       toast('✓ 設定已儲存');
     } catch (err) {
@@ -482,7 +509,7 @@
   }
 
   document.getElementById('saveBtn').onclick = saveProfile;
-  document.getElementById('discardBtn').onclick = ()=>{ clearDirty(); location.reload(); };
+  document.getElementById('discardBtn').onclick = () => { clearDirty(); location.reload(); };
 
   // ---------- segmented controls ----------
   document.querySelectorAll('.seg[data-seg]').forEach(seg=>{
@@ -498,17 +525,9 @@
   const updBio=()=>bioCount.textContent=`${bio.value.length} / 160`;
   bio.addEventListener('input', updBio); updBio();
 
-  // ---------- handle availability (mock) ----------
-  const hi=document.getElementById('handleInput'), hh=document.getElementById('handleHint');
-  const taken=['admin','yoi','studio','support'];
-  hi.addEventListener('input', ()=>{
-    const v=hi.value.trim().toLowerCase().replace(/[^a-z0-9-]/g,'');
-    if(hi.value!==v) hi.value=v;
-    document.getElementById('topHandle').textContent='＠'+(v||'…');
-    if(!v){ hh.className='hint'; hh.textContent='請輸入代號'; }
-    else if(taken.includes(v)){ hh.className='hint'; hh.style.color='var(--avoid)'; hh.textContent='✕ 此代號已被使用'; }
-    else { hh.className='hint ok'; hh.style.color=''; hh.textContent='✓ 此代號可使用'; }
-  });
+  // handle is read-only (username cannot be changed after registration)
+  const hh = document.getElementById('handleHint');
+  if (hh) { hh.className = 'hint'; hh.textContent = '使用者代號建立後無法更改。'; }
 
   // ---------- add link ----------
   const PLATFORMS=['Bluesky','Plurk','Misskey','個人網站','Patreon','其他'];
@@ -525,18 +544,18 @@
 
   // ---------- notifications grid ----------
   const NOTIF=[
-    {t:'新委託訊息', s:'有人寄來委託洽談或回覆', email:true, discord:true},
-    {t:'委託狀態變更', s:'委託進入下一階段時', email:true, discord:false},
-    {t:'截止日提醒', s:'委託到期前 3 天', email:true, discord:true},
-    {t:'有人收藏你的角色', s:'公開角色被加入收藏', email:false, discord:false},
-    {t:'產品更新', s:'新功能與公告', email:false, discord:false},
+    {key:'new_message',      t:'新委託訊息',     s:'有人寄來委託洽談或回覆',  email:true,  discord:true},
+    {key:'status_change',    t:'委託狀態變更',   s:'委託進入下一階段時',       email:true,  discord:false},
+    {key:'deadline_reminder',t:'截止日提醒',     s:'委託到期前 3 天',         email:true,  discord:true},
+    {key:'new_favorite',     t:'有人收藏你的角色', s:'公開角色被加入收藏',    email:false, discord:false},
+    {key:'product_update',   t:'產品更新',       s:'新功能與公告',             email:false, discord:false},
   ];
   const nEl=document.getElementById('notif');
-  nEl.insertAdjacentHTML('beforeend', NOTIF.map((n,i)=>`
+  nEl.insertAdjacentHTML('beforeend', NOTIF.map(n=>`
     <div class="nrow">
       <span class="nlabel">${n.t}<span class="sub">${n.s}</span></span>
-      <span class="cell"><label class="sw"><input type="checkbox" class="dirty" data-n="${i}-e" ${n.email?'checked':''}><span class="track"></span></label></span>
-      <span class="cell"><label class="sw"><input type="checkbox" class="dirty" data-n="${i}-d" ${n.discord?'checked':''}><span class="track"></span></label></span>
+      <span class="cell"><label class="sw sw-toggle" data-pref-key="${n.key}" data-pref-ch="email"><input type="checkbox" class="dirty" ${n.email?'checked':''}><span class="track"></span></label></span>
+      <span class="cell"><label class="sw sw-toggle" data-pref-key="${n.key}" data-pref-ch="discord"><input type="checkbox" class="dirty" ${n.discord?'checked':''}><span class="track"></span></label></span>
     </div>`).join(''));
   nEl.querySelectorAll('input').forEach(el=>{ el.addEventListener('change', markDirty); });
 
