@@ -121,10 +121,6 @@
   </div>
 </div>
 
-<div id="demoBanner" style="background:#FEF3C7;border-bottom:1px solid #F59E0B;padding:10px var(--s8);font-size:13px;color:#92400E;display:none">
-  ⚠ 目前顯示的是<b>示範資料</b>，不屬於你的帳號。委託功能將在下一版本串接至後端。
-</div>
-
 <div class="head">
   <div class="row">
     <h1>委託收件匣</h1>
@@ -148,27 +144,13 @@
   window.__autoInit = false;
   document.querySelectorAll('.js-soon').forEach(el => el.addEventListener('click', e => { e.preventDefault(); toast('功能開發中 · Coming soon'); }));
 
-  const CHARS = {
-    yoi:   {name:'宵霧', sp:'妖狐',  c:'#8FA3B0'},
-    tomori:{name:'燈守', sp:'付喪神', c:'#C8463C'},
-    hiru:  {name:'晝',   sp:'半神',  c:'#E0A23B'},
-    nozomi:{name:'望',   sp:'人類',  c:'#2E6F6A'},
-  };
+  const CHARS = {};
   const STATUS = {
     talk:     {t:'洽談中', en:'In talks',     c:'#A98B4E'},
     progress: {t:'進行中', en:'In progress',  c:'#3B6FB0'},
     done:     {t:'已完成', en:'Delivered',    c:'#3E8E5A'},
   };
-  // account-level: every commission across every character (cm1/cm2 map to 宵霧's real briefs)
-  const COMMS = [
-    {id:'cm2', char:'yoi',    title:'Q版表情貼圖 ×4',  artist:'',           status:'talk',     due:'2026.08.01', budget:'NT$3,200', usage:'commercial', unread:2, updated:'5 小時前', ago:5},
-    {id:'cm3', char:'tomori', title:'立繪翻新・全身',   artist:'@kuro_e',    status:'talk',     due:'未定',        budget:'洽談中',    usage:'personal',   unread:1, updated:'昨天', ago:26},
-    {id:'cm1', char:'yoi',    title:'生日紀念・提燈半身',artist:'@hoshi_ame', status:'progress', due:'2026.07.15', budget:'NT$8,000', usage:'personal',   unread:0, updated:'2 天前', ago:48},
-    {id:'cm4', char:'hiru',   title:'主視覺・坐姿全身',  artist:'@rin_draws', status:'progress', due:'2026.06.30', budget:'NT$12,000',usage:'commercial', unread:0, updated:'3 天前', ago:72},
-    {id:'cm5', char:'hiru',   title:'SD 配對掛畫',      artist:'@rin_draws', status:'progress', due:'2026.07.20', budget:'NT$5,000', usage:'personal',   unread:0, updated:'1 週前', ago:168},
-    {id:'cm6', char:'yoi',    title:'立繪・初版巫裝',    artist:'@momoko',    status:'done',     due:'2026.04.10', budget:'NT$9,500', usage:'personal',   unread:0, updated:'1 個月前', ago:720},
-    {id:'cm7', char:'nozomi', title:'頭像 icon',        artist:'@momoko',    status:'done',     due:'2026.03.02', budget:'NT$2,000', usage:'personal',   unread:0, updated:'2 個月前', ago:1440},
-  ];
+  let COMMS = [];
   const USAGE = { personal:'個人', commercial:'商用' };
   const TODAY = new Date('2026-06-04');
   const esc = s => (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -336,10 +318,8 @@
   renderChips();
   renderBoard();
 
-  // show demo banner when logged in (so user knows this isn't their data)
-  CharHub.getToken().then(t => {
-    if (t) document.getElementById('demoBanner').style.display = '';
-  });
+  // load real commissions — feature coming in next version
+  // CharHub.getToken() is available; stub for now
 </script>
 
 </body>

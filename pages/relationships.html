@@ -152,10 +152,6 @@
   </div>
 </div>
 
-<div id="demoBanner" style="background:#FEF3C7;border-bottom:1px solid #F59E0B;padding:10px var(--s8);font-size:13px;color:#92400E;display:none">
-  ⚠ 目前顯示的是<b>示範資料</b>。建立 OC 並在 API 新增關係後，這裡會顯示你的真實資料。
-</div>
-
 <div class="head">
   <div class="eyebrow">Relationships · 雙人 / 多人系統</div>
   <h1>關係系統</h1>
@@ -189,48 +185,9 @@
 <script>
   window.__autoInit = false;
   document.querySelectorAll('.js-soon').forEach(el => el.addEventListener('click', e => { e.preventDefault(); toast('功能開發中 · Coming soon'); }));
-  const CAST = {
-    yoi:   {name:'宵霧', rom:'YOIGIRI', sp:'妖狐', c:'#8FA3B0', x:50, y:50, center:true, proj:'tokoyo'},
-    hiru:  {name:'晝',   rom:'HIRU',    sp:'半神', c:'#E0A23B', x:82, y:22, proj:'day'},
-    tomori:{name:'燈守', rom:'TOMORI',  sp:'付喪神',c:'#C8463C', x:18, y:28, proj:'tokoyo'},
-    nozomi:{name:'望',   rom:'NOZOMI',  sp:'人類', c:'#2E6F6A', x:84, y:76, proj:'tokoyo'},
-    aka:   {name:'緋',   rom:'AKA',     sp:'鬼',   c:'#9E332B', x:52, y:90, proj:'day'},
-    hai:   {name:'灰',   rom:'HAI',     sp:'未定', c:'#8A857C', x:16, y:74, proj:'draft'},
-  };
-  const EDGES = [
-    {id:'yoi-tomori', a:'yoi', b:'tomori', label:'守護 · 契約'},
-    {id:'yoi-hiru',   a:'yoi', b:'hiru',   label:'宿敵'},
-    {id:'yoi-nozomi', a:'yoi', b:'nozomi', label:'羈絆'},
-    {id:'yoi-hai',    a:'yoi', b:'hai',    label:'？ 謎'},
-    {id:'hiru-aka',   a:'hiru',b:'aka',    label:'同盟'},
-    {id:'tomori-nozomi', a:'tomori', b:'nozomi', label:'舊識'},
-  ];
-  const PAIRS = {
-    'yoi-tomori': { rel:'守護 · 契約 Guardian',
-      desc:'百年前，宵霧在廢棄神社拾起一盞無主燈籠——那是化為付喪神的燈守。兩者立下「守燈之約」：只要燈不滅，狐便不孤。燈守替宵霧記路，宵霧替燈守續火。',
-      album:['雙人 · 神社','燈守 · 燈籠形態','並肩 · 夜路','約定 · 緋繩'],
-      timeline:[['百年前','初遇於廢稻荷神社，拾起無主燈籠'],['立約','訂下「守燈之約」，緋繩繫腕'],['災','一場山火，燈籠燒損、約近斷'],['重鑄','重鑄燈籠，緋繩重新繫上'],['現在','同行夜路，替迷途者點燈']] },
-    'yoi-hiru': { rel:'宿敵 Rival',
-      desc:'晝是司掌白晝的半神，與夜行的宵霧天生對立。兩者立場相反卻彼此熟知——晝不只一次在黎明前替宵霧收尾，宵霧也曾在月蝕夜替晝擋下一劫。敵意之下，是少有人懂的相互理解。',
-      album:['對峙 · 黎明','晝 · 立繪','交手','停戰 · 月蝕'],
-      timeline:[['初遇','晝奉命驅逐神社妖狐'],['交手','數度交鋒，互不相讓'],['月蝕','宵霧替晝擋下一劫'],['現在','維持微妙的停戰']] },
-    'yoi-nozomi': { rel:'羈絆 Bond',
-      desc:'望是某個迷途的雪夜被宵霧點燈引路的人類旅人。多年後望重回神社，成為少數能與宵霧好好說話的人。對宵霧而言，望是「被點過燈、卻又回來」的稀有存在。',
-      album:['初遇 · 雪夜','望 · 立繪','重逢 · 神社','茶席'],
-      timeline:[['雪夜','迷途的望被宵霧點燈引路'],['多年後','望重回神社道謝'],['現在','少數能與宵霧對話的人']] },
-    'yoi-hai': { rel:'？ 未知 Unknown',
-      desc:'灰是一個尚未定稿的角色。與宵霧之間似乎有某種未言明的牽連——草稿裡只留下一行字：「他記得灰，灰卻不記得他。」',
-      album:['灰 · 未完成','？','？','？'],
-      timeline:[['草稿','關係尚未定稿'],['線索','「他記得灰，灰卻不記得他」']] },
-    'hiru-aka': { rel:'同盟 Allies',
-      desc:'晝與鬼族的緋締結同盟，共同維繫白晝與火的秩序。兩者皆為強者，立場一致時無往不利。',
-      album:['同盟 · 締約','緋 · 立繪','並肩','晝 · 緋'],
-      timeline:[['締約','晝與緋結為同盟'],['現在','共同維繫秩序']] },
-    'tomori-nozomi': { rel:'舊識 Acquaintance',
-      desc:'燈守與望在不同的時間都曾受宵霧照拂，因而相識。望會替燈守添油，燈守替望記得回家的路。',
-      album:['舊識','燈守 · 望','添油','夜路'],
-      timeline:[['因緣','皆受宵霧照拂而相識'],['現在','彼此照應']] },
-  };
+  let CAST = {};
+  let EDGES = [];
+  let PAIRS = {};
 
   const map = document.getElementById('map');
   const edgesSvg = document.getElementById('edges');
@@ -460,10 +417,28 @@
   // deep-link from character page: ?pair=<edgeId> focuses that relationship
   (function(){ const pid=new URLSearchParams(location.search).get('pair'); if(pid && EDGES.some(e=>e.id===pid)) selectPair(pid); })();
 
-  // show demo banner when logged in
-  CharHub.getToken().then(t => {
-    if (t) document.getElementById('demoBanner').style.display = '';
-  });
+  // load real relationships from API
+  (async function loadRelationships() {
+    const token = await CharHub.getToken();
+    if (!token) return;
+
+    const [rels, ocs] = await Promise.all([
+      CharHub.apiFetch ? null : null, // placeholder
+      CharHub.listOCs ? CharHub.getMyOCs((await CharHub.getMe())?.username || '') : [],
+    ]);
+
+    // if no OCs yet, show empty state
+    if (!Array.isArray(ocs) || ocs.length === 0) {
+      document.getElementById('map').innerHTML = '';
+      document.getElementById('legend').innerHTML = '';
+      document.getElementById('pairPanel').innerHTML = `
+        <div style="padding:var(--s10);text-align:center;color:var(--text-faint)">
+          <div style="font-family:var(--font-serif);font-size:18px;margin-bottom:8px;color:var(--text-dim)">還沒有角色</div>
+          <div style="font-size:14px">先在「我的角色」建立 OC，再回來設定關係圖。</div>
+          <a href="dashboard.html" style="display:inline-block;margin-top:var(--s6);padding:9px 18px;background:var(--text);color:#fff;border-radius:var(--r-btn);font-size:14px;font-weight:600">前往建立角色 →</a>
+        </div>`;
+    }
+  })();
 </script>
 </body>
 </html>

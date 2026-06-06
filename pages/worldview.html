@@ -167,10 +167,6 @@
   </div>
 </div>
 
-<div id="demoBanner" style="background:#FEF3C7;border-bottom:1px solid #F59E0B;padding:10px var(--s8);font-size:13px;color:#92400E;display:none">
-  ⚠ 目前顯示的是<b>示範資料</b>。建立世界觀條目後，這裡會顯示你的真實資料。
-</div>
-
 <div class="head">
   <div class="eyebrow">Worldview · 國家 / 組織 / 家族 / 地點 / 種族 / 事件</div>
   <h1>世界觀</h1>
@@ -207,15 +203,7 @@
   window.__autoInit = false;
   document.querySelectorAll('.js-soon').forEach(el => el.addEventListener('click', e => { e.preventDefault(); toast('功能開發中 · Coming soon'); }));
 
-  // ---------- characters (link targets) ----------
-  const CHARS = {
-    yoi:   {name:'宵霧', rom:'YOIGIRI', sp:'妖狐',  c:'#8FA3B0', proj:'tokoyo'},
-    hiru:  {name:'晝',   rom:'HIRU',    sp:'半神',  c:'#E0A23B', proj:'day'},
-    tomori:{name:'燈守', rom:'TOMORI',  sp:'付喪神', c:'#C8463C', proj:'tokoyo'},
-    nozomi:{name:'望',   rom:'NOZOMI',  sp:'人類',  c:'#2E6F6A', proj:'tokoyo'},
-    aka:   {name:'緋',   rom:'AKA',     sp:'鬼',    c:'#9E332B', proj:'day'},
-    hai:   {name:'灰',   rom:'HAI',     sp:'未定',  c:'#8A857C', proj:'draft'},
-  };
+  const CHARS = {};
   // ---------- entity types ----------
   const TYPES = {
     nation: {t:'國家・勢力', en:'Nation', c:'#3B5E6B'},
@@ -227,65 +215,13 @@
   };
   const KIND_C = { '敵對':'#9E332B', '盟友':'#3E8E5A', '隸屬':'#3B5E6B', '分支':'#8A6FA0', '相關':'#A98B4E' };
 
-  // ---------- world entities ----------
-  const ENT = [
-    { id:'tokoyo', name:'常夜國', en:'Tokoyo', type:'nation', blurb:'妖與神棲息的永夜之國，宵霧的故鄉。',
-      setting:'被薄霧與長夜籠罩的國度，太陽終年不升。妖狐、付喪神與各路神祇在此共存，以「燈火」維繫秩序與道路。常夜國與司掌白晝的晝廷長年對立。',
-      chars:['yoi','tomori','hai'], rels:[{id:'hirutei',kind:'敵對'},{id:'tomoribito',kind:'隸屬'},{id:'kitsune3',kind:'隸屬'}], gallery:['常夜・遠景','霧之街','長夜天幕'] },
-    { id:'hirutei', name:'晝廷', en:'Day Court', type:'nation', blurb:'司掌白晝秩序的半神朝廷。',
-      setting:'位於黎明關之後、永晝照耀的朝廷。由半神統御，維繫白晝與時序的運行。視常夜國的妖為亂源，與其長年敵對，但偶有停戰。',
-      chars:['hiru'], rels:[{id:'tokoyo',kind:'敵對'},{id:'kaen',kind:'盟友'},{id:'dawnpass',kind:'相關'}], gallery:['晝廷・正殿','永晝','金階'] },
-    { id:'tomoribito', name:'守燈人', en:'Lantern Keepers', type:'org', blurb:'在夜路替迷途者點燈的結社。',
-      setting:'散居常夜國各地的結社，職責是替夜行的迷途者點燈引路。成員多為與燈火結緣的妖或神。宵霧與燈守皆屬此社。',
-      chars:['yoi','tomori'], rels:[{id:'tokoyo',kind:'隸屬'},{id:'pact',kind:'相關'}], gallery:['守燈人・徽','提燈','夜路'] },
-    { id:'kaen', name:'緋焰一門', en:'Crimson Flame', type:'org', blurb:'鬼族的火焰流派，緋所屬。',
-      setting:'以操火為業的鬼族門派，崇尚力量與焰之純粹。與晝廷結盟，共同維繫「火」與「晝」的秩序。',
-      chars:['aka'], rels:[{id:'hirutei',kind:'盟友'},{id:'oni',kind:'相關'}], gallery:['緋焰・紋','爐火','鬼面'] },
-    { id:'kitsune3', name:'三尾狐族', en:'Three-Tail Foxes', type:'family', blurb:'尾端雪白的三尾妖狐血脈，宵霧出身。',
-      setting:'常夜國古老的妖狐血脈，以三條尾端雪白的尾巴為記。擅化形與幻術，世代與燈火結緣。宵霧為此族後裔。',
-      chars:['yoi'], rels:[{id:'tokoyo',kind:'隸屬'},{id:'youko',kind:'相關'}], gallery:['狐族・家紋','三尾','雪尾'] },
-    { id:'nozomike', name:'望家', en:'Nozomi Family', type:'family', blurb:'代代為旅人指路的人類家系。',
-      setting:'居於常夜國邊境的人類家系，世代以替旅人指路為業。與守燈人理念相近，因而與宵霧結緣。',
-      chars:['nozomi'], rels:[{id:'tomoribito',kind:'相關'}], gallery:['望家・宅','路標','旅燈'] },
-    { id:'shrine', name:'廢稻荷神社', en:'Ruined Inari', type:'place', blurb:'宵霧與燈守初遇之地。',
-      setting:'常夜國深處一座荒廢的稻荷神社，鳥居傾頹、香火久絕。百年前宵霧在此拾起無主燈籠——化為付喪神的燈守，兩者就此結約。',
-      chars:['yoi','tomori'], rels:[{id:'pact',kind:'相關'},{id:'tokoyo',kind:'隸屬'}], gallery:['鳥居','荒社','燈籠'] },
-    { id:'yoichi', name:'常夜市', en:'Night Market', type:'place', blurb:'永夜中不眠的妖市集。',
-      setting:'常夜國最熱鬧的市集，永夜中燈火不滅。妖、神、人在此交易奇珍與情報。宵霧常於此提燈穿行。',
-      chars:['yoi'], rels:[{id:'tokoyo',kind:'隸屬'}], gallery:['夜市・攤','燈河','面具攤'] },
-    { id:'dawnpass', name:'黎明關', en:'Dawn Pass', type:'place', blurb:'晝與夜的交界，晝廷的前線。',
-      setting:'分隔常夜國與晝廷的關隘，晝夜在此交界。晝廷於此設防，是兩國對峙與停戰的舞台。月蝕停戰即發生於此。',
-      chars:['hiru'], rels:[{id:'hirutei',kind:'隸屬'},{id:'eclipse',kind:'相關'}], gallery:['關隘','晝夜界','哨'] },
-    { id:'youko', name:'妖狐', en:'Kitsune', type:'race', blurb:'化形與幻術見長的狐妖。',
-      setting:'能化人形、操幻術的狐之妖。尾數越多、修為越深。性情多疏離而念舊。三尾以上者，多與神格沾邊。',
-      chars:['yoi'], rels:[{id:'kitsune3',kind:'相關'}], gallery:['狐火','化形','尾'] },
-    { id:'tsukumo', name:'付喪神', en:'Tsukumogami', type:'race', blurb:'器物歷百年而成的神。',
-      setting:'器物歷經百年、承載人的情念而化成的神。燈守便是一盞無主燈籠所化，記性極佳，替人記路、記事、記火。',
-      chars:['tomori'], rels:[{id:'tomoribito',kind:'相關'}], gallery:['古燈','器靈','百年'] },
-    { id:'oni', name:'鬼', en:'Oni', type:'race', blurb:'操火與力的強橫一族。',
-      setting:'體魄強橫、多能操火的一族。重承諾、好爭強。緋焰一門即出於此族。',
-      chars:['aka'], rels:[{id:'kaen',kind:'相關'}], gallery:['鬼火','角','戰'] },
-    { id:'pact', name:'守燈之約', en:'The Lantern Pact', type:'event', blurb:'宵霧與燈守立下的守燈契約。',
-      setting:'百年前於廢稻荷神社，宵霧拾起化為付喪神的燈守，立下「守燈之約」：只要燈不滅，狐便不孤。緋繩繫腕為證。此約是兩者羈絆的起點。',
-      chars:['yoi','tomori'], rels:[{id:'shrine',kind:'相關'},{id:'fire',kind:'相關'},{id:'tomoribito',kind:'相關'}], gallery:['立約','緋繩','燈'] },
-    { id:'fire', name:'山火之災', en:'The Great Fire', type:'event', blurb:'燒損燈籠、幾乎斷約的一場山火。',
-      setting:'一場席捲山林的大火，燒損了燈守的燈籠之軀，守燈之約幾乎中斷。宵霧重鑄燈籠、重繫緋繩，約方得續。',
-      chars:['yoi','tomori'], rels:[{id:'pact',kind:'相關'}], gallery:['山火','焦土','重鑄'] },
-    { id:'eclipse', name:'月蝕停戰', en:'Eclipse Truce', type:'event', blurb:'宵霧與晝在月蝕夜的停戰。',
-      setting:'某個月蝕之夜，晝暫離永晝、踏入常夜，宵霧替其擋下一劫。自此兩者維持微妙的停戰——敵意之下，是少有人懂的相互理解。',
-      chars:['yoi','hiru'], rels:[{id:'dawnpass',kind:'相關'},{id:'hirutei',kind:'相關'}], gallery:['月蝕','停戰','黎明'] },
-  ];
-
-  // each entity carries its own project (worldbuilding often precedes characters);
-  // falls back to character-derived scope only when unset.
-  const ENT_PROJ = { tokoyo:'tokoyo', hirutei:'day', tomoribito:'tokoyo', kaen:'day', kitsune3:'tokoyo', nozomike:'tokoyo', shrine:'tokoyo', yoichi:'tokoyo', dawnpass:'day', youko:'tokoyo', tsukumo:'tokoyo', oni:'day', pact:'tokoyo', fire:'tokoyo', eclipse:['tokoyo','day'] };
-  ENT.forEach(e => { if (e.proj == null && ENT_PROJ[e.id] != null) e.proj = ENT_PROJ[e.id]; });
+  let ENT = [];
 
   const codex = document.getElementById('codex');
   const detail = document.getElementById('detail');
   const ftabs = document.getElementById('ftabs');
   let filter = '*';
-  let selId = ENT[0].id;
+  let selId = ENT[0]?.id || null;
   let draftN = 0;
   let query = '';
   function entHay(e){ return [e.name, e.en, e.blurb, e.setting, TYPES[e.type].t, TYPES[e.type].en, ...(e.chars||[]).map(id=>CHARS[id]&&CHARS[id].name)].filter(Boolean).join(' ').toLowerCase(); }
@@ -435,10 +371,15 @@
   })();
   (function(){ const eid=new URLSearchParams(location.search).get('e'); if(eid && ENT.some(x=>x.id===eid)) jumpTo(eid); })();
 
-  // show demo banner when logged in
-  CharHub.getToken().then(t => {
-    if (t) document.getElementById('demoBanner').style.display = '';
-  });
+  // show empty state when no entries
+  if (ENT.length === 0) {
+    document.getElementById('codex').innerHTML = '';
+    document.getElementById('detail').innerHTML = `
+      <div style="padding:var(--s12);text-align:center;color:var(--text-faint)">
+        <div style="font-family:var(--font-serif);font-size:20px;margin-bottom:8px;color:var(--text-dim)">還沒有世界觀條目</div>
+        <div style="font-size:14px">建立企劃和角色後，可以在這裡新增國家、組織、地點等世界觀設定。</div>
+      </div>`;
+  }
 </script>
 </body>
 </html>
