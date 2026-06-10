@@ -1,0 +1,26 @@
+@import "./tokens.css";
+@import "./components.css";
+@import "./worldrel.css";
+@import "./character.css";
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
