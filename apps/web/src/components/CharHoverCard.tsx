@@ -29,8 +29,10 @@ export function CharHoverCard({ charId, character: charProp, children }: Props) 
 
   const handleEnter = useCallback(() => {
     timerRef.current = setTimeout(() => {
-      if (triggerRef.current) {
-        const rect = triggerRef.current.getBoundingClientRect()
+      // display:contents makes the span itself have no box; use the first rendered child
+      const el = (triggerRef.current?.firstElementChild ?? triggerRef.current) as HTMLElement | null
+      if (el) {
+        const rect = el.getBoundingClientRect()
         const cardW = 260
         const cardH = 220
         const flip = rect.right + cardW + 16 > window.innerWidth
