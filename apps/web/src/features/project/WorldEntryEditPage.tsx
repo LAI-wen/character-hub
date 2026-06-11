@@ -99,7 +99,7 @@ export function WorldEntryEditPage() {
 
   if (status === "error" || !data?.entry) {
     return (
-      <div className="page">
+      <div className="page narrow">
         <div style={{ color: "var(--avoid)", marginBottom: "var(--s4)" }}>找不到條目。</div>
         <Link to={`/p/${projectId}/worldview`} className="lnk">← 回世界觀</Link>
       </div>
@@ -111,7 +111,7 @@ export function WorldEntryEditPage() {
   const color = typeColor(watchedType || entry.type)
 
   return (
-    <div className="page">
+    <div className="page narrow">
       <ContextHeader
         scope="project"
         crumbs={[project.name, "世界觀", entry.title, "編輯"]}

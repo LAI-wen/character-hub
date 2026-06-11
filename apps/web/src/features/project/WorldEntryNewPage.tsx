@@ -72,7 +72,7 @@ export function WorldEntryNewPage() {
   const color = typeColor(watchedType)
 
   return (
-    <div className="page">
+    <div className="page narrow">
       <ContextHeader scope="project" crumbs={[project.name, "世界觀", "新增條目"]} />
 
       <div className="ed-top">

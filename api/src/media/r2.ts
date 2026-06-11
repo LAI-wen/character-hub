@@ -7,5 +7,5 @@ export async function deleteFromR2(bucket: R2Bucket, key: string): Promise<void>
 }
 
 export function getR2PublicUrl(key: string): string {
-  return `https://media.oc-tools.pages.dev/${key}`;
+  return `/api/media/${key}`;
 }

@@ -1,0 +1,140 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  padding: var(--s10) var(--s8);
+  width: 360px;
+  box-shadow: var(--sh-1);
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 var(--s1) 0;
+}
+
+.subtitle {
+  font-size: 0.875rem;
+  color: var(--text-dim);
+  margin: 0 0 var(--s8) 0;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s5);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.field label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.input {
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-btn);
+  padding: var(--s2) var(--s3);
+  font-size: 0.875rem;
+  font-family: var(--font-sans);
+  background: var(--surface);
+  color: var(--text);
+  transition: border-color 0.15s;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.error {
+  font-size: 0.8125rem;
+  color: var(--avoid);
+}
+
+.formError {
+  font-size: 0.875rem;
+  color: var(--avoid);
+  background: var(--avoid-soft);
+  padding: var(--s2) var(--s3);
+  border-radius: var(--r-btn);
+}
+
+.submitBtn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--r-btn);
+  padding: var(--s3) var(--s4);
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  transition: opacity 0.15s;
+}
+
+.submitBtn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.submitBtn:disabled {
+  opacity: 0.6;
+}
+
+.oauthBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-btn);
+  padding: var(--s3) var(--s4);
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  color: var(--text);
+  background: var(--surface);
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s;
+  margin-bottom: var(--s3);
+}
+
+.oauthBtn:hover {
+  background: var(--surface-raised);
+  border-color: var(--border-strong);
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  color: var(--text-faint);
+  font-size: 0.8125rem;
+  margin-bottom: var(--s3);
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.divider span {
+  flex-shrink: 0;
+}

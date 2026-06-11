@@ -5,8 +5,8 @@ compatibility_flags = ["nodejs_compat"]
 
 [[d1_databases]]
 binding = "DB"
-database_name = "oc-tools-db"
-database_id = "cce5bca7-fa53-45f4-8523-09b953c88360"
+database_name = "oc-tools-db-v2"
+database_id = "18d3eb15-6c21-48f0-aa6a-d912de01eb25"
 
 [[r2_buckets]]
 binding = "BUCKET"
@@ -17,7 +17,7 @@ binding = "KV"
 id = "2c05fc09df2c4619ba0531ba62e355ce"
 
 [vars]
-FRONTEND_URL = "https://oc-tools.pages.dev"
+FRONTEND_URL = "https://oc-tools-8g5.pages.dev"
 
 [dev]
 port = 8787

@@ -1,6 +1,6 @@
 import type { JWTPayload } from '../types';
 
-const ACCESS_TTL = 15 * 60;
+const ACCESS_TTL = 24 * 60 * 60;
 const REFRESH_TTL = 30 * 24 * 60 * 60;
 
 async function importKey(secret: string): Promise<CryptoKey> {
@@ -56,7 +56,14 @@ export async function signAccessToken(userId: string, username: string, secret: 
   return sign({ sub: userId, username, jti: crypto.randomUUID(), iat: now, exp: now + ACCESS_TTL }, secret);
 }
 
+const SESSION_TTL = 30 * 24 * 60 * 60;
+
 export async function signRefreshToken(userId: string, username: string, secret: string): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
   return sign({ sub: userId, username, jti: crypto.randomUUID(), iat: now, exp: now + REFRESH_TTL }, secret);
+}
+
+export async function signSessionToken(userId: string, username: string, secret: string): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+  return sign({ sub: userId, username, jti: crypto.randomUUID(), iat: now, exp: now + SESSION_TTL }, secret);
 }

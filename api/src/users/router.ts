@@ -22,8 +22,7 @@ usersRouter.get('/me', requireAuth, async (c) => {
   const { sub } = c.get('user');
   const user = await getUserById(c.env.DB, sub);
   if (!user) return errorResponse(c, 404, 'NOT_FOUND', 'User not found');
-  const { password_hash, ...safe } = user;
-  return c.json(safe);
+  return c.json({ id: user.id, email: user.email, username: user.username, display_name: user.display_name, avatar_url: user.avatar_url });
 });
 
 usersRouter.patch('/me', requireAuth, async (c) => {
@@ -40,8 +39,7 @@ usersRouter.patch('/me', requireAuth, async (c) => {
   });
 
   const updated = await getUserById(c.env.DB, sub);
-  const { password_hash, ...safe } = updated!;
-  return c.json(safe);
+  return c.json({ id: updated!.id, email: updated!.email, username: updated!.username, display_name: updated!.display_name });
 });
 
 usersRouter.get('/:username', async (c) => {
@@ -66,13 +64,9 @@ usersRouter.get('/:username', async (c) => {
   return c.json({
     username: user.username,
     display_name: user.display_name,
-    bio: user.bio,
-    avatar_url: user.avatar_url,
-    accent_color: user.accent_color,
-    social_links: JSON.parse(user.social_links),
     ocs: visibleOCs.map(oc => ({
-      id: oc.id, slug: oc.slug, name: oc.name, rom: oc.rom,
-      species: oc.species, card_color: oc.card_color, visibility: oc.visibility,
+      id: oc.id, slug: oc.slug, name: oc.name,
+      visibility: oc.visibility,
     })),
   });
 });

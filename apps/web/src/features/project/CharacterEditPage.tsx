@@ -16,6 +16,8 @@ const EditSchema = z.object({
   summary: z.string().max(4000).optional(),
   visibility: z.enum(["private", "unlisted", "public"]),
   tagsRaw: z.string().optional(),
+  projectRole: z.string().max(120).optional(),
+  factionLabel: z.string().max(120).optional(),
 })
 type EditForm = z.infer<typeof EditSchema>
 
@@ -67,29 +69,44 @@ export function CharacterEditPage() {
         summary: c.summary ?? "",
         visibility: (c.visibility as "private" | "unlisted" | "public") ?? "private",
         tagsRaw: (c.tags ?? []).join(", "),
+        projectRole: data.projectLink?.projectRole ?? "",
+        factionLabel: data.projectLink?.factionLabel ?? "",
       })
     }
   }, [data, reset])
 
   const mutation = useMutation({
-    mutationFn: (values: EditForm) => {
+    mutationFn: async (values: EditForm) => {
       const tags = values.tagsRaw
         ? values.tagsRaw.split(",").map(t => t.trim()).filter(Boolean)
         : []
-      return apiClient<CharacterResponse>(
-        `/api/app/characters/${data!.character!.id}`,
-        {
-          method: "PATCH",
-          body: {
-            name: values.name,
-            romaji: values.romaji || null,
-            species: values.species || null,
-            summary: values.summary || null,
-            visibility: values.visibility,
-            tags,
+      const [charRes] = await Promise.all([
+        apiClient<CharacterResponse>(
+          `/api/app/characters/${data!.character!.id}`,
+          {
+            method: "PATCH",
+            body: {
+              name: values.name,
+              romaji: values.romaji || null,
+              species: values.species || null,
+              summary: values.summary || null,
+              visibility: values.visibility,
+              tags,
+            },
           },
-        },
-      )
+        ),
+        apiClient(
+          `/api/app/projects/${projectId}/characters/${linkId}`,
+          {
+            method: "PATCH",
+            body: {
+              projectRole: values.projectRole || null,
+              factionLabel: values.factionLabel || null,
+            },
+          },
+        ),
+      ])
+      return charRes
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["project", projectId, "roster"] })
@@ -115,7 +132,7 @@ export function CharacterEditPage() {
   const displayName = watchedName || character.name
 
   return (
-    <div className="page">
+    <div className="page narrow">
       <ContextHeader
         scope="project"
         crumbs={[project.name, "企劃角色", character.name, "編輯"]}
@@ -198,6 +215,24 @@ export function CharacterEditPage() {
                 <option value="unlisted">不公開連結</option>
                 <option value="public">公開</option>
               </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Project-specific fields */}
+        <div className="ed-region">
+          <div className="rh">
+            <span className="rt">企劃設定</span>
+            <span className="en">PROJECT ROLE</span>
+          </div>
+          <div className="ed-sec">
+            <div className="ed-field">
+              <label>角色定位 <span className="opt">選填</span></label>
+              <input className="inp" {...register("projectRole")} placeholder="e.g. 主角、對立角" />
+            </div>
+            <div className="ed-field">
+              <label>所屬勢力 <span className="opt">選填</span></label>
+              <input className="inp" {...register("factionLabel")} placeholder="e.g. 帝國軍、反抗軍" />
             </div>
           </div>
         </div>

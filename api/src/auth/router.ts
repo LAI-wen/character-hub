@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { hashPassword, verifyPassword } from './password';
-import { signAccessToken, signRefreshToken, verifyToken } from './jwt';
+import { signAccessToken, signRefreshToken, signSessionToken, verifyToken } from './jwt';
 import { getGoogleAuthUrl, exchangeGoogleCode, getGoogleUser, getGitHubAuthUrl, exchangeGitHubCode, getGitHubUser, getGitHubPrimaryEmail } from './oauth';
 import { createUser, getUserByEmail, getUserById, getOAuthAccount, createOAuthAccount } from '../db/queries/users';
 import { errorResponse } from '../types';
@@ -13,7 +13,7 @@ const REFRESH_MAX_AGE = 30 * 24 * 60 * 60;
 
 const registerSchema = z.object({
   email: z.string().email(),
-  username: z.string().min(2).max(32).regex(/^[a-z0-9-]+$/),
+  handle: z.string().min(2).max(32).regex(/^[a-z0-9-]+$/),
   password: z.string().min(8),
   display_name: z.string().max(64).optional(),
 });
@@ -27,27 +27,39 @@ function refreshCookie(token: string, maxAge: number) {
   return `refresh_token=${token}; HttpOnly; Secure; SameSite=None; Path=/api/v1/auth/refresh; Max-Age=${maxAge}`;
 }
 
+function sessionCookie(token: string, maxAge: number, isLocal: boolean) {
+  const secure = isLocal ? '' : '; Secure';
+  return `session=${token}; HttpOnly${secure}; SameSite=Lax; Path=/; Max-Age=${maxAge}`;
+}
+
+function isLocalRequest(c: any): boolean {
+  const appEnv = c.env.APP_ENV?.toLowerCase();
+  const hostname = new URL(c.req.url).hostname;
+  return appEnv === 'local' || appEnv === 'test' || hostname === 'localhost' || hostname === '127.0.0.1';
+}
+
 authRouter.post('/register', async (c) => {
   const body = await c.req.json().catch(() => null);
   const parsed = registerSchema.safeParse(body);
   if (!parsed.success) return errorResponse(c, 400, 'VALIDATION_ERROR', parsed.error.message);
 
-  const { email, username, password, display_name } = parsed.data;
+  const { email, handle, password, display_name } = parsed.data;
   if (await getUserByEmail(c.env.DB, email)) return errorResponse(c, 409, 'CONFLICT', 'Email already registered');
-  if (await c.env.DB.prepare('SELECT id FROM users WHERE username = ?').bind(username).first()) {
-    return errorResponse(c, 409, 'CONFLICT', 'Username taken');
+  if (await c.env.DB.prepare('SELECT id FROM users WHERE handle = ?').bind(handle).first()) {
+    return errorResponse(c, 409, 'CONFLICT', 'Handle taken');
   }
 
   const id = crypto.randomUUID();
-  const now = Math.floor(Date.now() / 1000);
-  await createUser(c.env.DB, { id, email, username, display_name, password_hash: await hashPassword(password), created_at: now });
+  await createUser(c.env.DB, { id, email, handle, display_name, password_hash: await hashPassword(password) });
 
-  const [accessToken, refreshToken] = await Promise.all([
-    signAccessToken(id, username, c.env.JWT_SECRET),
-    signRefreshToken(id, username, c.env.JWT_SECRET),
+  const [accessToken, refreshToken, sessionToken] = await Promise.all([
+    signAccessToken(id, handle, c.env.JWT_SECRET),
+    signRefreshToken(id, handle, c.env.JWT_SECRET),
+    signSessionToken(id, handle, c.env.JWT_SECRET),
   ]);
   c.header('Set-Cookie', refreshCookie(refreshToken, REFRESH_MAX_AGE));
-  return c.json({ access_token: accessToken, user: { id, email, username, display_name: display_name ?? null } }, 201);
+  c.header('Set-Cookie', sessionCookie(sessionToken, REFRESH_MAX_AGE, isLocalRequest(c)));
+  return c.json({ data: { id, email, handle, displayName: display_name ?? handle } }, 201);
 });
 
 authRouter.post('/login', async (c) => {
@@ -60,26 +72,73 @@ authRouter.post('/login', async (c) => {
   if (!user || !user.password_hash) return errorResponse(c, 401, 'UNAUTHORIZED', 'Invalid credentials');
   if (!await verifyPassword(password, user.password_hash)) return errorResponse(c, 401, 'UNAUTHORIZED', 'Invalid credentials');
 
-  const [accessToken, refreshToken] = await Promise.all([
+  const [accessToken, refreshToken, sessionToken] = await Promise.all([
     signAccessToken(user.id, user.username, c.env.JWT_SECRET),
     signRefreshToken(user.id, user.username, c.env.JWT_SECRET),
+    signSessionToken(user.id, user.username, c.env.JWT_SECRET),
   ]);
   c.header('Set-Cookie', refreshCookie(refreshToken, REFRESH_MAX_AGE));
-  return c.json({ access_token: accessToken, user: { id: user.id, email: user.email, username: user.username, display_name: user.display_name } });
+  c.header('Set-Cookie', sessionCookie(sessionToken, REFRESH_MAX_AGE, isLocalRequest(c)));
+  return c.json({ data: { id: user.id, email: user.email, displayName: user.display_name ?? user.username } });
 });
 
 authRouter.post('/logout', async (c) => {
-  const header = c.req.header('Authorization') ?? '';
-  const token = header.startsWith('Bearer ') ? header.slice(7) : null;
-  if (token) {
+  const cookieHeader = c.req.header('Cookie') ?? '';
+  const sessionMatch = cookieHeader.match(/session=([^;]+)/);
+  if (sessionMatch) {
     try {
-      const payload = await verifyToken(token, c.env.JWT_SECRET);
+      const payload = await verifyToken(sessionMatch[1], c.env.JWT_SECRET);
       const ttl = payload.exp - Math.floor(Date.now() / 1000);
       if (ttl > 0) await c.env.KV.put(`blacklist:${payload.jti}`, '1', { expirationTtl: ttl });
     } catch { /* already invalid */ }
   }
   c.header('Set-Cookie', refreshCookie('', 0));
+  c.header('Set-Cookie', sessionCookie('', 0, isLocalRequest(c)));
   return c.json({ ok: true });
+});
+
+authRouter.get('/me', async (c) => {
+  const cookieHeader = c.req.header('Cookie') ?? '';
+  const match = cookieHeader.match(/session=([^;]+)/);
+  if (!match) return errorResponse(c, 401, 'UNAUTHORIZED', 'Not authenticated');
+
+  let payload;
+  try {
+    payload = await verifyToken(match[1], c.env.JWT_SECRET);
+  } catch {
+    return errorResponse(c, 401, 'UNAUTHORIZED', 'Session invalid or expired');
+  }
+
+  if (await c.env.KV.get(`blacklist:${payload.jti}`)) {
+    return errorResponse(c, 401, 'UNAUTHORIZED', 'Session revoked');
+  }
+
+  const user = await getUserById(c.env.DB, payload.sub);
+  if (!user) return errorResponse(c, 404, 'NOT_FOUND', 'User not found');
+
+  return c.json({
+    data: {
+      id: user.id,
+      email: user.email,
+      displayName: user.display_name ?? user.username,
+    },
+  });
+});
+
+authRouter.get('/csrf', async (c) => {
+  const cookieHeader = c.req.header('Cookie') ?? '';
+  const match = cookieHeader.match(/session=([^;]+)/);
+  if (!match) return errorResponse(c, 401, 'UNAUTHORIZED', 'Not authenticated');
+
+  try {
+    await verifyToken(match[1], c.env.JWT_SECRET);
+  } catch {
+    return errorResponse(c, 401, 'UNAUTHORIZED', 'Session invalid or expired');
+  }
+
+  const csrfToken = crypto.randomUUID();
+  await c.env.KV.put(`csrf:${csrfToken}`, match[1].slice(-16), { expirationTtl: 3600 });
+  return c.json({ csrfToken });
 });
 
 authRouter.post('/refresh', async (c) => {
@@ -115,43 +174,46 @@ authRouter.post('/refresh', async (c) => {
 async function findOrCreateOAuthUser(
   db: D1Database,
   provider: string, providerId: string,
-  email: string, name: string, avatarUrl: string,
-): Promise<{ id: string; username: string }> {
+  email: string, name: string, _avatarUrl: string,
+): Promise<{ id: string; handle: string }> {
   const existing = await getOAuthAccount(db, provider, providerId);
   if (existing) {
     const user = await getUserById(db, existing.user_id);
-    return { id: user!.id, username: user!.username };
+    return { id: user!.id, handle: user!.username };
   }
   const byEmail = await getUserByEmail(db, email);
   if (byEmail) {
     await createOAuthAccount(db, crypto.randomUUID(), byEmail.id, provider, providerId);
-    return { id: byEmail.id, username: byEmail.username };
+    return { id: byEmail.id, handle: byEmail.username };
   }
   const id = crypto.randomUUID();
   const base = name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 28) || 'user';
-  let username = base;
+  let handle = base;
   let suffix = 1;
-  while (await db.prepare('SELECT id FROM users WHERE username = ?').bind(username).first()) {
-    username = `${base}-${suffix++}`;
+  while (await db.prepare('SELECT id FROM users WHERE handle = ?').bind(handle).first()) {
+    handle = `${base}-${suffix++}`;
   }
-  await createUser(db, { id, email, username, display_name: name, avatar_url: avatarUrl, created_at: Math.floor(Date.now() / 1000) });
+  await createUser(db, { id, email, handle, display_name: name });
   await createOAuthAccount(db, crypto.randomUUID(), id, provider, providerId);
-  return { id, username };
+  return { id, handle };
 }
 
-async function issueTokensAndRedirect(c: any, userId: string, username: string, frontendUrl: string) {
-  const [accessToken, refreshToken] = await Promise.all([
-    signAccessToken(userId, username, c.env.JWT_SECRET),
-    signRefreshToken(userId, username, c.env.JWT_SECRET),
+async function issueTokensAndRedirect(c: any, userId: string, handle: string, frontendUrl: string) {
+  const [accessToken, refreshToken, sessionToken] = await Promise.all([
+    signAccessToken(userId, handle, c.env.JWT_SECRET),
+    signRefreshToken(userId, handle, c.env.JWT_SECRET),
+    signSessionToken(userId, handle, c.env.JWT_SECRET),
   ]);
   c.header('Set-Cookie', refreshCookie(refreshToken, REFRESH_MAX_AGE));
-  return c.redirect(`${frontendUrl}/pages/dashboard.html#token=${accessToken}`);
+  c.header('Set-Cookie', sessionCookie(sessionToken, REFRESH_MAX_AGE, isLocalRequest(c)));
+  const base = frontendUrl.replace(/\/$/, '');
+  return c.redirect(`${base}/auth/callback?token=${encodeURIComponent(accessToken)}`);
 }
 
 authRouter.get('/google', async (c) => {
   const state = crypto.randomUUID();
   await c.env.KV.put(`oauth_state:${state}`, '1', { expirationTtl: 60 });
-  const redirectUri = new URL('/api/v1/auth/google/callback', c.req.url).toString();
+  const redirectUri = new URL('/api/v1/auth/google/callback', c.env.FRONTEND_URL).toString();
   return c.redirect(await getGoogleAuthUrl(c.env.GOOGLE_CLIENT_ID, redirectUri, state));
 });
 
@@ -160,11 +222,11 @@ authRouter.get('/google/callback', async (c) => {
   if (!state || !await c.env.KV.get(`oauth_state:${state}`)) return errorResponse(c, 400, 'VALIDATION_ERROR', 'Invalid state');
   await c.env.KV.delete(`oauth_state:${state}`);
 
-  const redirectUri = new URL('/api/v1/auth/google/callback', c.req.url).toString();
+  const redirectUri = new URL('/api/v1/auth/google/callback', c.env.FRONTEND_URL).toString();
   const tokens = await exchangeGoogleCode(code, c.env.GOOGLE_CLIENT_ID, c.env.GOOGLE_CLIENT_SECRET, redirectUri);
   const gUser = await getGoogleUser(tokens.access_token);
-  const { id, username } = await findOrCreateOAuthUser(c.env.DB, 'google', gUser.id, gUser.email, gUser.name, gUser.picture);
-  return issueTokensAndRedirect(c, id, username, c.env.FRONTEND_URL);
+  const { id, handle } = await findOrCreateOAuthUser(c.env.DB, 'google', gUser.id, gUser.email, gUser.name, gUser.picture);
+  return issueTokensAndRedirect(c, id, handle, c.env.FRONTEND_URL);
 });
 
 authRouter.get('/github', async (c) => {
@@ -183,6 +245,6 @@ authRouter.get('/github/callback', async (c) => {
   const email = ghUser.email ?? await getGitHubPrimaryEmail(tokens.access_token);
   if (!email) return errorResponse(c, 400, 'VALIDATION_ERROR', 'GitHub account has no verified email');
 
-  const { id, username } = await findOrCreateOAuthUser(c.env.DB, 'github', String(ghUser.id), email, ghUser.name || ghUser.login, ghUser.avatar_url);
-  return issueTokensAndRedirect(c, id, username, c.env.FRONTEND_URL);
+  const { id, handle } = await findOrCreateOAuthUser(c.env.DB, 'github', String(ghUser.id), email, ghUser.name || ghUser.login, ghUser.avatar_url);
+  return issueTokensAndRedirect(c, id, handle, c.env.FRONTEND_URL);
 });

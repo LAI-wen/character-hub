@@ -8,6 +8,8 @@ export type Env = {
   GITHUB_CLIENT_ID: string;
   GITHUB_CLIENT_SECRET: string;
   FRONTEND_URL: string;
+  APP_ENV?: string;
+  DEMO_AUTH_ENABLED?: string;
 };
 
 export type Variables = {

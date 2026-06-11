@@ -17,8 +17,9 @@
 .vis-b { display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .04em; padding: 2px 7px; border-radius: var(--r-pill); border: 1px solid var(--border); color: var(--text-faint); white-space: nowrap; }
 .vis-b .d { width: 6px; height: 6px; border-radius: 50%; }
 .vis-b.public { color: #1F6B43; border-color: #CDE8D8; background: var(--must-soft); } .vis-b.public .d { background: var(--must); }
-.vis-b.private { color: var(--accent-ink); border-color: #ECDFA8; background: var(--accent-soft); } .vis-b.private .d { background: var(--accent); }
-.vis-b.unlisted { color: var(--text-dim); } .vis-b.unlisted .d { background: var(--text-faint); }
+.vis-b.members { color: #355C86; border-color: #CBDDF0; background: #E8EEF6; } .vis-b.members .d { background: #4B7BB5; }
+.vis-b.host, .vis-b.private { color: var(--accent-ink); border-color: #ECDFA8; background: var(--accent-soft); } .vis-b.host .d, .vis-b.private .d { background: var(--accent); }
+.vis-b.unlisted, .vis-b.link { color: var(--text-dim); } .vis-b.unlisted .d, .vis-b.link .d { background: var(--text-faint); }
 
 /* ---- detail grid ---- */
 .det-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: var(--s6); align-items: start; }
@@ -39,6 +40,11 @@
 .ed-top .id { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .ed-top .av { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; color: #fff; font-family: var(--font-serif); font-weight: 800; flex: none; }
 .ed-top .nm { font-family: var(--font-serif); font-size: 19px; font-weight: 800; }
+.av-upload { position: relative; flex: none; cursor: pointer; width: 36px; height: 36px; border-radius: 10px; overflow: hidden; }
+.av-upload .av { width: 100%; height: 100%; border-radius: 0; }
+.av-img { width: 36px; height: 36px; object-fit: cover; display: block; border-radius: 10px; }
+.av-overlay { position: absolute; inset: 0; background: rgba(0,0,0,.45); color: #fff; font-size: 14px; display: grid; place-items: center; opacity: 0; transition: opacity .15s; border-radius: 10px; }
+.av-upload:hover .av-overlay { opacity: 1; }
 .ed-top .spacer { flex: 1; }
 
 /* SaveStatus */

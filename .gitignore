@@ -4,3 +4,6 @@ dist/
 .env
 .dev.vars
 *.local
+.DS_Store
+*.log
+*.zip

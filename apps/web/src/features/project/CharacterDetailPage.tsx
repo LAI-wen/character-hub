@@ -85,9 +85,8 @@ export function CharacterDetailPage() {
         </div>
 
         <div className="acts">
-          <Link to={`/p/${projectId}/roster/${linkId}/edit`} className="btn">
-            編輯角色
-          </Link>
+          <Link to={`/p/${projectId}/roster`} className="btn btn-ghost">← 角色列表</Link>
+          <Link to={`/p/${projectId}/roster/${linkId}/edit`} className="btn">編輯角色</Link>
         </div>
       </div>
 
@@ -135,6 +134,12 @@ export function CharacterDetailPage() {
                 <div className="r">
                   <span className="k">角色定位</span>
                   <span>{projectLink.projectRole}</span>
+                </div>
+              )}
+              {projectLink.factionLabel && (
+                <div className="r">
+                  <span className="k">所屬勢力</span>
+                  <span>{projectLink.factionLabel}</span>
                 </div>
               )}
               <div className="r">

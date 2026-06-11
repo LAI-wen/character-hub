@@ -1,8 +1,10 @@
+import { useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Link, useParams } from "react-router-dom"
 import { apiClient } from "@/lib/api/client"
 import { ContextHeader } from "@/components/ContextHeader"
 import { useProjectContext } from "@/routes/layouts/ProjectLayout"
+import { recordView } from "@/lib/recentlyViewed"
 import type { WorldEntryResponse } from "@oc-tools/contracts"
 
 const TYPE_LABELS: Record<string, string> = {
@@ -32,6 +34,12 @@ export function WorldEntryDetailPage() {
     enabled: !!projectId && !!entryId,
   })
 
+  const entry = data?.entry
+  useEffect(() => {
+    if (!entry || !projectId || !entryId) return
+    recordView({ type: "entry", id: e.id, name: e.title, path: `/p/${projectId}/worldview/${entryId}`, color: typeColor(e.type) })
+  }, [entry?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
   if (status === "pending") {
     return <div className="page" style={{ color: "var(--text-faint)" }}>載入中⋯</div>
   }
@@ -45,34 +53,35 @@ export function WorldEntryDetailPage() {
     )
   }
 
-  const { entry } = data
-  const color = typeColor(entry.type)
+  const e = data.entry
+  const color = typeColor(e.type)
 
   return (
     <div className="page">
-      <ContextHeader scope="project" crumbs={[project.name, "世界觀", entry.title]} />
+      <ContextHeader scope="project" crumbs={[project.name, "世界觀", e.title]} />
 
       <div className="ch-head">
         <div className="av" style={{ background: color, fontSize: 28 }}>
-          {entry.title.slice(0, 1)}
+          {e.title.slice(0, 1)}
         </div>
 
         <div className="id">
-          <h1>{entry.title}</h1>
-          {entry.summary && (
+          <h1>{e.title}</h1>
+          {e.summary && (
             <p className="tagline">
-              {entry.summary.slice(0, 120)}{entry.summary.length > 120 ? "…" : ""}
+              {e.summary.slice(0, 120)}{e.summary.length > 120 ? "…" : ""}
             </p>
           )}
           <div className="meta">
             <span className="tag" style={{ background: color + "22", borderColor: color + "44", color }}>
-              {typeLabel(entry.type)}
+              {typeLabel(e.type)}
             </span>
-            <span className="tag">{entry.visibility ?? "private"}</span>
+            <span className="tag">{e.visibility ?? "private"}</span>
           </div>
         </div>
 
         <div className="acts">
+          <Link to={`/p/${projectId}/worldview`} className="btn btn-ghost">← 世界觀</Link>
           <Link to={`/p/${projectId}/worldview/${entryId}/edit`} className="btn">編輯條目</Link>
           <Link to={`/p/${projectId}/worldview/new?parent=${entryId}`} className="btn">＋ 子條目</Link>
         </div>
@@ -80,17 +89,17 @@ export function WorldEntryDetailPage() {
 
       <div className="det-grid">
         <div>
-          {entry.summary && (
+          {e.summary && (
             <div className="block">
               <p className="bh">摘要 · SUMMARY</p>
-              <p>{entry.summary}</p>
+              <p>{e.summary}</p>
             </div>
           )}
 
-          {(entry.content || entry.body) && (
+          {(e.content || e.body) && (
             <div className="block">
               <p className="bh">詳細內容 · CONTENT</p>
-              <p style={{ whiteSpace: "pre-wrap" }}>{entry.content ?? entry.body}</p>
+              <p style={{ whiteSpace: "pre-wrap" }}>{e.content ?? e.body}</p>
             </div>
           )}
         </div>
@@ -101,19 +110,19 @@ export function WorldEntryDetailPage() {
             <div className="kvs">
               <div className="r">
                 <span className="k">類型</span>
-                <span>{typeLabel(entry.type)}</span>
+                <span>{typeLabel(e.type)}</span>
               </div>
               <div className="r">
                 <span className="k">可見性</span>
-                <span>{entry.visibility ?? "private"}</span>
+                <span>{e.visibility ?? "private"}</span>
               </div>
               <div className="r">
                 <span className="k">建立</span>
-                <span>{new Date(entry.createdAt).toLocaleDateString("zh-TW")}</span>
+                <span>{new Date(e.createdAt).toLocaleDateString("zh-TW")}</span>
               </div>
               <div className="r">
                 <span className="k">更新</span>
-                <span>{new Date(entry.updatedAt).toLocaleDateString("zh-TW")}</span>
+                <span>{new Date(e.updatedAt).toLocaleDateString("zh-TW")}</span>
               </div>
             </div>
           </div>
