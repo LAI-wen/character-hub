@@ -10,6 +10,8 @@ export type Env = {
   FRONTEND_URL: string;
   APP_ENV?: string;
   DEMO_AUTH_ENABLED?: string;
+  INVITE_LIMIT?: string;
+  INVITE_ADMIN_IDS?: string;
 };
 
 export type Variables = {

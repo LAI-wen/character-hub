@@ -10,6 +10,8 @@
     "dev:web": "npm run dev --workspace=apps/web",
     "dev:api": "npm run dev --workspace=api",
     "build:web": "npm run build --workspace=apps/web",
+    "deploy:web": "npm run deploy --workspace=apps/web",
+    "deploy:api": "npm run deploy --workspace=api",
     "typecheck": "npm run typecheck --workspaces --if-present"
   },
   "engines": {

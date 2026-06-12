@@ -14,11 +14,15 @@ export const CharacterSchema = z.object({
   heightCm: z.number().nullable().optional(),
   avatarAssetId: z.string().nullable().optional(),
   avatarUrl: z.string().nullable().optional(),
+  themeColor: z.string().nullable().optional(),
   visibility: VisibilitySchema,
   tags: z.array(z.string()).optional(),
   archivedAt: z.string().nullable().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
+  generalProfile: z.record(z.string(), z.unknown()).optional(),
+  artistProfile: z.record(z.string(), z.unknown()).optional(),
+  writerProfile: z.record(z.string(), z.unknown()).optional(),
 })
 export type Character = z.infer<typeof CharacterSchema>
 
@@ -27,6 +31,7 @@ export const CreateCharacterSchema = z.object({
   slug: z.string().min(1).max(50).regex(/^[a-z0-9-]+$/).optional(),
   summary: z.string().max(5000).optional(),
   species: z.string().max(100).optional(),
+  themeColor: z.string().max(32).nullable().optional(),
   visibility: VisibilitySchema.default("private"),
 })
 export type CreateCharacterRequest = z.infer<typeof CreateCharacterSchema>
@@ -35,9 +40,13 @@ export const PatchCharacterSchema = CreateCharacterSchema.partial()
 export type PatchCharacterRequest = z.infer<typeof PatchCharacterSchema>
 
 export const CharacterMembershipSchema = z.object({
-  projectId: z.string(),
-  projectName: z.string(),
+  projectId:    z.string(),
+  projectName:  z.string(),
   projectColor: z.string(),
+  factionLabel: z.string().nullable().optional(),
+  projectRole:  z.string().nullable().optional(),
+  status:       z.string().nullable().optional(),
+  linkId:       z.string().optional(),
 })
 export type CharacterMembership = z.infer<typeof CharacterMembershipSchema>
 

@@ -14,7 +14,9 @@ import { MyCharactersPage } from "@/features/account/MyCharactersPage"
 import { MyProjectsPage } from "@/features/account/MyProjectsPage"
 import { AccountSettingsPage } from "@/features/account/AccountSettingsPage"
 import { HeightComparePage } from "@/features/account/HeightComparePage"
+import { CommissionsPage } from "@/features/account/CommissionsPage"
 import { PublicPagesPage } from "@/features/account/PublicPagesPage"
+import { GlobalGalleryPage } from "@/features/account/GlobalGalleryPage"
 import { CharacterNewPage as AccountCharacterNewPage } from "@/features/account/CharacterNewPage"
 import { CharacterDetailPage as AccountCharacterDetailPage } from "@/features/account/CharacterDetailPage"
 import { CharacterEditPage as AccountCharacterEditPage } from "@/features/account/CharacterEditPage"
@@ -34,23 +36,17 @@ import { StoryPage } from "@/features/project/StoryPage"
 import { GalleryPage } from "@/features/project/GalleryPage"
 import { TimelinePage } from "@/features/project/TimelinePage"
 import { SettingsPage } from "@/features/project/SettingsPage"
+import { ParticipantsPage } from "@/features/project/ParticipantsPage"
+import { InspirationPage } from "@/features/project/InspirationPage"
+import { ApplicationsPage } from "@/features/project/ApplicationsPage"
+import { ContentSubmissionsPage } from "@/features/project/ContentSubmissionsPage"
+import { PublicPagePage } from "@/features/project/PublicPagePage"
+import { TemplateBuilderPage } from "@/features/project/TemplateBuilderPage"
 
 // Public
 import { PublicProjectPage } from "@/features/public/PublicProjectPage"
 import { PublicCharacterPage } from "@/features/public/PublicCharacterPage"
 
-
-function ComingSoonPage({ title }: { title: string }) {
-  return (
-    <div className="page">
-      <div className="pageh"><div className="ht"><h1 style={{ fontFamily: "var(--font-serif)" }}>{title}</h1></div></div>
-      <div className="state">
-        <span className="ti">即將推出</span>
-        <p className="bd">這個功能正在開發中，敬請期待。</p>
-      </div>
-    </div>
-  )
-}
 
 export const router = createBrowserRouter([
   {
@@ -79,7 +75,8 @@ export const router = createBrowserRouter([
       { path: "projects", element: <MyProjectsPage /> },
       { path: "settings", element: <AccountSettingsPage /> },
       { path: "public-pages",   element: <PublicPagesPage /> },
-      { path: "commissions",    element: <ComingSoonPage title="委託" /> },
+      { path: "gallery",         element: <GlobalGalleryPage /> },
+      { path: "commissions",    element: <CommissionsPage /> },
       { path: "height-compare", element: <HeightComparePage /> },
       { path: "characters/new",        element: <AccountCharacterNewPage /> },
       { path: "characters/:charId",     element: <AccountCharacterDetailPage /> },
@@ -103,8 +100,14 @@ export const router = createBrowserRouter([
           { path: "relationships", element: <RelationshipsPage /> },
           { path: "story", element: <StoryPage /> },
           { path: "timeline", element: <TimelinePage /> },
-          { path: "gallery", element: <GalleryPage /> },
-          { path: "settings", element: <SettingsPage /> },
+          { path: "gallery",      element: <GalleryPage /> },
+          { path: "inspiration",  element: <InspirationPage /> },
+          { path: "applications", element: <ApplicationsPage /> },
+          { path: "submissions",  element: <ContentSubmissionsPage /> },
+          { path: "public-page",  element: <PublicPagePage /> },
+          { path: "template",     element: <TemplateBuilderPage /> },
+          { path: "participants", element: <ParticipantsPage /> },
+          { path: "settings",     element: <SettingsPage /> },
         ],
       },
     ],

@@ -89,7 +89,7 @@ export function OverviewPage() {
         <div className="ov-bd">
           <span className="ov-mk" style={{ background: color }}>{project.name.slice(0, 1)}</span>
           <div className="ov-info">
-            <h1>{project.name}</h1>
+            <h1>{project.name}<span className="en">Project</span></h1>
             {project.description && <p className="ov-bl">{project.description}</p>}
           </div>
           <div style={{ display: "flex", gap: "var(--s2)", alignItems: "center" }}>

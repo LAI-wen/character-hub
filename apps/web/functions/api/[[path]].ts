@@ -7,9 +7,10 @@ export async function onRequest(ctx: { request: Request }) {
   const req = new Request(target.toString(), {
     method: ctx.request.method,
     headers: ctx.request.headers,
-    body: ["GET", "HEAD"].includes(ctx.request.method) ? undefined : ctx.request.body,
-    redirect: "manual",
+    body: ctx.request.method !== "GET" && ctx.request.method !== "HEAD"
+      ? ctx.request.body
+      : null,
   })
 
-  return fetch(req)
+  return fetch(req, { redirect: "manual" })
 }

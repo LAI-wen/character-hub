@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from "react"
 import { Outlet, NavLink, Link, useNavigate, useMatch, useLocation } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
 import { useAuth } from "@/lib/auth/context"
 import { apiClient } from "@/lib/api/client"
 import { CommandPalette } from "@/components/CommandPalette"
-import { useRecentItems } from "@/lib/recentlyViewed"
 import type { ProjectListResponse, ProjectResponse } from "@oc-tools/contracts"
 
 type AccountNavLink = { to: string; label: string; icon: string }
@@ -12,24 +12,33 @@ type AccountNavLabel = { kind: "label"; label: string }
 type AccountNavItem = AccountNavLink | AccountNavLabel
 
 const ACCOUNT_NAV: AccountNavItem[] = [
-  { to: "/workspace",       label: "工作台",    icon: "home" },
-  { to: "/characters",      label: "我的角色",  icon: "mask" },
-  { to: "/projects",        label: "我的企劃",  icon: "box" },
-  { to: "/public-pages",    label: "我的公開頁", icon: "window" },
-  { kind: "label",          label: "全域工具" },
-  { to: "/commissions",     label: "委託",      icon: "star" },
-  { to: "/height-compare",  label: "身高比較",  icon: "ruler" },
+  { to: "/workspace",       label: "nav.workspace",    icon: "home" },
+  { to: "/characters",      label: "nav.myCharacters",  icon: "mask" },
+  { to: "/projects",        label: "nav.myProjects",  icon: "box" },
+  { to: "/public-pages",    label: "nav.myPublicPages", icon: "window" },
+  { kind: "label",          label: "nav.globalTools" },
+  { to: "/gallery",         label: "nav.globalGallery",  icon: "image" },
+  { to: "/commissions",     label: "nav.commissions",      icon: "star" },
+  { to: "/height-compare",  label: "nav.heightCompare",  icon: "ruler" },
 ]
 
-const PROJECT_NAV = [
-  { path: "overview",      label: "企劃總覽", icon: "grid" },
-  { path: "roster",        label: "企劃角色", icon: "mask" },
-  { path: "worldview",     label: "世界觀",   icon: "globe" },
-  { path: "relationships", label: "關係圖",   icon: "nodes" },
-  { path: "story",         label: "故事",     icon: "book" },
-  { path: "timeline",      label: "時間軸",   icon: "clock" },
-  { path: "gallery",       label: "圖庫",     icon: "image" },
-  { path: "settings",      label: "設定",     icon: "gear" },
+type ProjectNavItem = { path: string; label: string; icon: string } | { kind: "label"; label: string }
+const PROJECT_NAV: ProjectNavItem[] = [
+  { path: "overview",      label: "nav.projectOverview", icon: "grid" },
+  { path: "roster",        label: "nav.projectRoster", icon: "mask" },
+  { path: "worldview",     label: "nav.worldview",   icon: "globe" },
+  { path: "relationships", label: "nav.relationships",   icon: "nodes" },
+  { path: "story",         label: "nav.story",     icon: "book" },
+  { path: "timeline",      label: "nav.timeline",   icon: "clock" },
+  { path: "gallery",       label: "nav.gallery",     icon: "image" },
+  { path: "inspiration",   label: "nav.inspiration",   icon: "bulb" },
+  { path: "applications",  label: "nav.applications", icon: "check2" },
+  { path: "submissions",   label: "nav.submissions", icon: "upload2" },
+  { kind: "label",          label: "nav.projectManagement" },
+  { path: "public-page",   label: "nav.publicPage",   icon: "window" },
+  { path: "template",      label: "nav.characterTemplate", icon: "layout" },
+  { path: "participants",  label: "nav.participants",   icon: "people" },
+  { path: "settings",      label: "nav.settings",     icon: "gear" },
 ]
 
 // Minimal SVG icons (same set as v3 shell.js ICONS)
@@ -47,8 +56,13 @@ const ICONS: Record<string, string> = {
   book:   '<path d="M5 4h10a3 3 0 0 1 3 3v13a2.5 2.5 0 0 0-2.5-2H5Z"/><path d="M5 4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2"/><path d="M9 8h5M9 11h5"/>',
   image:  '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M21 16l-5-5-7 7"/>',
   gear:   '<circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.3 1a7 7 0 0 0-1.7-1l-.4-2.5H9.5l-.4 2.5a7 7 0 0 0-1.7 1l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 1.7 1l.4 2.5h4.9l.4-2.5a7 7 0 0 0 1.7-1l2.3 1 2-3.4-2-1.5a7 7 0 0 0 .1-1Z"/>',
-  search: '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/>',
-  clock:  '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
+  search:  '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/>',
+  clock:   '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
+  bulb:    '<path d="M9 21h6M12 3a6 6 0 0 1 6 6c0 2.5-1.3 4.7-3 6H9c-1.7-1.3-3-3.5-3-6a6 6 0 0 1 6-6Z"/><path d="M9 17h6"/>',
+  check2:  '<path d="M9 12l2 2 4-4"/><rect x="3" y="4" width="18" height="16" rx="2"/>',
+  upload2: '<path d="M12 16V8M8 12l4-4 4 4"/><rect x="3" y="16" width="18" height="4" rx="1.5"/>',
+  layout:  '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>',
+  people:  '<circle cx="9" cy="7" r="3"/><path d="M3 21v-1a6 6 0 0 1 6-6h0"/><circle cx="16" cy="9" r="3"/><path d="M12 21v-1a6 6 0 0 1 6-6h3"/>',
 }
 
 function Icon({ k, size = 18 }: { k: string; size?: number }) {
@@ -71,6 +85,7 @@ export function AppLayout() {
   const { viewer, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const { t } = useTranslation()
 
   // Detect project scope from URL
   const projectMatch = useMatch("/p/:projectId/*")
@@ -92,8 +107,6 @@ export function AppLayout() {
 
   const currentProject = projectQuery.data?.project
   const projects = projectsQuery.data?.projects ?? []
-
-  const recentItems = useRecentItems()
 
   const initial = viewer?.displayName?.slice(0, 1) ?? "?"
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -154,14 +167,13 @@ export function AppLayout() {
       <aside className={"appsb" + (sidebarOpen ? " open" : "")}>
         {/* Brand */}
         <a className="sb-brand" href="/workspace">
-          <span className="mk">霧</span>
-          CharacterHub
+          <img src="/logo.png" alt="CharacterHub" className="sb-logo" />
         </a>
 
         {/* Search → opens command palette */}
         <button className="sb-search" onClick={() => setCmdOpen(true)}>
           <Icon k="search" size={16} />
-          <span style={{ flex: 1, textAlign: "left" }}>搜尋…</span>
+          <span style={{ flex: 1, textAlign: "left" }}>{t("nav.search")}</span>
           <span className="kbd">⌘K</span>
         </button>
 
@@ -171,13 +183,13 @@ export function AppLayout() {
             className={scope === "account" ? "on" : ""}
             onClick={() => handleScopeSwitch("account")}
           >
-            我的空間
+            {t("nav.mySpace")}
           </button>
           <button
             className={scope === "project" ? "on" : ""}
             onClick={() => handleScopeSwitch("project")}
           >
-            目前企劃
+            {t("nav.currentProject")}
           </button>
         </div>
 
@@ -199,7 +211,7 @@ export function AppLayout() {
           {scope === "account"
             ? ACCOUNT_NAV.map((item, i) => {
                 if ("kind" in item) {
-                  return <div key={`lbl-${i}`} className="sb-label">{item.label}</div>
+                  return <div key={`lbl-${i}`} className="sb-label">{t(item.label)}</div>
                 }
                 return (
                   <NavLink
@@ -208,64 +220,46 @@ export function AppLayout() {
                     className={({ isActive }) => "sb-item" + (isActive ? " on" : "")}
                   >
                     <Icon k={item.icon} />
-                    {item.label}
+                    {t(item.label)}
                   </NavLink>
                 )
               })
-            : PROJECT_NAV.map(({ path, label, icon }) => {
-                const to = `/p/${projectId}/${path}`
+            : PROJECT_NAV.map((item, i) => {
+                if ("kind" in item) {
+                  return <div key={`lbl-${i}`} className="sb-label">{t(item.label)}</div>
+                }
+                const to = `/p/${projectId}/${item.path}`
                 const isActive = location.pathname === to || location.pathname.startsWith(to + "/")
                 return (
                   <NavLink
-                    key={path}
+                    key={item.path}
                     to={to}
                     className={"sb-item" + (isActive ? " on" : "")}
                   >
-                    <Icon k={icon} />
-                    {label}
+                    <Icon k={item.icon} />
+                    {t(item.label)}
                   </NavLink>
                 )
               })}
         </nav>
 
-        {/* Recently viewed */}
-        {recentItems.length > 0 && (
-          <div className="sb-recent">
-            <div className="sb-label">最近瀏覽</div>
-            {recentItems.slice(0, 5).map(item => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className={({ isActive }) => "sb-item rv-item" + (isActive ? " on" : "")}
-              >
-                <span className="rv-dot" style={{ background: item.imgUrl ? "transparent" : item.color }}>
-                  {item.imgUrl
-                    ? <img src={item.imgUrl} alt={item.name} />
-                    : item.name.slice(0, 1)
-                  }
-                </span>
-                <span className="rv-nm">{item.name}</span>
-              </NavLink>
-            ))}
-          </div>
-        )}
 
         {/* Quick add */}
         <div className="quick-wrap" ref={quickRef}>
           <button className="sb-quick" onClick={() => setQuickOpen(v => !v)}>
             <Icon k="plus" size={17} />
-            <span style={{ flex: 1, textAlign: "left" }}>快速新增</span>
+            <span style={{ flex: 1, textAlign: "left" }}>{t("nav.quickAdd")}</span>
             <span className="cv">▾</span>
           </button>
           {quickOpen && (
             <div className="quick-menu">
               <Link to="/characters/new" className="qm" onClick={() => setQuickOpen(false)}>
                 <Icon k="mask" size={16} />
-                新角色
+                {t("nav.newCharacter")}
               </Link>
               <button className="qm" onClick={() => { setQuickOpen(false); navigate("/projects") }}>
                 <Icon k="box" size={16} />
-                新企劃
+                {t("nav.newProject")}
               </button>
             </div>
           )}
@@ -281,7 +275,7 @@ export function AppLayout() {
             </span>
           </Link>
           <button className="sb-logout" onClick={handleLogout}>
-            登出
+            {t("nav.logout")}
           </button>
         </div>
       </aside>
@@ -293,15 +287,14 @@ export function AppLayout() {
       />
 
       {/* Main content */}
-      <main style={{ flex: 1, overflow: "auto", background: "var(--bg)", display: "flex", flexDirection: "column" }}>
+      <main style={{ flex: 1, overflowY: "auto", overflowX: "hidden", background: "var(--bg)", display: "flex", flexDirection: "column" }}>
         {/* Mobile top bar */}
         <div className="app-mtop">
-          <button className="burger" onClick={() => setSidebarOpen(v => !v)} aria-label="選單">
+          <button className="burger" onClick={() => setSidebarOpen(v => !v)} aria-label={t("nav.mySpace")}>
             ☰
           </button>
           <a className="mt-brand" href="/workspace">
-            <span className="mk">霧</span>
-            CharacterHub
+            <img src="/logo.png" alt="CharacterHub" className="sb-logo" style={{ height: 28 }} />
           </a>
         </div>
         <Outlet />

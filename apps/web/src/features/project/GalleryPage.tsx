@@ -1,37 +1,214 @@
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useProjectContext } from "@/routes/layouts/ProjectLayout"
-import { PageHeader } from "@/components/PageHeader"
 import { ContextHeader } from "@/components/ContextHeader"
 import { apiClient } from "@/lib/api/client"
+import { compressImage } from "@/lib/compressImage"
 import type { AssetListResponse, Asset } from "@oc-tools/contracts"
 
 function Ic({ d, size = 18 }: { d: string; size?: number }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"
+      strokeLinecap="round" strokeLinejoin="round"
       style={{ width: size, height: size, display: "block", flexShrink: 0 }}
       dangerouslySetInnerHTML={{ __html: d }} />
   )
 }
 const IC = {
-  image:  '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M21 16l-5-5-7 7"/>',
-  upload: '<path d="M12 3v13"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M8 8l4-5 4 5"/>',
-  plus:   '<path d="M12 5v14M5 12h14"/>',
-  x:      '<path d="M18 6L6 18M6 6l12 12"/>',
-  trash:  '<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>',
-  search: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
+  image:    '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M21 16l-5-5-7 7"/>',
+  upload:   '<path d="M12 3v13"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M8 8l4-5 4 5"/>',
+  x:        '<path d="M18 6L6 18M6 6l12 12"/>',
+  trash:    '<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>',
+  search:   '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
+  gridsm:   '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+  columns:  '<rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="18" rx="1"/><rect x="17" y="3" width="5" height="18" rx="1"/>',
+  check:    '<polyline points="20 6 9 17 4 12"/>',
+  checkbox: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="m9 12 2 2 4-4"/>',
+  zoom:     '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/><path d="M8 11h6M11 8v6"/>',
 }
+
+// ── Detail Drawer ────────────────────────────────────────────────────────────
+
+function AssetDrawer({
+  asset,
+  onClose,
+  onOpenLightbox,
+  onDelete,
+}: {
+  asset: Asset
+  onClose: () => void
+  onOpenLightbox: () => void
+  onDelete: () => void
+}) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose() }
+    document.addEventListener("keydown", onKey)
+    return () => document.removeEventListener("keydown", onKey)
+  }, [onClose])
+
+  const sizeKB = asset.sizeBytes ? `${Math.round(asset.sizeBytes / 1024)} KB` : null
+  const dims   = asset.width && asset.height ? `${asset.width}×${asset.height}` : null
+
+  return (
+    <>
+      <div className="ad-scrim in" onClick={onClose} />
+      <aside className="ad-drawer in" role="dialog" aria-modal aria-label={asset.title}>
+        <div className="dh">
+          <div className="t">{asset.title}</div>
+          <button className="x" aria-label="關閉" onClick={onClose}>✕</button>
+        </div>
+
+        <div className="db">
+          {/* big preview — click to open lightbox */}
+          <div
+            className="ad-big"
+            role="img"
+            aria-label={asset.title}
+            onClick={onOpenLightbox}
+            style={{ cursor: "zoom-in", background: "var(--bg-tint)", overflow: "hidden" }}
+          >
+            <img
+              src={asset.url}
+              alt={asset.title}
+              style={{ width: "100%", maxHeight: 220, objectFit: "contain", display: "block", borderRadius: "var(--r-img)" }}
+            />
+          </div>
+
+          <div className="ad-field">
+            <div className="k">標題</div>
+            <div className="v">{asset.title}</div>
+          </div>
+
+          {(dims || asset.mimeType || sizeKB) && (
+            <div className="ad-field">
+              <div className="k">尺寸／格式／大小</div>
+              <div className="v">{[dims, asset.mimeType, sizeKB].filter(Boolean).join(" · ")}</div>
+            </div>
+          )}
+
+          <div className="ad-attr">
+            <div className="b">
+              <div className="k">Creator 作者</div>
+              <div className="v">
+                {asset.authorName || <span style={{ color: "var(--accent-ink)" }}>未署名</span>}
+              </div>
+            </div>
+            <div className="b">
+              <div className="k">Type 分類</div>
+              <div className="v">{asset.assetType || "—"}</div>
+            </div>
+            <div className="b">
+              <div className="k">上傳時間</div>
+              <div className="v">{new Date(asset.createdAt).toLocaleDateString("zh-Hant")}</div>
+            </div>
+          </div>
+
+          {asset.sourceUrl && (
+            <div className="ad-field">
+              <div className="k">原始來源</div>
+              <div className="v">
+                <a href={asset.sourceUrl} target="_blank" rel="noopener noreferrer"
+                  style={{ color: "var(--accent-ink)", wordBreak: "break-all", fontSize: 13 }}>
+                  {asset.sourceUrl}
+                </a>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="df">
+          <button
+            className="btn btn-sm"
+            style={{ borderColor: "var(--avoid)", color: "var(--avoid)" }}
+            onClick={onDelete}
+          >
+            刪除圖片
+          </button>
+          <span style={{ flex: 1 }} />
+          <button className="btn btn-sm" onClick={onOpenLightbox}>
+            全螢幕查看
+          </button>
+        </div>
+      </aside>
+    </>
+  )
+}
+
+// ── Lightbox ─────────────────────────────────────────────────────────────────
+
+function Lightbox({
+  list,
+  startIdx,
+  onClose,
+}: {
+  list: Asset[]
+  startIdx: number
+  onClose: () => void
+}) {
+  const [idx, setIdx] = useState(startIdx)
+  const a = list[idx]
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose()
+      else if (e.key === "ArrowLeft")  setIdx(i => (i - 1 + list.length) % list.length)
+      else if (e.key === "ArrowRight") setIdx(i => (i + 1) % list.length)
+    }
+    document.addEventListener("keydown", onKey)
+    return () => document.removeEventListener("keydown", onKey)
+  }, [onClose, list.length])
+
+  return (
+    <div className="lb-scrim in" onClick={onClose}>
+      <button className="lb-close" aria-label="關閉" onClick={onClose}>✕</button>
+      {list.length > 1 && (
+        <>
+          <button className="lb-nav prev" aria-label="上一張"
+            onClick={e => { e.stopPropagation(); setIdx(i => (i - 1 + list.length) % list.length) }}>
+            ‹
+          </button>
+          <button className="lb-nav next" aria-label="下一張"
+            onClick={e => { e.stopPropagation(); setIdx(i => (i + 1) % list.length) }}>
+            ›
+          </button>
+        </>
+      )}
+      <div className="lb-stage" onClick={e => e.stopPropagation()}>
+        <img
+          src={a.url}
+          alt={a.title}
+          style={{ maxWidth: "86vw", maxHeight: "70vh", objectFit: "contain", borderRadius: "var(--r-img)", display: "block" }}
+        />
+        <div className="lb-cap">
+          {a.title}
+          {a.authorName ? ` · ${a.authorName}` : ""}
+          {list.length > 1 ? ` · ${idx + 1}/${list.length}` : ""}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Main Page ─────────────────────────────────────────────────────────────────
 
 export function GalleryPage() {
   const { project } = useProjectContext()
   const qc = useQueryClient()
   const pid = project.id
   const fileRef = useRef<HTMLInputElement>(null)
-  const [uploading, setUploading] = useState(false)
+
+  const [uploading,   setUploading]   = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
-  const [preview, setPreview] = useState<Asset | null>(null)
-  const [deleteId, setDeleteId] = useState<string | null>(null)
-  const [q, setQ] = useState("")
+  const [q,           setQ]           = useState("")
+  const [layout,      setLayout]      = useState<"grid" | "masonry">("grid")
+  const [filterType,  setFilterType]  = useState("*")
+
+  const [multi,    setMulti]    = useState(false)
+  const [selected, setSelected] = useState<Record<string, boolean>>({})
+
+  const [drawerAsset,  setDrawerAsset]  = useState<Asset | null>(null)
+  const [lightboxIdx,  setLightboxIdx]  = useState<number | null>(null)
+  const [deleteId,     setDeleteId]     = useState<string | null>(null)
 
   const { data, status } = useQuery({
     queryKey: ["project", pid, "assets"],
@@ -44,17 +221,39 @@ export function GalleryPage() {
       apiClient(`/api/app/projects/${pid}/assets/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["project", pid, "assets"] })
-      if (preview?.id === deleteId) setPreview(null)
+      if (drawerAsset?.id === deleteId) setDrawerAsset(null)
       setDeleteId(null)
     },
   })
+
+  // derive type filter options
+  const typeCounts: Record<string, number> = {}
+  assets.forEach(a => { typeCounts[a.assetType] = (typeCounts[a.assetType] || 0) + 1 })
+
+  const filtered = assets.filter(a => {
+    if (filterType !== "*" && a.assetType !== filterType) return false
+    if (q.trim() && !a.title.toLowerCase().includes(q.toLowerCase())) return false
+    return true
+  })
+
+  const selCount = Object.values(selected).filter(Boolean).length
+
+  function toggleSel(id: string) {
+    setSelected(prev => ({ ...prev, [id]: !prev[id] }))
+  }
+
+  function openLightbox(a: Asset) {
+    const i = filtered.findIndex(f => f.id === a.id)
+    setLightboxIdx(i >= 0 ? i : 0)
+  }
 
   async function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return
     setUploadError(null)
     setUploading(true)
     try {
-      for (const file of Array.from(files)) {
+      for (const rawFile of Array.from(files)) {
+        const file = await compressImage(rawFile)
         const form = new FormData()
         form.append("file", file)
         form.append("title", file.name.replace(/\.[^.]+$/, ""))
@@ -69,24 +268,27 @@ export function GalleryPage() {
     }
   }
 
-  const filtered = q.trim()
-    ? assets.filter(a => a.title.toLowerCase().includes(q.toLowerCase()))
-    : assets
-
   return (
     <div className="page">
       <ContextHeader scope="project" crumbs={[project.name, "圖庫"]} />
-      <PageHeader
-        eyebrow="Gallery"
-        title="圖庫"
-        sub="上傳並管理此企劃的圖片素材。"
-        action={
-          <button className="btn btn-accent" onClick={() => fileRef.current?.click()} disabled={uploading}
-            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-            {uploading ? "上傳中…" : <><Ic d={IC.upload} size={15} /> 上傳圖片</>}
+
+      <div className="pageh">
+        <div className="ht">
+          <h1>圖庫 <span className="en">Gallery</span></h1>
+          <p className="sub">{project.name} 的圖片資產與關聯。</p>
+        </div>
+        <div className="acts">
+          <button
+            className="btn btn-accent"
+            disabled={uploading}
+            onClick={() => fileRef.current?.click()}
+            style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+          >
+            <Ic d={IC.upload} size={15} />
+            {uploading ? "上傳中…" : "＋ 上傳圖片"}
           </button>
-        }
-      />
+        </div>
+      </div>
 
       <input
         ref={fileRef}
@@ -104,7 +306,7 @@ export function GalleryPage() {
       )}
 
       {status === "pending" && <p style={{ color: "var(--text-faint)" }}>載入中⋯</p>}
-      {status === "error" && <p style={{ color: "var(--avoid)" }}>無法載入圖庫</p>}
+      {status === "error"   && <p style={{ color: "var(--avoid)"  }}>無法載入圖庫</p>}
 
       {status === "success" && assets.length === 0 && (
         <div
@@ -121,24 +323,31 @@ export function GalleryPage() {
 
       {status === "success" && assets.length > 0 && (
         <div className="gl-cols">
-          {/* Filter sidebar */}
+          {/* ── Filter sidebar ── */}
           <div className="gl-filter">
             <div className="fg">
-              <div className="ft">類別</div>
-              <button className="opt on">
-                全部
-                <span className="ct">{assets.length}</span>
+              <div className="ft">資產類型</div>
+              <button className={"opt" + (filterType === "*" ? " on" : "")} onClick={() => setFilterType("*")}>
+                全部 <span className="ct">{assets.length}</span>
               </button>
+              {Object.entries(typeCounts).map(([type, count]) => (
+                <button
+                  key={type}
+                  className={"opt" + (filterType === type ? " on" : "")}
+                  onClick={() => setFilterType(type)}
+                >
+                  {type || "其他"} <span className="ct">{count}</span>
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Main area */}
+          {/* ── Main area ── */}
           <div className="gl-main">
             {/* Toolbar */}
             <div className="gl-toolbar">
               <div className="searchf">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ position: "absolute", left: 11, width: 15, height: 15, color: "var(--text-faint)", pointerEvents: "none" }}
-                  dangerouslySetInnerHTML={{ __html: IC.search }} />
+                <Ic d={IC.search} size={15} />
                 <input
                   type="search"
                   placeholder="搜尋圖片…"
@@ -146,82 +355,123 @@ export function GalleryPage() {
                   onChange={e => setQ(e.target.value)}
                 />
               </div>
+
+              <div className="ac-view">
+                <button className={layout === "grid"    ? "on" : ""} title="網格"   onClick={() => setLayout("grid")}>
+                  <Ic d={IC.gridsm}  size={15} />
+                </button>
+                <button className={layout === "masonry" ? "on" : ""} title="瀑布流" onClick={() => setLayout("masonry")}>
+                  <Ic d={IC.columns} size={15} />
+                </button>
+              </div>
+
               <div className="spacer" />
+
+              <button
+                className="btn btn-sm"
+                style={{ display: "inline-flex", alignItems: "center", gap: 5 }}
+                onClick={() => { setMulti(m => !m); setSelected({}) }}
+              >
+                <Ic d={IC.checkbox} size={13} />
+                {multi ? "結束多選" : "多選"}
+              </button>
+
               <span className="gl-count">{filtered.length} 張</span>
             </div>
 
+            {/* Grid */}
             <div
-              className="gl-grid"
+              className={"gl-grid" + (layout === "masonry" ? " masonry" : "")}
               onDragOver={e => e.preventDefault()}
               onDrop={e => { e.preventDefault(); handleFiles(e.dataTransfer.files) }}
             >
               {filtered.map(a => (
                 <button
                   key={a.id}
-                  className="acard"
-                  onClick={() => setPreview(a)}
+                  className={"acard" + (selected[a.id] ? " sel" : "")}
+                  aria-label={a.title}
+                  onClick={() => multi ? toggleSel(a.id) : setDrawerAsset(a)}
                 >
+                  {multi && (
+                    <span className="sel-check">
+                      {selected[a.id] && <Ic d={IC.check} size={11} />}
+                    </span>
+                  )}
                   <div className="thumb">
                     <img src={a.url} alt={a.title} loading="lazy" />
                   </div>
                   <div className="pad">
                     <div className="t">{a.title}</div>
+                    <div className="meta">{a.authorName || "無署名"}</div>
                   </div>
-                  <button
-                    className="acard-del"
-                    onClick={e => { e.stopPropagation(); setDeleteId(a.id) }}
-                    title="刪除"
-                  >
-                    <Ic d={IC.trash} size={12} />
-                  </button>
+                  {!multi && (
+                    <button
+                      className="acard-del"
+                      title="刪除"
+                      onClick={e => { e.stopPropagation(); setDeleteId(a.id) }}
+                    >
+                      <Ic d={IC.trash} size={12} />
+                    </button>
+                  )}
                 </button>
               ))}
 
               {/* Upload tile */}
-              <button
-                className="acard acard-add"
-                onClick={() => fileRef.current?.click()}
-              >
+              <button className="acard acard-add" onClick={() => fileRef.current?.click()}>
                 <div className="thumb">
                   <Ic d={IC.upload} size={28} />
                   <span style={{ fontSize: 12 }}>上傳圖片</span>
                 </div>
               </button>
             </div>
+
+            {/* Bulk action bar */}
+            {multi && selCount > 0 && (
+              <div className="bulk-bar">
+                <span className="n">已選 {selCount} 張</span>
+                <span className="spacer" />
+                <button onClick={() => {}}>設定可見性</button>
+                <button onClick={() => {}}>補作者</button>
+                <button className="exit" onClick={() => { setMulti(false); setSelected({}) }}>✕</button>
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* Preview lightbox */}
-      {preview && (
-        <div className="gal-lb" onClick={() => setPreview(null)}>
-          <div className="gal-lb-box" onClick={e => e.stopPropagation()}>
-            <button className="gal-lb-close" onClick={() => setPreview(null)}><Ic d={IC.x} size={16} /></button>
-            <img src={preview.url} alt={preview.title} />
-            <div className="gal-lb-foot">
-              <span>{preview.title}</span>
-              <button
-                className="btn btn-sm"
-                style={{ color: "var(--avoid)" }}
-                onClick={() => setDeleteId(preview.id)}
-              >
-                刪除
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* ── Detail Drawer ── */}
+      {drawerAsset && (
+        <AssetDrawer
+          asset={drawerAsset}
+          onClose={() => setDrawerAsset(null)}
+          onOpenLightbox={() => { openLightbox(drawerAsset); setDrawerAsset(null) }}
+          onDelete={() => { setDeleteId(drawerAsset.id); setDrawerAsset(null) }}
+        />
       )}
 
-      {/* Delete confirm */}
+      {/* ── Lightbox ── */}
+      {lightboxIdx !== null && (
+        <Lightbox
+          list={filtered}
+          startIdx={lightboxIdx}
+          onClose={() => setLightboxIdx(null)}
+        />
+      )}
+
+      {/* ── Delete confirm modal ── */}
       {deleteId && (
         <div className="modal-overlay" onClick={() => setDeleteId(null)}>
           <div className="modal modal-sm" onClick={e => e.stopPropagation()}>
             <div className="modal-h">
               <h2>刪除圖片？</h2>
-              <button className="modal-close" onClick={() => setDeleteId(null)}><Ic d={IC.x} size={15} /></button>
+              <button className="modal-close" onClick={() => setDeleteId(null)}>
+                <Ic d={IC.x} size={15} />
+              </button>
             </div>
             <div className="modal-body">
-              <p style={{ fontSize: 14, color: "var(--text-dim)" }}>圖片將從圖庫永久移除。</p>
+              <p style={{ fontSize: 14, color: "var(--text-dim)" }}>
+                圖片將從圖庫永久移除，所有關聯也會解除。
+              </p>
             </div>
             <div className="modal-foot">
               <button className="btn btn-ghost" onClick={() => setDeleteId(null)}>取消</button>

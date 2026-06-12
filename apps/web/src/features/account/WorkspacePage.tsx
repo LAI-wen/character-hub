@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth/context"
 import { apiClient } from "@/lib/api/client"
 import { ContextHeader } from "@/components/ContextHeader"
 import { charColor } from "@/lib/charColor"
-import { CharHoverCard } from "@/components/CharHoverCard"
+import { useRecentItems } from "@/lib/recentlyViewed"
 import type { ProjectListResponse } from "@oc-tools/contracts"
 import type { CharacterListResponse } from "@oc-tools/contracts"
 
@@ -28,6 +28,7 @@ export function WorkspacePage() {
 
   const projects = projData?.projects ?? []
   const characters = charData?.characters ?? []
+  const recentItems = useRecentItems()
 
   return (
     <div className="page">
@@ -81,10 +82,16 @@ export function WorkspacePage() {
                           </span>
                           <div>
                             <div className="pcard-nm">{project.name}</div>
-                            {project.description && (
-                              <div className="pcard-bl">{project.description}</div>
-                            )}
+                            <div className="pcard-en">Project</div>
                           </div>
+                        </div>
+                        <div className="pcard-bl">
+                          {project.description || "還沒有描述。"}
+                        </div>
+                        <div className="pcard-st">
+                          <span><b>—</b> 角色</span>
+                          <span><b>—</b> 世界觀</span>
+                          <span><b>—</b> 關係</span>
                         </div>
                       </div>
                     </Link>
@@ -97,12 +104,28 @@ export function WorkspacePage() {
 
         {/* Side column */}
         <aside className="wk-side">
-          {/* Recent activity placeholder */}
+          {/* Recently viewed */}
           <div className="block wk-side-card">
-            <p className="wk-side-ch">最近活動</p>
-            <p style={{ fontSize: 13, color: "var(--text-faint)", padding: "var(--s3) 0" }}>
-              活動記錄即將推出。
-            </p>
+            <p className="wk-side-ch">最近瀏覽</p>
+            {recentItems.length === 0 ? (
+              <p style={{ fontSize: 13, color: "var(--text-faint)", padding: "var(--s3) 0" }}>
+                還沒有瀏覽紀錄。
+              </p>
+            ) : (
+              <div className="mini-chars" style={{ gap: "var(--s2)" }}>
+                {recentItems.slice(0, 8).map(item => (
+                  <Link key={item.path} to={item.path} className="mini-char">
+                    <span className="rv-dot" style={{ background: item.imgUrl ? "transparent" : item.color }}>
+                      {item.imgUrl
+                        ? <img src={item.imgUrl} alt={item.name} />
+                        : item.name.slice(0, 1)
+                      }
+                    </span>
+                    <span className="mini-nm">{item.name}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* My characters mini */}
@@ -111,15 +134,13 @@ export function WorkspacePage() {
               <p className="wk-side-ch">我的角色 · {characters.length}</p>
               <div className="mini-chars">
                 {characters.slice(0, 5).map(c => (
-                  <CharHoverCard key={c.id} character={c}>
-                    <Link to={`/characters/${c.id}`} className="mini-char">
+                    <Link key={c.id} to={`/characters/${c.id}`} className="mini-char">
                       {c.avatarUrl
                         ? <img src={c.avatarUrl} alt={c.name} className="mini-av mini-av-img" />
-                        : <span className="mini-av" style={{ background: charColor(c.id) }}>{c.name.slice(0, 1)}</span>
+                        : <span className="mini-av" style={{ background: c.themeColor ?? charColor(c.id) }}>{c.name.slice(0, 1)}</span>
                       }
                       <span className="mini-nm">{c.name}</span>
                     </Link>
-                  </CharHoverCard>
                 ))}
               </div>
               <Link

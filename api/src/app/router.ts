@@ -85,6 +85,7 @@ const updateCharacterSchema = z.object({
   tags: optionalStringArray,
   avatarAssetId: z.string().nullable().optional(),
   heightCm: z.number().int().min(50).max(300).nullable().optional(),
+  themeColor: z.string().max(32).nullable().optional(),
   generalProfile: optionalJsonObject,
   artistProfile: optionalJsonObject,
   writerProfile: optionalJsonObject,
@@ -103,6 +104,11 @@ const createProjectLinkSchema = z.object({
 
 const updateProjectLinkSchema = createProjectLinkSchema.omit({ characterId: true }).partial().extend({
   reviewMessage: z.string().max(2000).nullable().optional(),
+});
+
+const applyToProjectSchema = z.object({
+  projectSlug: z.string().min(1),
+  characterId: z.string().min(1),
 });
 
 const createWorldEntrySchema = z.object({
@@ -207,6 +213,7 @@ type CharacterRow = {
   summary: string | null;
   avatar_asset_id: string | null;
   avatar_r2_key: string | null;
+  theme_color: string | null;
   visibility: string;
   height_cm: number | null;
   tags_json: string | null;
@@ -328,9 +335,9 @@ function nowIso() {
 function slugify(value: string, fallback: string) {
   const slug = value
     .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
+    .replace(/[^\p{L}\p{N}]+/gu, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase();
   return slug || `${fallback}-${crypto.randomUUID().slice(0, 8)}`;
 }
 
@@ -437,6 +444,7 @@ function mapCharacter(row: CharacterRow) {
     tagline: row.summary,
     avatarAssetId: row.avatar_asset_id,
     avatarUrl: row.avatar_r2_key ? r2PublicUrl(row.avatar_r2_key) : null,
+    themeColor: row.theme_color ?? null,
     visibility: row.visibility,
     heightCm: row.height_cm ?? null,
     tags: parseJson<string[]>(row.tags_json, []),
@@ -1016,6 +1024,26 @@ appApiRouter.get('/projects/:projectId', async (c) => {
   });
 });
 
+appApiRouter.get('/projects/:projectId/members', async (c) => {
+  const db = getDb(c);
+  const user = c.get('user');
+  const { project } = await getVisibleProject(c, c.req.param('projectId'), 'project:view');
+  type MemberRow = { id: string; user_id: string; role: string; status: string; joined_at: string; display_name: string; handle: string; char_count: number };
+  const rows = await all<MemberRow>(db,
+    `SELECT pm.id, pm.user_id, pm.role, pm.status, pm.joined_at,
+            u.display_name, u.handle,
+            COUNT(pcl.id) AS char_count
+     FROM project_members pm
+     JOIN users u ON u.id = pm.user_id
+     LEFT JOIN project_character_links pcl ON pcl.project_id = pm.project_id AND pcl.submitted_by_user_id = pm.user_id AND pcl.removed_at IS NULL
+     WHERE pm.project_id = ? AND pm.removed_at IS NULL
+     GROUP BY pm.id
+     ORDER BY CASE pm.role WHEN 'owner' THEN 0 ELSE 1 END, pm.joined_at ASC`,
+    [project.id]);
+  const isOwner = project.owner_user_id === user.sub;
+  return c.json({ members: rows.map(r => ({ id: r.id, userId: r.user_id, role: r.role, status: r.status, joinedAt: r.joined_at, displayName: r.display_name, handle: r.handle, charCount: r.char_count, isCurrentUser: r.user_id === user.sub })), viewerIsOwner: isOwner });
+});
+
 appApiRouter.patch('/projects/:projectId', async (c) => {
   const db = getDb(c);
   const { project, viewerRole } = await getVisibleProject(c, c.req.param('projectId'), 'project:view');
@@ -1122,9 +1150,10 @@ appApiRouter.get('/characters', async (c) => {
   // Attach project memberships
   const charIds = characters.map(c => c.id);
   const placeholders = charIds.map(() => '?').join(',');
-  const memRows = await all<{ character_id: string; project_id: string; project_name: string; project_color: string }>(
+  const memRows = await all<{ character_id: string; project_id: string; project_name: string; project_color: string; faction_label: string | null; project_role: string | null; status: string | null; link_id: string }>(
     db,
-    `SELECT pcl.character_id, p.id AS project_id, p.name AS project_name, p.theme_color AS project_color
+    `SELECT pcl.id AS link_id, pcl.character_id, p.id AS project_id, p.name AS project_name, p.theme_color AS project_color,
+            pcl.faction_label, pcl.project_role, pcl.status
      FROM project_character_links pcl
      JOIN projects p ON pcl.project_id = p.id
      WHERE pcl.character_id IN (${placeholders})
@@ -1132,10 +1161,13 @@ appApiRouter.get('/characters', async (c) => {
        AND p.archived_at IS NULL`,
     charIds,
   );
-  const membershipMap = new Map<string, { projectId: string; projectName: string; projectColor: string }[]>();
+  const membershipMap = new Map<string, { projectId: string; projectName: string; projectColor: string; factionLabel?: string | null; projectRole?: string | null; status?: string | null; linkId?: string }[]>();
   for (const r of memRows) {
     if (!membershipMap.has(r.character_id)) membershipMap.set(r.character_id, []);
-    membershipMap.get(r.character_id)!.push({ projectId: r.project_id, projectName: r.project_name, projectColor: r.project_color });
+    membershipMap.get(r.character_id)!.push({
+      projectId: r.project_id, projectName: r.project_name, projectColor: r.project_color,
+      factionLabel: r.faction_label, projectRole: r.project_role, status: r.status, linkId: r.link_id,
+    });
   }
   const enriched = characters.map(ch => ({ ...ch, memberships: membershipMap.get(ch.id) ?? [] }));
   return c.json({ characters: enriched, nextCursor: null });
@@ -1250,6 +1282,7 @@ appApiRouter.patch('/characters/:characterId', async (c) => {
     tags: { column: 'tags_json', value: (value) => jsonColumn(value, []) },
     avatarAssetId: { column: 'avatar_asset_id' },
     heightCm: { column: 'height_cm' },
+    themeColor: { column: 'theme_color' },
     generalProfile: { column: 'general_profile_json', value: (value) => jsonColumn(value, {}) },
     artistProfile: { column: 'artist_profile_json', value: (value) => jsonColumn(value, {}) },
     writerProfile: { column: 'writer_profile_json', value: (value) => jsonColumn(value, {}) },
@@ -1286,6 +1319,46 @@ appApiRouter.post('/characters/:characterId/avatar', async (c) => {
   return c.json({ character: mapCharacter(updated!), avatarUrl: r2PublicUrl(r2Key) });
 });
 
+appApiRouter.post('/characters/:characterId/main-visual', async (c) => {
+  const db = getDb(c);
+  const user = c.get('user');
+  await requirePermission(c, 'character:update');
+  const character = await getCharacterRow(db, c.req.param('characterId'));
+  if (!character) throw new AppHttpError(404, 'NOT_FOUND', 'Character not found');
+  if (character.owner_user_id !== user.sub) throw new AppHttpError(403, 'FORBIDDEN', 'Access denied');
+  const contentType = c.req.header('Content-Type') ?? '';
+  if (!contentType.startsWith('multipart/form-data')) throw new AppHttpError(400, 'VALIDATION_ERROR', 'multipart/form-data required');
+  const formData = await c.req.formData();
+  const file = formData.get('file') as File | null;
+  if (!file) throw new AppHttpError(400, 'VALIDATION_ERROR', 'file required');
+  if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) throw new AppHttpError(400, 'VALIDATION_ERROR', 'Only jpeg/png/webp/gif allowed');
+  if (file.size > 20 * 1024 * 1024) throw new AppHttpError(400, 'VALIDATION_ERROR', 'Max 20 MB');
+  const ext = file.type.split('/')[1].replace('jpeg', 'jpg');
+  const r2Key = `main-visuals/${character.id}/${crypto.randomUUID()}.${ext}`;
+  await c.env.BUCKET.put(r2Key, await file.arrayBuffer(), { httpMetadata: { contentType: file.type } });
+  return c.json({ url: r2PublicUrl(r2Key) });
+});
+
+appApiRouter.post('/characters/:characterId/upload', async (c) => {
+  const db = getDb(c);
+  const user = c.get('user');
+  await requirePermission(c, 'character:update');
+  const character = await getCharacterRow(db, c.req.param('characterId'));
+  if (!character) throw new AppHttpError(404, 'NOT_FOUND', 'Character not found');
+  if (character.owner_user_id !== user.sub) throw new AppHttpError(403, 'FORBIDDEN', 'Access denied');
+  const contentType = c.req.header('Content-Type') ?? '';
+  if (!contentType.startsWith('multipart/form-data')) throw new AppHttpError(400, 'VALIDATION_ERROR', 'multipart/form-data required');
+  const formData = await c.req.formData();
+  const file = formData.get('file') as File | null;
+  if (!file) throw new AppHttpError(400, 'VALIDATION_ERROR', 'file required');
+  if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) throw new AppHttpError(400, 'VALIDATION_ERROR', 'Only jpeg/png/webp/gif allowed');
+  if (file.size > 20 * 1024 * 1024) throw new AppHttpError(400, 'VALIDATION_ERROR', 'Max 20 MB');
+  const ext = file.type.split('/')[1].replace('jpeg', 'jpg');
+  const r2Key = `characters/${character.id}/images/${crypto.randomUUID()}.${ext}`;
+  await c.env.BUCKET.put(r2Key, await file.arrayBuffer(), { httpMetadata: { contentType: file.type } });
+  return c.json({ url: r2PublicUrl(r2Key) });
+});
+
 appApiRouter.delete('/characters/:characterId', async (c) => {
   const db = getDb(c);
   const user = c.get('user');
@@ -1295,6 +1368,31 @@ appApiRouter.delete('/characters/:characterId', async (c) => {
   const now = nowIso();
   await run(db, 'UPDATE characters SET archived_at = ?, updated_at = ? WHERE id = ?', [now, now, character.id]);
   return c.json({ ok: true });
+});
+
+appApiRouter.post('/apply', async (c) => {
+  const db = getDb(c);
+  const user = c.get('user');
+  const input = await validateJson(c, applyToProjectSchema);
+
+  const project = await first<ProjectRow>(db, 'SELECT * FROM projects WHERE slug = ? AND archived_at IS NULL', [input.projectSlug]);
+  if (!project || project.visibility === 'private') throw new AppHttpError(404, 'NOT_FOUND', 'Project not found or not accepting applications');
+  if (project.owner_user_id === user.sub) throw new AppHttpError(400, 'INVALID_REQUEST', 'You cannot apply to your own project');
+
+  const character = await getCharacterRow(db, input.characterId);
+  if (!character) throw new AppHttpError(404, 'NOT_FOUND', 'Character not found');
+  if (character.owner_user_id !== user.sub) throw new AppHttpError(403, 'FORBIDDEN', 'Character does not belong to you');
+
+  const duplicate = await getProjectLinkForCharacter(db, project.id, character.id);
+  if (duplicate) throw new AppHttpError(409, 'CONFLICT', 'This character has already applied or been linked to this project');
+
+  const link = await createProjectCharacterLink(db, {
+    projectId: project.id,
+    characterId: character.id,
+    userId: user.sub,
+    status: 'pending',
+  });
+  return c.json({ projectLink: mapProjectLink(link), project: { id: project.id, name: project.name, slug: project.slug } }, 201);
 });
 
 appApiRouter.get('/projects/:projectId/characters', async (c) => {
@@ -1354,7 +1452,7 @@ appApiRouter.get('/projects/:projectId/characters/:linkId', async (c) => {
 appApiRouter.patch('/projects/:projectId/characters/:linkId', async (c) => {
   const db = getDb(c);
   const user = c.get('user');
-  await getVisibleProject(c, c.req.param('projectId'), 'project_character:update');
+  const { project } = await getVisibleProject(c, c.req.param('projectId'), 'project_character:update');
   const link = await getProjectLinkById(db, c.req.param('projectId'), c.req.param('linkId'));
   if (!link) throw new AppHttpError(404, 'NOT_FOUND', 'Project character link not found');
   const input = await validateJson(c, updateProjectLinkSchema);
@@ -1374,6 +1472,20 @@ appApiRouter.patch('/projects/:projectId/characters/:linkId', async (c) => {
     values.push(now, user.sub);
   }
   if (sets.length) await run(db, `UPDATE project_character_links SET ${sets.join(', ')}, updated_at = ? WHERE id = ?`, [...values, now, link.id]);
+
+  // On approval: auto-add applicant as project member if not already one
+  if (input.status === 'active' && link.submitted_by_user_id && link.submitted_by_user_id !== project.owner_user_id) {
+    const existing = await getProjectMember(db, project.id, link.submitted_by_user_id);
+    if (!existing) {
+      const memberId = crypto.randomUUID();
+      await run(db,
+        `INSERT INTO project_members (id, project_id, user_id, role, status, permissions_json, invited_by, joined_at, removed_at, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, NULL, NULL, ?, NULL, ?, ?)`,
+        [memberId, project.id, link.submitted_by_user_id, 'member', 'active', now, now, now],
+      );
+    }
+  }
+
   const updated = await getProjectLinkById(db, c.req.param('projectId'), link.id);
   return c.json({ projectLink: mapProjectLink(updated) });
 });
@@ -1667,12 +1779,12 @@ appApiRouter.delete('/projects/:projectId/stories/:storyId/chapters/:chapterId',
 const ALLOWED_IMAGE_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const MAX_ASSET_SIZE = 10 * 1024 * 1024;
 
-type AssetRow = { id: string; title: string; r2_key: string | null; mime_type: string | null; width: number | null; height: number | null; asset_type: string; author_name: string | null; source_url: string | null; created_at: string };
+type AssetRow = { id: string; title: string; r2_key: string | null; mime_type: string | null; size_bytes: number | null; width: number | null; height: number | null; asset_type: string; author_name: string | null; source_url: string | null; created_at: string; project_id?: string | null; project_name?: string | null };
 
 const r2Url = r2PublicUrl;
 
 function mapAsset(row: AssetRow) {
-  return { id: row.id, title: row.title, url: row.r2_key ? r2Url(row.r2_key) : '', mimeType: row.mime_type ?? null, width: row.width ?? null, height: row.height ?? null, assetType: row.asset_type, authorName: row.author_name ?? null, sourceUrl: row.source_url ?? null, createdAt: row.created_at };
+  return { id: row.id, title: row.title, url: row.r2_key ? r2Url(row.r2_key) : '', mimeType: row.mime_type ?? null, sizeBytes: row.size_bytes ?? null, width: row.width ?? null, height: row.height ?? null, assetType: row.asset_type, authorName: row.author_name ?? null, sourceUrl: row.source_url ?? null, createdAt: row.created_at, projectId: row.project_id ?? null, projectName: row.project_name ?? null };
 }
 
 appApiRouter.get('/projects/:projectId/assets', async (c) => {
@@ -1728,8 +1840,34 @@ appApiRouter.delete('/projects/:projectId/assets/:assetId', async (c) => {
   await run(db, `UPDATE assets SET deleted_at = ?, updated_at = ? WHERE id = ?`, [now, now, asset.id]);
   return c.json({ deleted: true });
 });
-appApiRouter.all('/projects/:projectId/public-page', (c) => notImplemented(c, 'PublicPageRepository'));
-appApiRouter.all('/projects/:projectId/public-page/*', (c) => notImplemented(c, 'PublicPageRepository'));
+// Global asset gallery (all user assets)
+appApiRouter.get('/assets', async (c) => {
+  const db = getDb(c);
+  const user = c.get('user');
+  const rows = await all<AssetRow>(db,
+    `SELECT a.id, a.title, a.r2_key, a.mime_type, a.size_bytes, a.width, a.height, a.asset_type, a.author_name, a.source_url, a.created_at,
+            p.id AS project_id, p.name AS project_name
+     FROM assets a
+     LEFT JOIN asset_links al ON al.asset_id = a.id AND al.target_type = 'project'
+     LEFT JOIN projects p ON p.id = al.project_id
+     WHERE a.owner_user_id = ? AND a.deleted_at IS NULL
+     ORDER BY a.created_at DESC`,
+    [user.sub]);
+  const totalBytes = rows.reduce((s, r) => s + (r.size_bytes ?? 0), 0);
+  return c.json({ assets: rows.map(mapAsset), totalBytes });
+});
+
+// Account storage usage
+appApiRouter.get('/account/storage', async (c) => {
+  const db = getDb(c);
+  const user = c.get('user');
+  const row = await first<{ total_bytes: number; asset_count: number }>(db,
+    `SELECT COALESCE(SUM(size_bytes), 0) AS total_bytes, COUNT(*) AS asset_count FROM assets WHERE owner_user_id = ? AND deleted_at IS NULL`,
+    [user.sub]);
+  return c.json({ totalBytes: row?.total_bytes ?? 0, assetCount: row?.asset_count ?? 0, limitBytes: 500 * 1024 * 1024 });
+});
+
+// public-page routes registered below near content-submissions
 
 appApiRouter.get('/projects/:projectId/relationships', async (c) => {
   const db = getDb(c);
@@ -2108,10 +2246,260 @@ appApiRouter.on(['PUT', 'PATCH'], '/projects/:projectId/relationship-layout', as
   const row = await getRelationshipLayoutRow(db, project.id);
   return c.json({ layout: mapRelationshipLayout(row, project.id) });
 });
-appApiRouter.all('/projects/:projectId/applications/characters', (c) => notImplemented(c, 'CollaborationRepository'));
-appApiRouter.all('/projects/:projectId/applications/characters/*', (c) => notImplemented(c, 'CollaborationRepository'));
-appApiRouter.all('/projects/:projectId/submissions/content', (c) => notImplemented(c, 'CollaborationRepository'));
-appApiRouter.all('/projects/:projectId/submissions/content/*', (c) => notImplemented(c, 'CollaborationRepository'));
+// ── Content Submissions ──────────────────────────────────────────────────────
+
+type ContentSubmissionRow = {
+  id: string;
+  project_id: string;
+  submitter_user_id: string | null;
+  submitter_name: string | null;
+  type: string;
+  title: string;
+  message: string | null;
+  asset_id: string | null;
+  text_content: string | null;
+  related_character_ids_json: string | null;
+  status: string;
+  destination_type: string | null;
+  destination_id: string | null;
+  submitted_at: string;
+  reviewed_at: string | null;
+  reviewed_by_user_id: string | null;
+  review_message: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+function mapSubmission(row: ContentSubmissionRow) {
+  return {
+    id: row.id,
+    projectId: row.project_id,
+    submitterUserId: row.submitter_user_id,
+    submitterName: row.submitter_name,
+    type: row.type,
+    title: row.title,
+    message: row.message,
+    assetId: row.asset_id,
+    textContent: row.text_content,
+    relatedCharacterIds: parseJson<string[]>(row.related_character_ids_json, []),
+    status: row.status,
+    destinationType: row.destination_type,
+    destinationId: row.destination_id,
+    submittedAt: row.submitted_at,
+    reviewedAt: row.reviewed_at,
+    reviewedByUserId: row.reviewed_by_user_id,
+    reviewMessage: row.review_message,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+const createSubmissionSchema = z.object({
+  type: z.enum(['image', 'text', 'video', 'other']),
+  title: z.string().min(1).max(200),
+  message: z.string().max(2000).nullable().optional(),
+  assetId: z.string().nullable().optional(),
+  textContent: z.string().max(60000).nullable().optional(),
+  relatedCharacterIds: z.array(z.string()).optional(),
+  destinationType: z.string().max(80).nullable().optional(),
+  destinationId: z.string().nullable().optional(),
+});
+
+const updateSubmissionSchema = z.object({
+  status: z.enum(['draft', 'submitted', 'changes_requested', 'approved', 'rejected', 'withdrawn']).optional(),
+  reviewMessage: z.string().max(2000).nullable().optional(),
+});
+
+appApiRouter.get('/projects/:projectId/submissions/content', async (c) => {
+  const db = getDb(c);
+  const user = c.get('user');
+  const { project } = await getVisibleProject(c, c.req.param('projectId'), 'project:view');
+  const isOwner = project.owner_user_id === user.sub;
+  const rows = await all<ContentSubmissionRow>(
+    db,
+    isOwner
+      ? `SELECT * FROM content_submissions WHERE project_id = ? ORDER BY submitted_at DESC, created_at DESC`
+      : `SELECT * FROM content_submissions WHERE project_id = ? AND submitter_user_id = ? ORDER BY submitted_at DESC, created_at DESC`,
+    isOwner ? [project.id] : [project.id, user.sub],
+  );
+  return c.json({ submissions: rows.map(mapSubmission), viewerIsOwner: isOwner });
+});
+
+appApiRouter.post('/projects/:projectId/submissions/content', async (c) => {
+  const db = getDb(c);
+  const user = c.get('user');
+  const { project } = await getVisibleProject(c, c.req.param('projectId'), 'project:view');
+  const input = await validateJson(c, createSubmissionSchema);
+  const now = nowIso();
+  const id = crypto.randomUUID();
+  await run(db,
+    `INSERT INTO content_submissions (id, project_id, submitter_user_id, type, title, message, asset_id, text_content, related_character_ids_json, status, destination_type, destination_id, submitted_at, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'submitted', ?, ?, ?, ?, ?)`,
+    [id, project.id, user.sub, input.type, input.title, input.message ?? null, input.assetId ?? null, input.textContent ?? null,
+     jsonColumn(input.relatedCharacterIds, []), input.destinationType ?? null, input.destinationId ?? null, now, now, now],
+  );
+  const row = await first<ContentSubmissionRow>(db, 'SELECT * FROM content_submissions WHERE id = ?', [id]);
+  return c.json({ submission: mapSubmission(row!) }, 201);
+});
+
+appApiRouter.patch('/projects/:projectId/submissions/content/:submissionId', async (c) => {
+  const db = getDb(c);
+  const user = c.get('user');
+  const { project } = await getVisibleProject(c, c.req.param('projectId'), 'project:view');
+  const submission = await first<ContentSubmissionRow>(db, 'SELECT * FROM content_submissions WHERE id = ? AND project_id = ?', [c.req.param('submissionId'), project.id]);
+  if (!submission) throw new AppHttpError(404, 'NOT_FOUND', 'Submission not found');
+  const isOwner = project.owner_user_id === user.sub;
+  const isSubmitter = submission.submitter_user_id === user.sub;
+  if (!isOwner && !isSubmitter) throw new AppHttpError(403, 'FORBIDDEN', 'No access to this submission');
+  const input = await validateJson(c, updateSubmissionSchema);
+  const now = nowIso();
+  const sets: string[] = ['updated_at = ?'];
+  const vals: unknown[] = [now];
+  if (input.status) { sets.push('status = ?'); vals.push(input.status); }
+  if ('reviewMessage' in input) { sets.push('review_message = ?'); vals.push(input.reviewMessage ?? null); }
+  if (isOwner && input.status) { sets.push('reviewed_at = ?', 'reviewed_by_user_id = ?'); vals.push(now, user.sub); }
+  vals.push(submission.id);
+  await run(db, `UPDATE content_submissions SET ${sets.join(', ')} WHERE id = ?`, vals);
+  const updated = await first<ContentSubmissionRow>(db, 'SELECT * FROM content_submissions WHERE id = ?', [submission.id]);
+  return c.json({ submission: mapSubmission(updated!) });
+});
+
+// ── Public Page settings ──────────────────────────────────────────────────────
+
+type PublicPageRow = {
+  id: string;
+  project_id: string;
+  slug: string;
+  status: string;
+  draft_json: string;
+  theme_json: string | null;
+  settings_json: string | null;
+  published_version_id: string | null;
+  updated_by_user_id: string | null;
+  created_at: string;
+  updated_at: string;
+  published_at: string | null;
+  unpublished_at: string | null;
+};
+
+function mapPublicPage(row: PublicPageRow) {
+  return {
+    id: row.id,
+    projectId: row.project_id,
+    slug: row.slug,
+    status: row.status,
+    settings: parseJson<Record<string, unknown>>(row.settings_json, {}),
+    theme: parseJson<Record<string, unknown>>(row.theme_json, {}),
+    publishedVersionId: row.published_version_id,
+    publishedAt: row.published_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+const updatePublicPageSchema = z.object({
+  status: z.enum(['draft', 'published', 'disabled']).optional(),
+  settings: z.record(z.unknown()).optional(),
+  theme: z.record(z.unknown()).optional(),
+});
+
+appApiRouter.get('/projects/:projectId/public-page', async (c) => {
+  const db = getDb(c);
+  const { project } = await getVisibleProject(c, c.req.param('projectId'), 'project:view');
+  const row = await first<PublicPageRow>(db, 'SELECT * FROM public_pages WHERE project_id = ?', [project.id]);
+  if (!row) throw new AppHttpError(404, 'NOT_FOUND', 'Public page not found');
+  return c.json({ publicPage: mapPublicPage(row), projectSlug: project.slug });
+});
+
+appApiRouter.patch('/projects/:projectId/public-page', async (c) => {
+  const db = getDb(c);
+  const user = c.get('user');
+  const { project } = await getVisibleProject(c, c.req.param('projectId'), 'project:manage_settings');
+  const row = await first<PublicPageRow>(db, 'SELECT * FROM public_pages WHERE project_id = ?', [project.id]);
+  if (!row) throw new AppHttpError(404, 'NOT_FOUND', 'Public page not found');
+  const input = await validateJson(c, updatePublicPageSchema);
+  const now = nowIso();
+  const sets: string[] = ['updated_at = ?', 'updated_by_user_id = ?'];
+  const vals: unknown[] = [now, user.sub];
+  if (input.status) { sets.push('status = ?'); vals.push(input.status); }
+  if (input.settings) { sets.push('settings_json = ?'); vals.push(JSON.stringify(input.settings)); }
+  if (input.theme) { sets.push('theme_json = ?'); vals.push(JSON.stringify(input.theme)); }
+  vals.push(row.id);
+  await run(db, `UPDATE public_pages SET ${sets.join(', ')} WHERE id = ?`, vals);
+  const updated = await first<PublicPageRow>(db, 'SELECT * FROM public_pages WHERE id = ?', [row.id]);
+  return c.json({ publicPage: mapPublicPage(updated!) });
+});
+// ── Project Template ─────────────────────────────────────────────────────────
+
+type TemplateField = {
+  id: string;
+  type: 'section' | 'text' | 'textarea' | 'number' | 'select' | 'multiselect' | 'color' | 'image' | 'relation';
+  label: string;
+  key: string;
+  description?: string;
+  required?: boolean;
+  visibility?: string;
+  editableBy?: string;
+  options?: string[];
+  min?: number;
+  max?: number;
+  sortOrder: number;
+};
+
+const putTemplateSchema = z.object({
+  fields: z.array(z.object({
+    id: z.string().min(1),
+    type: z.string().min(1).max(80),
+    label: z.string().min(1).max(200),
+    key: z.string().min(1).max(100),
+    description: z.string().max(500).optional(),
+    required: z.boolean().optional(),
+    visibility: z.string().max(80).optional(),
+    editableBy: z.string().max(80).optional(),
+    options: z.array(z.string().max(200)).optional(),
+    min: z.number().optional(),
+    max: z.number().optional(),
+    sortOrder: z.number().int(),
+  })).max(100).optional(),
+  canvasTemplates: z.array(z.unknown()).optional(),
+  canvasDesign: z.unknown().optional(),
+});
+
+appApiRouter.get('/projects/:projectId/template', async (c) => {
+  const db = getDb(c);
+  const { project } = await getVisibleProject(c, c.req.param('projectId'), 'project:view');
+  const row = await first<{ template_fields_json: string | null }>(
+    db, 'SELECT template_fields_json FROM projects WHERE id = ?', [project.id],
+  );
+  const raw = parseJson<unknown>(row?.template_fields_json, null);
+  let fields: TemplateField[] = [];
+  let canvasTemplates: unknown[] = [];
+  let canvasDesign: unknown = {};
+  if (Array.isArray(raw)) {
+    fields = raw as TemplateField[];
+  } else if (raw && typeof raw === 'object') {
+    const r = raw as Record<string, unknown>;
+    fields = Array.isArray(r.fields) ? r.fields as TemplateField[] : [];
+    canvasTemplates = Array.isArray(r.canvasTemplates) ? r.canvasTemplates : [];
+    canvasDesign = r.canvasDesign ?? {};
+  }
+  return c.json({ fields, canvasTemplates, canvasDesign });
+});
+
+appApiRouter.put('/projects/:projectId/template', async (c) => {
+  const db = getDb(c);
+  const { project } = await getVisibleProject(c, c.req.param('projectId'), 'project:manage_settings');
+  const input = await validateJson(c, putTemplateSchema);
+  const now = nowIso();
+  const stored = {
+    fields: input.fields ?? [],
+    canvasTemplates: input.canvasTemplates ?? [],
+    canvasDesign: input.canvasDesign ?? {},
+  };
+  await run(db, `UPDATE projects SET template_fields_json = ?, updated_at = ? WHERE id = ?`,
+    [JSON.stringify(stored), now, project.id]);
+  return c.json(stored);
+});
+
 appApiRouter.all('/wishlist', (c) => notImplemented(c, 'CommissionRepository'));
 appApiRouter.all('/wishlist/*', (c) => notImplemented(c, 'CommissionRepository'));
 appApiRouter.all('/commissions', (c) => notImplemented(c, 'CommissionRepository'));
@@ -2236,6 +2624,89 @@ appApiRouter.patch('/account/password', async (c) => {
   await run(db, `UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?`,
     [newHash, nowIso(), user.sub]);
   return c.json({ ok: true });
+});
+
+appApiRouter.get('/account/connected', async (c) => {
+  const db = getDb(c);
+  const user = c.get('user');
+  const rows = await all<{ id: string; provider: string; created_at: string }>(
+    db, 'SELECT id, provider, created_at FROM oauth_accounts WHERE user_id = ? ORDER BY created_at ASC', [user.sub],
+  );
+  return c.json({ accounts: rows.map(r => ({ id: r.id, provider: r.provider, connectedAt: r.created_at })) });
+});
+
+appApiRouter.delete('/account/connected/:provider', async (c) => {
+  const db = getDb(c);
+  const user = c.get('user');
+  const { provider } = c.req.param();
+
+  const userRow = await first<{ password_hash: string | null }>(
+    db, 'SELECT password_hash FROM users WHERE id = ?', [user.sub],
+  );
+  const countRow = await first<{ count: number }>(
+    db, 'SELECT COUNT(*) as count FROM oauth_accounts WHERE user_id = ?', [user.sub],
+  );
+  if (!userRow?.password_hash && (countRow?.count ?? 0) <= 1) {
+    throw new AppHttpError(400, 'VALIDATION_ERROR', '至少需要保留一種登入方式');
+  }
+
+  await run(db, 'DELETE FROM oauth_accounts WHERE user_id = ? AND provider = ?', [user.sub, provider]);
+  return c.json({ ok: true });
+});
+
+function genInviteCode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const arr = new Uint8Array(8);
+  crypto.getRandomValues(arr);
+  const s = Array.from(arr).map(b => chars[b % chars.length]).join('');
+  return `${s.slice(0, 4)}-${s.slice(4)}`;
+}
+
+function getInviteLimit(c: any): number | null {
+  const adminIds = (c.env.INVITE_ADMIN_IDS ?? '').split(',').map((s: string) => s.trim()).filter(Boolean);
+  if (adminIds.includes(c.get('user').sub)) return null; // unlimited
+  const limit = parseInt(c.env.INVITE_LIMIT ?? '5', 10);
+  return isNaN(limit) ? 5 : limit;
+}
+
+appApiRouter.get('/account/invites', async (c) => {
+  const db = getDb(c);
+  const user = c.get('user');
+  const rows = await all<{
+    id: string; code: string; used_by_user_id: string | null; created_at: string; used_at: string | null;
+  }>(db, 'SELECT id, code, used_by_user_id, created_at, used_at FROM invite_codes WHERE created_by_user_id = ? ORDER BY created_at DESC', [user.sub]);
+  const limit = getInviteLimit(c);
+  const created = rows.length;
+  return c.json({
+    invites: rows.map(r => ({
+      id: r.id, code: r.code,
+      usedByUserId: r.used_by_user_id,
+      createdAt: r.created_at,
+      usedAt: r.used_at,
+    })),
+    limit,
+    remaining: limit === null ? null : Math.max(0, limit - created),
+    isAdmin: limit === null,
+  });
+});
+
+appApiRouter.post('/account/invites', async (c) => {
+  const db = getDb(c);
+  const user = c.get('user');
+  const limit = getInviteLimit(c);
+  if (limit !== null) {
+    const countRow = await first<{ count: number }>(db, 'SELECT COUNT(*) as count FROM invite_codes WHERE created_by_user_id = ?', [user.sub]);
+    if ((countRow?.count ?? 0) >= limit) {
+      throw new AppHttpError(400, 'LIMIT_REACHED', `邀請碼上限為 ${limit} 組`);
+    }
+  }
+  const id = crypto.randomUUID();
+  let code = genInviteCode();
+  while (await first(db, 'SELECT id FROM invite_codes WHERE code = ?', [code])) {
+    code = genInviteCode();
+  }
+  await run(db, 'INSERT INTO invite_codes (id, code, created_by_user_id) VALUES (?, ?, ?)', [id, code, user.sub]);
+  return c.json({ invite: { id, code, createdAt: new Date().toISOString() } }, 201);
 });
 
 publicApiRouter.get('/characters/:slug', async (c) => {

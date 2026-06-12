@@ -67,7 +67,7 @@ export function CharacterNewPage() {
               {errors.name && <span className="ed-err">{errors.name.message}</span>}
             </div>
             <div className="ed-field">
-              <label>種族 / 類型</label>
+              <label>種族 / 身分</label>
               <input className="inp" placeholder="人類、精靈、人工智能…" {...register("species")} />
             </div>
             <div className="ed-field">

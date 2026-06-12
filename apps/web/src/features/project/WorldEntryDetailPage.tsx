@@ -37,7 +37,7 @@ export function WorldEntryDetailPage() {
   const entry = data?.entry
   useEffect(() => {
     if (!entry || !projectId || !entryId) return
-    recordView({ type: "entry", id: e.id, name: e.title, path: `/p/${projectId}/worldview/${entryId}`, color: typeColor(e.type) })
+    recordView({ type: "entry", id: entry.id, name: entry.title, path: `/p/${projectId}/worldview/${entryId}`, color: typeColor(entry.type) })
   }, [entry?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (status === "pending") {
@@ -58,7 +58,7 @@ export function WorldEntryDetailPage() {
 
   return (
     <div className="page">
-      <ContextHeader scope="project" crumbs={[project.name, "世界觀", e.title]} />
+      <ContextHeader scope="project" crumbs={[{ label: project.name, href: `/p/${projectId}` }, { label: "世界觀", href: `/p/${projectId}/worldview` }, e.title]} />
 
       <div className="ch-head">
         <div className="av" style={{ background: color, fontSize: 28 }}>

@@ -44,7 +44,7 @@ export async function getUserByEmail(db: D1Database, email: string): Promise<App
       `SELECT u.*, uc.password_hash
        FROM users u
        LEFT JOIN user_credentials uc ON uc.user_id = u.id
-       WHERE u.email = ?`,
+       WHERE LOWER(u.email) = LOWER(?)`,
     )
     .bind(email)
     .first<UserWithCredentials>();

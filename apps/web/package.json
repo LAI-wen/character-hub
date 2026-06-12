@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "deploy": "npm run build && wrangler pages deploy dist --project-name oc-tools --branch main --commit-dirty=true",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -16,9 +17,11 @@
     "@hookform/resolvers": "^5.4.0",
     "@oc-tools/contracts": "*",
     "@tanstack/react-query": "^5.101.0",
+    "i18next": "^26.3.1",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-hook-form": "^7.78.0",
+    "react-i18next": "^17.0.8",
     "react-router-dom": "^7.17.0",
     "zod": "^4.4.3"
   },

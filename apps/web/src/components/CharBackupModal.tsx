@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { showConfirm } from '@/components/ConfirmModal'
 import { BUILTIN_FORMS, type FormTemplate, loadForms, saveForms, schemaFromSections, sectionsFromSchema } from '@/data/formTemplates'
 
 function uid() { return Math.random().toString(36).slice(2, 9) }
@@ -26,8 +27,8 @@ export function CharBackupModal({ charName: _charName, sections, onExport, onImp
     persist([...formTemplates, tpl])
   }
 
-  const applyTemplate = (t: FormTemplate) => {
-    if (!window.confirm(`套用「${t.name}」格式？這會換掉目前的設定區塊（但不影響模板和圖庫）。`)) return
+  const applyTemplate = async (t: FormTemplate) => {
+    if (!await showConfirm('這會換掉目前的設定區塊（但不影響模板和圖庫）。', { title: `套用「${t.name}」格式？`, confirmLabel: '套用' })) return
     onApplySections(sectionsFromSchema(t.sections) as Section[])
     onClose()
   }

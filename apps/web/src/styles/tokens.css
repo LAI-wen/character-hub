@@ -25,6 +25,11 @@
   --avoid:     #C8463C;   /* common-mistake red */
   --avoid-soft:#F8E9E7;
 
+  /* octool-react compat aliases — lets copied components use original var names */
+  --bg-2: var(--surface);
+  --bg-3: var(--surface-2);
+  --text-2: var(--text-dim);
+
   /* --- Type --- */
   --font-sans: 'Inter', 'Huninn', 'Noto Sans TC', system-ui, sans-serif;
   --font-round: 'Huninn', 'Inter', 'Noto Sans TC', sans-serif;

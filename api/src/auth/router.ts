@@ -16,6 +16,7 @@ const registerSchema = z.object({
   handle: z.string().min(2).max(32).regex(/^[a-z0-9-]+$/),
   password: z.string().min(8),
   display_name: z.string().max(64).optional(),
+  invite_code: z.string().min(1),
 });
 
 const loginSchema = z.object({
@@ -43,7 +44,13 @@ authRouter.post('/register', async (c) => {
   const parsed = registerSchema.safeParse(body);
   if (!parsed.success) return errorResponse(c, 400, 'VALIDATION_ERROR', parsed.error.message);
 
-  const { email, handle, password, display_name } = parsed.data;
+  const { email, handle, password, display_name, invite_code } = parsed.data;
+
+  const inviteRow = await c.env.DB.prepare(
+    'SELECT id FROM invite_codes WHERE code = ? AND used_at IS NULL',
+  ).bind(invite_code.toUpperCase()).first<{ id: string }>();
+  if (!inviteRow) return errorResponse(c, 400, 'INVITE_INVALID', '邀請碼無效或已被使用');
+
   if (await getUserByEmail(c.env.DB, email)) return errorResponse(c, 409, 'CONFLICT', 'Email already registered');
   if (await c.env.DB.prepare('SELECT id FROM users WHERE handle = ?').bind(handle).first()) {
     return errorResponse(c, 409, 'CONFLICT', 'Handle taken');
@@ -51,6 +58,9 @@ authRouter.post('/register', async (c) => {
 
   const id = crypto.randomUUID();
   await createUser(c.env.DB, { id, email, handle, display_name, password_hash: await hashPassword(password) });
+  await c.env.DB.prepare(
+    'UPDATE invite_codes SET used_by_user_id = ?, used_at = ? WHERE id = ?',
+  ).bind(id, new Date().toISOString(), inviteRow.id).run();
 
   const [accessToken, refreshToken, sessionToken] = await Promise.all([
     signAccessToken(id, handle, c.env.JWT_SECRET),
@@ -171,11 +181,12 @@ authRouter.post('/refresh', async (c) => {
 
 // ── OAuth helpers ──────────────────────────────────────────────────────────────
 
-async function findOrCreateOAuthUser(
+// Returns the existing user, or null if this is a brand-new identity.
+async function findExistingOAuthUser(
   db: D1Database,
   provider: string, providerId: string,
-  email: string, name: string, _avatarUrl: string,
-): Promise<{ id: string; handle: string }> {
+  email: string,
+): Promise<{ id: string; handle: string } | null> {
   const existing = await getOAuthAccount(db, provider, providerId);
   if (existing) {
     const user = await getUserById(db, existing.user_id);
@@ -186,6 +197,15 @@ async function findOrCreateOAuthUser(
     await createOAuthAccount(db, crypto.randomUUID(), byEmail.id, provider, providerId);
     return { id: byEmail.id, handle: byEmail.username };
   }
+  return null;
+}
+
+// Creates a new user + OAuth account. Call only after invite has been validated.
+async function createNewOAuthUser(
+  db: D1Database,
+  email: string, name: string,
+  provider: string, providerId: string,
+): Promise<{ id: string; handle: string }> {
   const id = crypto.randomUUID();
   const base = name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 28) || 'user';
   let handle = base;
@@ -193,9 +213,41 @@ async function findOrCreateOAuthUser(
   while (await db.prepare('SELECT id FROM users WHERE handle = ?').bind(handle).first()) {
     handle = `${base}-${suffix++}`;
   }
-  await createUser(db, { id, email, handle, display_name: name });
+  await createUser(db, { id, email: email.toLowerCase(), handle, display_name: name });
   await createOAuthAccount(db, crypto.randomUUID(), id, provider, providerId);
   return { id, handle };
+}
+
+function parseOAuthState(raw: string | null): { invite: string | null } {
+  if (!raw) return { invite: null };
+  try { return { invite: JSON.parse(raw)?.invite ?? null }; }
+  catch { return { invite: null }; }
+}
+
+// Looks up a valid invite code row. Returns a redirect on failure, the row id on success.
+async function validateInvite(invite: string | null, db: D1Database, frontendUrl: string): Promise<{ rowId: string } | Response> {
+  const base = frontendUrl.replace(/\/$/, '');
+  if (!invite) return Response.redirect(`${base}/login?error=invite_required`, 302);
+  const row = await db.prepare(
+    'SELECT id FROM invite_codes WHERE code = ? AND used_at IS NULL',
+  ).bind(invite.toUpperCase()).first<{ id: string }>();
+  if (!row) return Response.redirect(`${base}/login?error=invite_invalid`, 302);
+  return { rowId: row.id };
+}
+
+async function markInviteUsed(db: D1Database, rowId: string, userId: string): Promise<void> {
+  await db.prepare(
+    'UPDATE invite_codes SET used_by_user_id = ?, used_at = ? WHERE id = ?',
+  ).bind(userId, new Date().toISOString(), rowId).run();
+}
+
+// Validates an invite code and marks it used for newUserId.
+// Returns a redirect response on failure, null on success.
+async function consumeInvite(db: D1Database, invite: string | null, newUserId: string, frontendUrl: string): Promise<Response | null> {
+  const result = await validateInvite(invite, db, frontendUrl);
+  if (result instanceof Response) return result;
+  await markInviteUsed(db, result.rowId, newUserId);
+  return null;
 }
 
 async function issueTokensAndRedirect(c: any, userId: string, handle: string, frontendUrl: string) {
@@ -211,40 +263,67 @@ async function issueTokensAndRedirect(c: any, userId: string, handle: string, fr
 }
 
 authRouter.get('/google', async (c) => {
+  const invite = c.req.query('invite') ?? null;
   const state = crypto.randomUUID();
-  await c.env.KV.put(`oauth_state:${state}`, '1', { expirationTtl: 60 });
+  await c.env.KV.put(`oauth_state:${state}`, JSON.stringify({ invite }), { expirationTtl: 300 });
   const redirectUri = new URL('/api/v1/auth/google/callback', c.env.FRONTEND_URL).toString();
   return c.redirect(await getGoogleAuthUrl(c.env.GOOGLE_CLIENT_ID, redirectUri, state));
 });
 
 authRouter.get('/google/callback', async (c) => {
   const { code, state } = c.req.query();
-  if (!state || !await c.env.KV.get(`oauth_state:${state}`)) return errorResponse(c, 400, 'VALIDATION_ERROR', 'Invalid state');
+  const kvRaw = await c.env.KV.get(`oauth_state:${state}`);
+  if (!state || !kvRaw) return errorResponse(c, 400, 'VALIDATION_ERROR', 'Invalid state');
   await c.env.KV.delete(`oauth_state:${state}`);
+  const { invite } = parseOAuthState(kvRaw);
 
   const redirectUri = new URL('/api/v1/auth/google/callback', c.env.FRONTEND_URL).toString();
   const tokens = await exchangeGoogleCode(code, c.env.GOOGLE_CLIENT_ID, c.env.GOOGLE_CLIENT_SECRET, redirectUri);
   const gUser = await getGoogleUser(tokens.access_token);
-  const { id, handle } = await findOrCreateOAuthUser(c.env.DB, 'google', gUser.id, gUser.email, gUser.name, gUser.picture);
-  return issueTokensAndRedirect(c, id, handle, c.env.FRONTEND_URL);
+
+  const existing = await findExistingOAuthUser(c.env.DB, 'google', gUser.id, gUser.email);
+  if (existing) {
+    return issueTokensAndRedirect(c, existing.id, existing.handle, c.env.FRONTEND_URL);
+  }
+
+  // Brand-new user — validate invite BEFORE creating account to avoid orphaned rows
+  const inviteResult = await validateInvite(invite, c.env.DB, c.env.FRONTEND_URL);
+  if (inviteResult instanceof Response) return inviteResult;
+
+  const newUser = await createNewOAuthUser(c.env.DB, gUser.email, gUser.name, 'google', gUser.id);
+  await markInviteUsed(c.env.DB, inviteResult.rowId, newUser.id);
+  return issueTokensAndRedirect(c, newUser.id, newUser.handle, c.env.FRONTEND_URL);
 });
 
 authRouter.get('/github', async (c) => {
+  const invite = c.req.query('invite') ?? null;
   const state = crypto.randomUUID();
-  await c.env.KV.put(`oauth_state:${state}`, '1', { expirationTtl: 60 });
+  await c.env.KV.put(`oauth_state:${state}`, JSON.stringify({ invite }), { expirationTtl: 300 });
   return c.redirect(await getGitHubAuthUrl(c.env.GITHUB_CLIENT_ID, state));
 });
 
 authRouter.get('/github/callback', async (c) => {
   const { code, state } = c.req.query();
-  if (!state || !await c.env.KV.get(`oauth_state:${state}`)) return errorResponse(c, 400, 'VALIDATION_ERROR', 'Invalid state');
+  const kvRaw = await c.env.KV.get(`oauth_state:${state}`);
+  if (!state || !kvRaw) return errorResponse(c, 400, 'VALIDATION_ERROR', 'Invalid state');
   await c.env.KV.delete(`oauth_state:${state}`);
+  const { invite } = parseOAuthState(kvRaw);
 
   const tokens = await exchangeGitHubCode(code, c.env.GITHUB_CLIENT_ID, c.env.GITHUB_CLIENT_SECRET);
   const ghUser = await getGitHubUser(tokens.access_token);
   const email = ghUser.email ?? await getGitHubPrimaryEmail(tokens.access_token);
   if (!email) return errorResponse(c, 400, 'VALIDATION_ERROR', 'GitHub account has no verified email');
 
-  const { id, handle } = await findOrCreateOAuthUser(c.env.DB, 'github', String(ghUser.id), email, ghUser.name || ghUser.login, ghUser.avatar_url);
-  return issueTokensAndRedirect(c, id, handle, c.env.FRONTEND_URL);
+  const existing = await findExistingOAuthUser(c.env.DB, 'github', String(ghUser.id), email);
+  if (existing) {
+    return issueTokensAndRedirect(c, existing.id, existing.handle, c.env.FRONTEND_URL);
+  }
+
+  // Brand-new user — validate invite BEFORE creating account to avoid orphaned rows
+  const inviteResult = await validateInvite(invite, c.env.DB, c.env.FRONTEND_URL);
+  if (inviteResult instanceof Response) return inviteResult;
+
+  const newUser = await createNewOAuthUser(c.env.DB, email, ghUser.name || ghUser.login, 'github', String(ghUser.id));
+  await markInviteUsed(c.env.DB, inviteResult.rowId, newUser.id);
+  return issueTokensAndRedirect(c, newUser.id, newUser.handle, c.env.FRONTEND_URL);
 });

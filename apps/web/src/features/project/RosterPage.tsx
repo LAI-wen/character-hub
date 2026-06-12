@@ -5,7 +5,6 @@ import { apiClient } from "@/lib/api/client"
 import { PageHeader } from "@/components/PageHeader"
 import { ContextHeader } from "@/components/ContextHeader"
 import { useProjectContext } from "@/routes/layouts/ProjectLayout"
-import { CharHoverCard } from "@/components/CharHoverCard"
 import { charColor } from "@/lib/charColor"
 import type {
   ProjectCharacterLinkListResponse,
@@ -41,7 +40,7 @@ function DetailPanel({
   if (!row) return null
   const { projectLink, character } = row
   if (!character) return null
-  const color = charColor(character.id)
+  const color = character.themeColor ?? charColor(character.id)
 
   return (
     <div className="dp">
@@ -128,8 +127,10 @@ export function RosterPage() {
   const { projectId } = useParams<{ projectId: string }>()
   const { project } = useProjectContext()
   const navigate = useNavigate()
-  const [selId, setSelId] = useState<string | null>(null)
-  const [q, setQ] = useState("")
+  const [selId, setSelId]         = useState<string | null>(null)
+  const [q, setQ]                 = useState("")
+  const [statusFilter, setStatus] = useState<"all" | "approved" | "pending" | "rejected">("all")
+  const [factionFilter, setFaction] = useState<string>("all")
 
   const { data, status } = useQuery({
     queryKey: ["project", projectId, "roster"],
@@ -157,13 +158,31 @@ export function RosterPage() {
 
   const roster = data?.roster ?? []
 
+  // Unique factions for filter pills
+  const factions = [...new Set(roster.map(r => r.projectLink.factionLabel).filter(Boolean) as string[])]
+
+  // Status counts
+  const statusCounts = {
+    all:      roster.length,
+    approved: roster.filter(r => r.projectLink.status === "approved").length,
+    pending:  roster.filter(r => r.projectLink.status === "pending" || !r.projectLink.status).length,
+    rejected: roster.filter(r => r.projectLink.status === "rejected").length,
+  }
+
   const visible = roster.filter(({ character, projectLink }) => {
+    if (statusFilter !== "all") {
+      const s = projectLink.status ?? "pending"
+      if (statusFilter === "pending" && s !== "pending" && s !== undefined && s !== "") return false
+      if (statusFilter !== "pending" && s !== statusFilter) return false
+    }
+    if (factionFilter !== "all" && projectLink.factionLabel !== factionFilter) return false
     if (!q) return true
     const haystack = [
       character?.name ?? "",
       character?.romaji ?? "",
       character?.species ?? "",
       projectLink.projectRole ?? "",
+      projectLink.factionLabel ?? "",
     ]
       .join(" ")
       .toLowerCase()
@@ -174,12 +193,12 @@ export function RosterPage() {
   const effectiveSel =
     selId ?? (visible.length > 0 ? visible[0].projectLink.id : null)
 
-  // Group by projectRole
+  // Group by faction (fallback: projectRole, then "未分組")
   type Group = { label: string; rows: typeof roster }
   const groups: Group[] = []
   const seen = new Set<string>()
   for (const row of visible) {
-    const label = row.projectLink.projectRole ?? "未分組"
+    const label = row.projectLink.factionLabel ?? row.projectLink.projectRole ?? "未分組"
     if (!seen.has(label)) {
       seen.add(label)
       groups.push({ label, rows: [] })
@@ -201,7 +220,7 @@ export function RosterPage() {
         }
       />
 
-      {/* Toolbar */}
+      {/* Toolbar with status filter + faction filter */}
       <div className="toolbar">
         <div className="searchf">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -214,6 +233,48 @@ export function RosterPage() {
             onChange={(e) => setQ(e.target.value)}
           />
         </div>
+
+        <div className="filterbar">
+          {([
+            ["all",      "全部",   statusCounts.all],
+            ["approved", "已通過",  statusCounts.approved],
+            ["pending",  "待審",   statusCounts.pending],
+            ["rejected", "已拒絕", statusCounts.rejected],
+          ] as const).map(([v, label, ct]) => (ct > 0 || v === "all") ? (
+            <button
+              key={v}
+              type="button"
+              className={"fbtn" + (statusFilter === v ? " on" : "")}
+              onClick={() => setStatus(v)}
+            >
+              {label}
+              <span className="ct">{ct}</span>
+            </button>
+          ) : null)}
+        </div>
+
+        {factions.length > 0 && (
+          <div className="filterbar">
+            <button
+              type="button"
+              className={"fbtn" + (factionFilter === "all" ? " on" : "")}
+              onClick={() => setFaction("all")}
+            >
+              全部陣營
+            </button>
+            {factions.map(f => (
+              <button
+                key={f}
+                type="button"
+                className={"fbtn" + (factionFilter === f ? " on" : "")}
+                onClick={() => setFaction(f === factionFilter ? "all" : f)}
+              >
+                <span className="dot" style={{ background: "var(--accent)" }} />
+                {f}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {status === "pending" && (
@@ -235,52 +296,63 @@ export function RosterPage() {
           <div className="rs-list">
             {groups.map(({ label, rows }) => (
               <div key={label}>
-                <div className="grouph">{label} · {rows.length}</div>
+                <div className="grouph">
+                  <span className="d" style={{ background: "var(--accent)" }} />
+                  {label} · {rows.length}
+                </div>
                 {rows.map(({ projectLink, character }) => {
                   if (!character) return null
-                  const color = charColor(character.id)
+                  const color = character.themeColor ?? charColor(character.id)
                   const isSel = effectiveSel === projectLink.id
                   const relCount = relCountMap.get(character.id) ?? 0
                   return (
-                    <CharHoverCard key={projectLink.id} character={character}>
-                      <button
-                        className={"rrow" + (isSel ? " sel" : "")}
-                        onClick={() => setSelId(projectLink.id)}
-                      >
-                        <span className="av" style={{ background: color }}>
-                          {character.avatarUrl
-                            ? <img src={character.avatarUrl} alt={character.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", borderRadius: "inherit" }} />
-                            : character.name.slice(0, 1)
-                          }
-                        </span>
-                        <div className="id">
-                          <div className="nm">{character.name}</div>
-                          <div className="meta">
-                            {projectLink.projectRole && (
-                              <span>{projectLink.projectRole}</span>
-                            )}
-                            {character.species && (
-                              <span style={{ color: "var(--text-faint)" }}>
-                                {character.species}
-                              </span>
-                            )}
-                          </div>
+                    <button
+                      key={projectLink.id}
+                      className={"rrow" + (isSel ? " sel" : "")}
+                      onClick={() => setSelId(projectLink.id)}
+                    >
+                      <span className="av" style={{ background: color }}>
+                        {character.avatarUrl
+                          ? <img src={character.avatarUrl} alt={character.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", borderRadius: "inherit" }} />
+                          : character.name.slice(0, 1)
+                        }
+                      </span>
+                      <div className="id">
+                        <div className="nm">{character.name}</div>
+                        <div className="meta">
+                          {projectLink.factionLabel && (
+                            <span style={{ color: "var(--accent-ink)" }}>{projectLink.factionLabel}</span>
+                          )}
+                          {projectLink.projectRole && (
+                            <span>{projectLink.projectRole}</span>
+                          )}
+                          {character.species && (
+                            <span style={{ color: "var(--text-faint)" }}>
+                              {character.species}
+                            </span>
+                          )}
                         </div>
-                        {relCount > 0 && (
-                          <span
-                            role="button"
-                            className="rel-badge"
-                            title={`${relCount} 條關係 · 前往關係圖`}
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              navigate(`/p/${projectId}/relationships?focus=${character.id}`)
-                            }}
-                          >
-                            {relCount}
-                          </span>
-                        )}
-                      </button>
-                    </CharHoverCard>
+                      </div>
+                      {projectLink.status === "approved" && (
+                        <span title="已通過" style={{ fontSize: 10, fontWeight: 700, color: "var(--must)", background: "rgba(31,138,91,.1)", borderRadius: 6, padding: "2px 6px", flexShrink: 0, whiteSpace: "nowrap" }}>已通過</span>
+                      )}
+                      {(!projectLink.status || projectLink.status === "pending") && (
+                        <span title="待審" style={{ fontSize: 10, fontWeight: 700, color: "var(--text-dim)", background: "var(--surface-2)", borderRadius: 6, padding: "2px 6px", flexShrink: 0, whiteSpace: "nowrap" }}>待審</span>
+                      )}
+                      {relCount > 0 && (
+                        <span
+                          role="button"
+                          className="rel-badge"
+                          title={`${relCount} 條關係 · 前往關係圖`}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            navigate(`/p/${projectId}/relationships?focus=${character.id}`)
+                          }}
+                        >
+                          {relCount}
+                        </span>
+                      )}
+                    </button>
                   )
                 })}
               </div>
