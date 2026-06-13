@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CharacterHub · 文件與報告總覽</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/ds.css">
+<style>
+  body { background: var(--bg); }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: var(--s12) var(--s8) var(--s16); }
+  .hero { border-bottom: 1px solid var(--border-strong); padding-bottom: var(--s8); margin-bottom: var(--s8); }
+  .hero .eyebrow { margin-bottom: 12px; }
+  .hero h1 { font-family: var(--font-serif); font-size: 40px; font-weight: 900; margin: 0; letter-spacing: -.025em; line-height: 1.06; }
+  .hero .lead { color: var(--text-dim); font-size: 15.5px; margin: var(--s4) 0 0; max-width: 64ch; line-height: 1.65; text-wrap: pretty; }
+  .hero .links { display: flex; gap: var(--s2); margin-top: var(--s5); flex-wrap: wrap; }
+  .hero .links a { font-size: 13px; font-weight: 600; padding: 9px 15px; border-radius: var(--r-btn); border: 1px solid var(--border-strong); background: var(--surface); text-decoration: none; color: inherit; }
+  .hero .links a.primary { background: var(--text); color: #fff; border-color: var(--text); }
+  .hero .links a:hover { background: var(--bg-tint); } .hero .links a.primary:hover { background: #000; }
+
+  section { margin-top: var(--s10); }
+  .sh { display: flex; align-items: baseline; gap: var(--s3); margin-bottom: var(--s4); }
+  .sh .ix { font-family: var(--font-mono); font-size: 12px; color: var(--text-faint); }
+  .sh h2 { font-family: var(--font-serif); font-size: 22px; font-weight: 800; margin: 0; }
+  .sh .en { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); }
+  .sh .rule { flex: 1; height: 1px; background: var(--border); align-self: center; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(248px, 1fr)); gap: var(--s3); }
+  .card { display: flex; flex-direction: column; gap: 3px; padding: var(--s4) var(--s5); border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--sh-1); text-decoration: none; color: inherit; transition: box-shadow .15s, transform .15s; position: relative; }
+  .card:hover { box-shadow: var(--sh-2); transform: translateY(-2px); }
+  .card .n { font-family: var(--font-serif); font-size: 16px; font-weight: 700; }
+  .card .f { font-family: var(--font-mono); font-size: 10.5px; color: var(--accent-ink); margin-top: 2px; }
+  .card .d { font-size: 12.5px; color: var(--text-dim); margin-top: 5px; line-height: 1.5; text-wrap: pretty; }
+  .card .tag { position: absolute; top: 13px; right: 13px; font-family: var(--font-mono); font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: var(--r-pill); }
+  .tag.pass { background: var(--must-soft); color: #1F6B43; border: 1px solid #CDE8D8; }
+  .tag.plan { background: var(--accent-soft); color: var(--accent-ink); border: 1px solid #ECDFA8; }
+  .tag.spec { background: #E8EEF6; color: #355C86; border: 1px solid #CBDDF0; }
+  .tag.hand { background: #EDE7F4; color: #5B4A86; border: 1px solid #DDD0EC; }
+
+  .mdlist { display: flex; flex-wrap: wrap; gap: 6px; }
+  .mdlist a { font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; padding: 5px 11px; border-radius: var(--r-pill); border: 1px solid var(--border); background: var(--surface); color: var(--text-dim); text-decoration: none; }
+  .mdlist a:hover { border-color: var(--accent); color: var(--accent-ink); }
+  .note { font-size: 13px; color: var(--text-faint); line-height: 1.6; margin: 0 0 var(--s4); }
+  .foot { margin-top: var(--s16); padding-top: var(--s6); border-top: 1px solid var(--border-strong); font-size: 13px; color: var(--text-faint); line-height: 1.7; }
+  @media (max-width: 760px) { .hero h1 { font-size: 30px; } .grid { grid-template-columns: 1fr; } .wrap { padding: var(--s10) var(--s4); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">CharacterHub · 設計原型文件中心</div>
+    <h1>文件與報告總覽</h1>
+    <p class="lead">所有規劃、Slice 驗收、QA 校正、交接文件與資料規格的單一入口。報告檔放在專案根目錄（可直接開啟），本頁依階段整理連結。</p>
+    <div class="links">
+      <a class="primary" href="../index.html">設計原型總覽 ↗</a>
+      <a href="../pages/workspace.html">進入工作台 ↗</a>
+      <a href="../handoff.html">Integration Handoff ↗</a>
+    </div>
+  </div>
+
+  <div id="sections"></div>
+
+  <section>
+    <div class="sh"><span class="ix">＋</span><h2>資料規格與契約</h2><span class="en">Specs &amp; contracts</span><span class="rule"></span></div>
+    <p class="note">後端交接的草案文件（Markdown），與頁面規格。</p>
+    <div class="mdlist" id="mds"></div>
+  </section>
+
+  <div class="foot">
+    報告為設計原型階段產物，記錄決策與驗收；<b>正式 Router／Repository／API／D1／Auth／持久化</b>於本地專案處理。資料層維持單一 <span class="mono">OCData</span>，互動為 <span class="mono">Demo interaction only</span>。
+  </div>
+</div>
+
+<script>
+  var SECTIONS = [
+    { ix: '01', title: '規劃與整理', en: 'Planning', items: [
+      ['整理規劃報告', '../cleanup-plan.html', 'cleanup-plan.html', '現況盤點、重複衝突、單一 IA 與清理計畫', 'plan'],
+      ['設計原型總覽', '../index.html', 'index.html', '三大 scope 的頁面索引／啟動頁', 'plan'],
+    ]},
+    { ix: '02', title: 'Slice 驗收', en: 'Slice acceptance', items: [
+      ['Slice 1 · 全站範圍與導覽', '../slice1-report.html', 'slice1-report.html', 'App Shell、工作台、我的角色、企劃總覽、企劃角色', 'pass'],
+      ['Slice 2 · 角色體驗', '../slice2-report.html', 'slice2-report.html', '角色詳情、角色編輯器（本體 vs 企劃限定）', 'pass'],
+      ['Slice 3 · 內容工具', '../slice3-report.html', 'slice3-report.html', '世界觀（階層＋EntityLink）、關係圖', 'pass'],
+      ['Slice 4A · 故事', '../slice4a-report.html', 'slice4a-report.html', 'Story／Chapter／StoryEvent', 'pass'],
+      ['Slice 4B · 圖庫', '../slice4b-report.html', 'slice4b-report.html', 'Asset／AssetLink、燈箱、關聯', 'pass'],
+      ['Slice 4C · 靈感匣', '../slice4c-report.html', 'slice4c-report.html', 'Inspiration 捷記與轉換', 'pass'],
+      ['Slice 5A · 角色卡模板', '../slice5a-report.html', 'slice5a-report.html', 'ProjectTemplate／欄位／版本', 'pass'],
+      ['Slice 5B · 參與者與權限', '../slice5b-report.html', 'slice5b-report.html', 'Membership／Invitation／權限矩陣', 'pass'],
+      ['Slice 5C · 角色加入申請', '../slice5c-report.html', 'slice5c-report.html', 'CharacterApplication 與審核', 'pass'],
+      ['Slice 5D · 作品投稿', '../slice5d-report.html', 'slice5d-report.html', 'ContentSubmission（圖片／文章）', 'pass'],
+    ]},
+    { ix: '03', title: '公開頁 Builder', en: 'Public Page Builder', items: [
+      ['PB0 · Builder 架構', '../pb0-report.html', 'pb0-report.html', '版型／區塊樹／資料綁定', 'pass'],
+      ['PB0.1 · 主題與發布安全', '../pb01-report.html', 'pb01-report.html', '主題、發布管線、公開安全', 'pass'],
+      ['PB0.2 · 易用性', '../pb02-report.html', 'pb02-report.html', '模式切換、綁定、可用性', 'pass'],
+      ['公開頁 Ownership 校正', '../public-page-ownership-report.html', 'public-page-ownership-report.html', '個人頁 vs 企劃頁、route-specific scope', 'pass'],
+    ]},
+    { ix: '04', title: 'QA 與整合', en: 'QA & integration', items: [
+      ['QA Phase 0 · Scope &amp; State', '../qa-phase0-report.html', 'qa-phase0-report.html', 'Route-based scope、Demo Session、P0/P1 清零', 'pass'],
+      ['Integration Handoff', '../handoff.html', 'handoff.html', 'Route／職責／元件／權限／API 成熟度／實作順序', 'hand'],
+    ]},
+  ];
+  var host = document.getElementById('sections');
+  SECTIONS.forEach(function (s) {
+    var sec = document.createElement('section');
+    sec.innerHTML = '<div class="sh"><span class="ix">' + s.ix + '</span><h2>' + s.title + '</h2><span class="en">' + s.en + '</span><span class="rule"></span></div>';
+    var grid = document.createElement('div'); grid.className = 'grid';
+    grid.innerHTML = s.items.map(function (it) {
+      return '<a class="card" href="' + it[1] + '"><span class="tag ' + it[4] + '">' + (it[4] === 'pass' ? '驗收' : it[4] === 'hand' ? '交接' : it[4] === 'spec' ? '規格' : '規劃') + '</span>'
+        + '<span class="n">' + it[0] + '</span><span class="f">' + it[2] + '</span><span class="d">' + it[3] + '</span></a>';
+    }).join('');
+    sec.appendChild(grid); host.appendChild(sec);
+  });
+
+  var MDS = [
+    ['頁面規格 · 工作台', 'pages/account-home.md'], ['頁面規格 · 角色', 'pages/characters.md'],
+    ['頁面規格 · 企劃總覽', 'pages/project-overview.md'], ['頁面規格 · 世界觀', 'pages/worldview.md'],
+    ['頁面規格 · 關係圖', 'pages/relationships.md'], ['頁面規格 · 故事', 'pages/story.md'],
+    ['頁面規格 · 圖庫', 'pages/gallery.md'], ['頁面規格 · 公開頁', 'pages/public-page.md'],
+    ['API 契約 v1', '../uploads/api-contract-v1.md'], ['D1 Schema 草案', '../uploads/schema-v1-draft.md'],
+    ['Repository ↔ API Map', '../uploads/repository-api-map.md'], ['前端資料契約決策', '../uploads/frontend-data-contract-decisions.md'],
+  ];
+  document.getElementById('mds').innerHTML = MDS.map(function (m) { return '<a href="' + m[1] + '">' + m[0] + '</a>'; }).join('');
+</script>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#1C1B19"/>
+    <path d="M28 26h34l10 10v38H28Z" fill="#FAFAF8"/><path d="M36 44h26M36 54h26M36 64h16" stroke="#1C1B19" stroke-width="4" stroke-linecap="round"/>
+  </svg>
+</template>
+</body>
+</html>

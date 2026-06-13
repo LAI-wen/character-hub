@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Slice 5D 驗收 · 作品投稿 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/ds.css">
+<link rel="stylesheet" href="assets/components.css">
+<style>
+  body { background: var(--bg); }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: var(--s12) var(--s8) var(--s16); }
+  .hero { border-bottom: 1px solid var(--border-strong); padding-bottom: var(--s8); margin-bottom: var(--s10); }
+  .hero .eyebrow { margin-bottom: 12px; }
+  .hero h1 { font-family: var(--font-serif); font-size: 40px; font-weight: 900; margin: 0; letter-spacing: -.025em; line-height: 1.06; }
+  .hero .lead { color: var(--text-dim); font-size: 16px; margin: var(--s4) 0 0; max-width: 64ch; line-height: 1.65; text-wrap: pretty; }
+  .hero .chips { display: flex; gap: var(--s2); margin-top: var(--s5); flex-wrap: wrap; }
+  section { margin-top: var(--s12); }
+  .sh { display: flex; align-items: baseline; gap: var(--s4); margin-bottom: var(--s5); }
+  .sh .ix { font-family: var(--font-mono); font-size: 13px; color: var(--text-faint); }
+  .sh h2 { font-family: var(--font-serif); font-size: 23px; font-weight: 800; margin: 0; }
+  .sh .en { font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); }
+  .sh .rule { flex: 1; height: 1px; background: var(--border); align-self: center; }
+  p.note { font-size: 14.5px; color: var(--text-dim); line-height: 1.7; max-width: 74ch; text-wrap: pretty; }
+  p.note b { color: var(--text); }
+  .pages { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--s3); }
+  .pcard { display: flex; flex-direction: column; gap: 3px; padding: var(--s4) var(--s5); border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--sh-1); text-decoration: none; color: inherit; transition: box-shadow .15s, transform .15s; }
+  .pcard:hover { box-shadow: var(--sh-2); transform: translateY(-2px); }
+  .pcard .n { font-family: var(--font-serif); font-size: 16px; font-weight: 700; }
+  .pcard .d { font-size: 12.5px; color: var(--text-dim); margin-top: 4px; line-height: 1.5; }
+  .shots { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s4); margin-top: var(--s4); }
+  .shots figure { margin: 0; }
+  .shots img { width: 100%; border: 1px solid var(--border); border-radius: var(--r-card); box-shadow: var(--sh-1); display: block; }
+  .shots figcaption { font-size: 12px; color: var(--text-faint); margin-top: 6px; font-family: var(--font-mono); }
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); overflow: hidden; margin-top: var(--s2); }
+  thead th { text-align: left; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); padding: var(--s3) var(--s4); border-bottom: 1px solid var(--border); background: var(--surface-2); }
+  tbody td { padding: var(--s3) var(--s4); border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: top; line-height: 1.5; }
+  tbody tr:last-child td { border-bottom: 0; }
+  td .f { font-family: var(--font-mono); font-size: 12px; font-weight: 600; }
+  .gap-card { border: 1px solid #ECDFA8; background: var(--accent-soft); border-radius: var(--r-card); padding: var(--s4) var(--s5); margin-bottom: var(--s3); }
+  .gap-card .gt { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--accent-ink); }
+  .gap-card .gd { font-size: 13px; color: var(--text-dim); margin-top: 5px; line-height: 1.6; }
+  .gap-card .gd b { color: var(--text); }
+  .gap-card.bad { border-color: #F0CFCB; background: var(--avoid-soft); } .gap-card.bad .gt { color: #9E332B; }
+  .gap-card.ok { border-color: #CDE8D8; background: var(--must-soft); } .gap-card.ok .gt { color: #1F6B43; }
+  .demo-row { display: flex; align-items: center; gap: 10px; font-size: 13.5px; padding: 9px 13px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); margin-bottom: 8px; }
+  ul.issues { margin: 0; padding-left: 1.2em; font-size: 14px; color: var(--text-dim); line-height: 1.9; }
+  ul.issues b { color: var(--text); }
+  .scen { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+  .scen .s { font-size: 12.5px; padding: 8px 11px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); display: flex; align-items: center; gap: 7px; }
+  .scen .s .d { width: 7px; height: 7px; border-radius: 50%; background: var(--must); flex: none; }
+  .foot { margin-top: var(--s16); padding-top: var(--s6); border-top: 1px solid var(--border-strong); }
+  .foot .q { font-family: var(--font-serif); font-size: 19px; font-weight: 700; margin: 0 0 var(--s2); }
+  .foot p { font-size: 14px; color: var(--text-dim); line-height: 1.7; }
+  @media (max-width: 860px) { .hero h1 { font-size: 30px; } .pages, .shots { grid-template-columns: 1fr; } .wrap { padding: var(--s10) var(--s4); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">CharacterHub · Slice 5D · Content Submission</div>
+    <h1>Slice 5D 驗收</h1>
+    <p class="lead">圖片與文章<b>作品投稿與審核</b>。與 CharacterApplication 資料與核准結果完全分開——圖片通過建立 <b>AssetLink</b>、文章通過建立／更新 <b>Story 內容</b>，皆<b>不進角色名冊</b>。共用審核中心外殼與 Review Card，但 payload 與目的地分型。</p>
+    <div class="chips">
+      <span class="badge approved"><span class="d" style="background:var(--must)"></span>content-submissions.html</span>
+      <span class="badge">asset / text</span>
+      <span class="badge">≠ CharacterApplication</span>
+      <span class="demo-only">Demo interaction only</span>
+    </div>
+  </div>
+
+  <section>
+    <div class="sh"><span class="ix">01</span><h2>可點擊頁面</h2><span class="en">Clickable</span><span class="rule"></span></div>
+    <p class="note">同一審核中心兩個分頁：<b>我的投稿</b>（投稿者）與<b>主持人審核</b>（依權限）。頂部類型分頁切換 圖片／文章。用側欄「視角」切換 主持／參與／預覽。</p>
+    <div class="pages" style="margin-top:var(--s4)">
+      <a class="pcard" href="pages/content-submissions.html?project=tokoyo"><span class="n">作品投稿（常夜國）</span><span class="d">圖片＋文章投稿與審核佇列；含 draft／submitted／changes_requested／approved。</span></a>
+      <a class="pcard" href="pages/content-submissions.html?project=tokoyo&failapprove=1"><span class="n">通過交易失敗</span><span class="d">審核 → 通過：模擬原子流程失敗，不部分完成。</span></a>
+      <a class="pcard" href="pages/content-submissions.html?project=hoshi"><span class="n">未開放投稿</span><span class="d">submissionsEnabled=false——停用狀態。</span></a>
+    </div>
+    <div class="shots">
+      <figure><img src="screenshots/s5d-mine.png" alt="我的投稿：圖片／文章清單 + 圖片詳情 + 作者授權"><figcaption>我的投稿 · 圖片詳情（作者／擁有者／授權）</figcaption></figure>
+      <figure><img src="screenshots/s5d-review-text.png" alt="主持人審核：佇列 + 文章內容 + 目的地"><figcaption>主持人審核 · 文章內容 + 發布目標</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">02</span><h2>與 CharacterApplication 分離</h2><span class="en">Separate data &amp; result</span><span class="rule"></span></div>
+    <table>
+      <thead><tr><th style="width:24%">面向</th><th>CharacterApplication</th><th>ContentSubmission</th></tr></thead>
+      <tbody>
+        <tr><td class="f">資料</td><td>申請角色加入（fieldValues / templateVersionId）</td><td>圖片或文章作品（typed payload）</td></tr>
+        <tr><td class="f">通過結果</td><td>建立 <b>ProjectCharacterLink</b>（角色名冊）</td><td>建立 <b>AssetLink</b> 或 <b>Story 內容</b>（不進名冊）</td></tr>
+        <tr><td class="f">頁面</td><td>submissions.html · 角色申請</td><td>content-submissions.html · 作品投稿</td></tr>
+        <tr><td class="f">共用</td><td colspan="2">審核中心外殼、Review Card、狀態、審核紀錄、要求修改／拒絕、權限判斷——<b>但核准結果分開</b></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">03</span><h2>圖片投稿 · Asset / AssetLink</h2><span class="en">Image</span><span class="rule"></span></div>
+    <p class="note">使用<b>既有 Asset</b>，payload 為 <span class="mono">AssetSubmissionPayload</span>（assetId / proposedLinks / caption / visibility / attributionConfirmation）。proposedLinks 可指向 圖庫／角色／世界觀／故事／事件／關係相簿。</p>
+    <ul class="issues">
+      <li>通過：Submission → approved ＋建立核准的 AssetLink ＋寫入 destinationType／destinationId。</li>
+      <li><b>不轉移 Asset 擁有權</b>；主持人不能因核准而永久刪除投稿者 Asset；Creator／Uploader／Owner 分離（詳情顯示 作者／擁有者／授權）。</li>
+      <li>Asset 必須 <b>ready</b>——processing／failed 無法提交或通過（顯示處理中警告）。</li>
+      <li>Asset 被封存或改私密 → 投稿顯示<b>來源失效</b>。</li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">04</span><h2>文章投稿 · Story 目的地</h2><span class="en">Text</span><span class="rule"></span></div>
+    <p class="note">typed <span class="mono">TextSubmissionPayload</span>（title / summary? / content / destinationIntent / targetId? / visibility），<b>不與圖片 payload 混用</b>。destinationIntent：create_story／create_chapter／append_to_chapter／create_story_event。</p>
+    <ul class="issues">
+      <li>通過：建立 Story／Chapter／StoryEvent 或附加到既有 Chapter ＋寫入 destinationType／destinationId。</li>
+      <li>目標（章節／故事）不存在 → <b>目的地失效</b>警告，不可通過。</li>
+      <li>投稿者 <b>作者署名保留</b>，內容進入企劃故事後仍標示作者。</li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">05</span><h2>審核者發布設定 vs 投稿原稿</h2><span class="en">Publish settings ≠ original</span><span class="rule"></span></div>
+    <p class="note">右側預覽<b>依類型不同</b>：圖片顯示「將建立哪些 AssetLink／出現在哪／作者授權」；文章顯示「將建立或更新哪個 Story／Chapter／Event／標題內容可見性／作者署名」。<b>不用模糊的「通過後加入名冊」</b>。</p>
+    <p class="note">主持人可調整<b>發布目的地／分類／可見性</b>——明確標為「發布設定（審核者）」並保留 Audit，<b>不無痕重寫投稿者原稿</b>。要求修改／拒絕<b>必填原因</b>。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">06</span><h2>Action Permission + 目的地權限</h2><span class="en">Two-layer</span><span class="rule"></span></div>
+    <p class="note">投稿動作走 <span class="mono">submission:create / view_own / update_own / submit / withdraw / review / request_changes / approve / reject</span>（沿用 5B 的 Permission Resolution）。<b>核准目的地另外檢查</b>：<span class="mono">assetLink:create</span>（圖片）、<span class="mono">story:create / chapter:create／update / storyEvent:create</span>（文章）。有 submission:approve <b>不代表</b>能寫入所有目的地。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">07</span><h2>公開與 Ownership</h2><span class="en">Visibility chain</span><span class="rule"></span></div>
+    <p class="note">核准內容公開仍需：Submission approved <b>且</b> Destination visible <b>且</b> Source Asset／Entity visible <b>且</b> Project／Published Page visible。圖片 Creator、文章作者與投稿者資訊<b>不被默默移除</b>；圖片投稿<b>不改 Asset Owner</b>；文章進入企劃內容後清楚標示 作者／投稿者／企劃審核者。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">08</span><h2>狀態與錯誤（17 情境）</h2><span class="en">States</span><span class="rule"></span></div>
+    <div class="scen">
+      <div class="s"><span class="d"></span>沒有投稿</div><div class="s"><span class="d"></span>圖片草稿</div><div class="s"><span class="d"></span>文章草稿</div>
+      <div class="s"><span class="d"></span>Submitted</div><div class="s"><span class="d"></span>Changes Requested</div><div class="s"><span class="d"></span>圖片通過→圖庫</div>
+      <div class="s"><span class="d"></span>文章通過→章節</div><div class="s"><span class="d"></span>Rejected</div><div class="s"><span class="d"></span>Withdrawn</div>
+      <div class="s"><span class="d"></span>Asset 處理中</div><div class="s"><span class="d"></span>Asset 封存／失效</div><div class="s"><span class="d"></span>目的地失效</div>
+      <div class="s"><span class="d"></span>通過交易失敗</div><div class="s"><span class="d"></span>Already Processed</div><div class="s"><span class="d"></span>另分頁已審核</div>
+      <div class="s"><span class="d"></span>無審核權限</div><div class="s"><span class="d"></span>部分目的地無權限</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">09</span><h2>Responsive / A11y</h2><span class="en">RWD · A11y</span><span class="rule"></span></div>
+    <p class="note">桌機三欄（投稿清單＋內容預覽＋目的地與審核紀錄）；窄寬改類型分頁、單欄內容預覽、審核區 Accordion、固定底部審核操作；圖片保持比例、長文章可讀不被操作列遮住。A11y：投稿類型有文字（非只圖示）、錯誤摘要 + focus 第一個錯誤、狀態 aria-live、Dialog focus trap、圖片 Alt、退修／拒絕原因可朗讀、清單鍵盤可操作。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">10</span><h2>Contract / API Status</h2><span class="en">Status</span><span class="rule"></span></div>
+    <div class="gap-card"><div class="gt">DOMAIN CONTRACT PARTIAL · ContentSubmission</div><div class="gd">id / projectId / submitterUserId / submissionType / status / payload / destinationType? / destinationId? / submittedAt? / reviewedAt? / reviewedBy? / revision。payload 分型 AssetSubmissionPayload／TextSubmissionPayload。本地已有 Asset、Story 等概念，但 ContentSubmission 結構為前端 UI 依據。</div></div>
+    <div class="gap-card bad"><div class="gt">API STATUS · NOT IMPLEMENTED</div><div class="gd">正式 ContentSubmission API、核准 transaction、目的地寫入（AssetLink／Story）與 Repository <b>皆未實作</b>。本頁所有寫入皆為 Demo。</div></div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">11</span><h2>Demo-only / Open Issues</h2><span class="en">Demo · 未完成</span><span class="rule"></span></div>
+    <div class="demo-row"><span class="demo-only">demo</span>建立草稿、儲存、提交、撤回、刪除草稿、重新提交</div>
+    <div class="demo-row"><span class="demo-only">demo</span>通過／要求修改／拒絕、原子通過（成功／失敗）、發布設定調整</div>
+    <ul class="issues" style="margin-top:var(--s4)">
+      <li><b>投稿建立 wizard</b>（選類型→選/建內容→選目標→說明→預覽→提交）目前以類型挑選 + 既有草稿呈現，逐步精靈未完整串接。</li>
+      <li><b>逐筆 proposedLink 編輯</b>（增刪關聯目標）尚未做成可編輯 UI，目前以 fixture 呈現。</li>
+      <li><b>「另一分頁已審核」「Already Processed」</b>以 Demo／provenance（destinationType 已寫）表示，未做實際版本衝突回復。</li>
+      <li><b>部分目的地無權限</b>的逐目的地灰化／提示為說明層級，未做完整 gating UI。</li>
+      <li><b>真人測試未做</b>：圖片 vs 文章流程切換、目的地選擇的可理解性需任務驗證。</li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">12</span><h2>交接註記（驗收後補）</h2><span class="en">Handoff for backend</span><span class="rule"></span></div>
+    <div class="gap-card"><div class="gt">① 多目的地結果 · ContentSubmissionDestination[]</div><div class="gd">單一 destinationType/Id 只能表示主要去向。正式記錄 <span class="mono">ContentSubmissionDestination</span>（submissionId / destinationType / destinationId / resultType / resultId / status / sourceItemKey?）或等價 <span class="mono">approvalResults[]</span>。每筆核准建立的 AssetLink／Story／Chapter／StoryEvent <b>各有獨立結果紀錄</b>。</div></div>
+    <div class="gap-card"><div class="gt">② Submission Revision · 固定版本審核</div><div class="gd"><span class="mono">ContentSubmissionRevision</span>（submissionId / revisionNumber / payloadSnapshot / submittedAt / submittedBy）。主持人審核的是<b>固定 revision 的 snapshot</b>，不是仍可變動的草稿 payload。</div></div>
+    <div class="gap-card"><div class="gt">③ 投稿原稿 vs 發布設定</div><div class="gd">主持人調整的目的地／分類／可見性／Caption 保存為獨立 <b>Publish Plan／Review Decision</b>，<b>不覆寫</b>投稿者原稿。需改原稿走「要求修改」，不可無痕編輯。</div></div>
+    <div class="gap-card"><div class="gt">④ Provenance · sourceSubmissionId</div><div class="gd">核准建立的 AssetLink／Story／Chapter／StoryEvent 保存 <span class="mono">sourceSubmissionId</span> 或等價 attribution。用於 Idempotency／Audit／作者署名／回查原投稿／防重複建立。</div></div>
+    <div class="gap-card"><div class="gt">⑤ proposedLinks 逐筆核准</div><div class="gd">建議審核者可對每個 proposedLink 選 approved／rejected／modified；最終 transaction <b>只建立核准的 destinations</b>，仍為原子；每個 destination 保存自己的審核結果。本輪 UI 為整批呈現，逐筆核准列為待本地決策。</div></div>
+    <div class="gap-card"><div class="gt">⑥ append_to_chapter 不無條件拼接</div><div class="gd">不可直接把投稿正文接到既有章節。第一版建立<b>新內容區塊／待編輯草稿段落／章節附加內容</b>，並保存插入位置、原始投稿、實際寫入結果與作者署名。</div></div>
+    <div class="gap-card"><div class="gt">⑦ Approved 後生命週期</div><div class="gd">Draft 可刪；Submitted／Changes Requested 可撤回；<b>Approved 不可直接改 Withdrawn</b>，需走獨立的解除發布／移除流程；Rejected／Withdrawn／Approved 均保留歷史。</div></div>
+    <div class="gap-card"><div class="gt">⑧ Asset Revocation Gate</div><div class="gd">即使 Submission 已核准，Asset 被封存／改私密／撤銷授權時，<b>公開顯示需立即停止</b>；內部引用顯示來源失效與修復入口，不可續用舊公開素材。</div></div>
+  </section>
+
+  <div class="foot">
+    <p class="q">Slice 5D 完成 · 進 Integration Handoff</p>
+    <p>交接註記已補（不另開 5D.1）。接著進「Integration Handoff · UI Freeze 與本地接線規格」——只整理交接，不改後端、不新增功能。</p>
+    <p style="margin-top:var(--s2)"><a href="handoff.html" style="color:var(--accent-ink);font-weight:700">→ 開啟 Integration Handoff 文件</a></p>
+  </div>
+</div>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#3B5E6B"/>
+    <rect x="24" y="28" width="32" height="26" rx="3" fill="#fff" opacity=".9"/>
+    <circle cx="33" cy="37" r="3" fill="#3B5E6B"/><path d="M28 52l9-8 6 5 5-4 8 7" stroke="#3B5E6B" stroke-width="3" fill="none"/>
+    <path d="M46 60h30M46 68h30M46 76h20" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+  </svg>
+</template>
+</body>
+</html>

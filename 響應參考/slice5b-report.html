@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Slice 5B 驗收 · 參與者與權限 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/ds.css">
+<link rel="stylesheet" href="assets/components.css">
+<style>
+  body { background: var(--bg); }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: var(--s12) var(--s8) var(--s16); }
+  .hero { border-bottom: 1px solid var(--border-strong); padding-bottom: var(--s8); margin-bottom: var(--s10); }
+  .hero .eyebrow { margin-bottom: 12px; }
+  .hero h1 { font-family: var(--font-serif); font-size: 40px; font-weight: 900; margin: 0; letter-spacing: -.025em; line-height: 1.06; }
+  .hero .lead { color: var(--text-dim); font-size: 16px; margin: var(--s4) 0 0; max-width: 64ch; line-height: 1.65; text-wrap: pretty; }
+  .hero .chips { display: flex; gap: var(--s2); margin-top: var(--s5); flex-wrap: wrap; }
+  section { margin-top: var(--s12); }
+  .sh { display: flex; align-items: baseline; gap: var(--s4); margin-bottom: var(--s5); }
+  .sh .ix { font-family: var(--font-mono); font-size: 13px; color: var(--text-faint); }
+  .sh h2 { font-family: var(--font-serif); font-size: 23px; font-weight: 800; margin: 0; }
+  .sh .en { font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); }
+  .sh .rule { flex: 1; height: 1px; background: var(--border); align-self: center; }
+  p.note { font-size: 14.5px; color: var(--text-dim); line-height: 1.7; max-width: 74ch; text-wrap: pretty; }
+  p.note b { color: var(--text); }
+  .pages { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--s3); }
+  .pcard { display: flex; flex-direction: column; gap: 3px; padding: var(--s4) var(--s5); border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--sh-1); text-decoration: none; color: inherit; transition: box-shadow .15s, transform .15s; }
+  .pcard:hover { box-shadow: var(--sh-2); transform: translateY(-2px); }
+  .pcard .n { font-family: var(--font-serif); font-size: 16px; font-weight: 700; }
+  .pcard .d { font-size: 12.5px; color: var(--text-dim); margin-top: 4px; line-height: 1.5; }
+  .shot { width: 100%; border: 1px solid var(--border); border-radius: var(--r-card); margin-top: var(--s4); box-shadow: var(--sh-1); }
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); overflow: hidden; margin-top: var(--s2); }
+  thead th { text-align: left; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); padding: var(--s3) var(--s4); border-bottom: 1px solid var(--border); background: var(--surface-2); }
+  tbody td { padding: var(--s3) var(--s4); border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: top; line-height: 1.5; }
+  tbody tr:last-child td { border-bottom: 0; }
+  td .f { font-family: var(--font-mono); font-size: 12px; font-weight: 600; }
+  .gap-card { border: 1px solid #ECDFA8; background: var(--accent-soft); border-radius: var(--r-card); padding: var(--s4) var(--s5); margin-bottom: var(--s3); }
+  .gap-card .gt { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--accent-ink); }
+  .gap-card .gd { font-size: 13px; color: var(--text-dim); margin-top: 5px; line-height: 1.6; }
+  .gap-card .gd b { color: var(--text); }
+  .gap-card.bad { border-color: #F0CFCB; background: var(--avoid-soft); } .gap-card.bad .gt { color: #9E332B; }
+  .gap-card.ok { border-color: #CDE8D8; background: var(--must-soft); } .gap-card.ok .gt { color: #1F6B43; }
+  .demo-row { display: flex; align-items: center; gap: 10px; font-size: 13.5px; padding: 9px 13px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); margin-bottom: 8px; }
+  ul.issues { margin: 0; padding-left: 1.2em; font-size: 14px; color: var(--text-dim); line-height: 1.9; }
+  ul.issues b { color: var(--text); }
+  .foot { margin-top: var(--s16); padding-top: var(--s6); border-top: 1px solid var(--border-strong); }
+  .foot .q { font-family: var(--font-serif); font-size: 19px; font-weight: 700; margin: 0 0 var(--s2); }
+  .foot p { font-size: 14px; color: var(--text-dim); line-height: 1.7; }
+  @media (max-width: 860px) { .hero h1 { font-size: 30px; } .pages { grid-template-columns: 1fr; } .wrap { padding: var(--s10) var(--s4); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">CharacterHub · Slice 5B · 參與者與權限</div>
+    <h1>Slice 5B 驗收</h1>
+    <p class="lead">參與者管理：成員與邀請、角色預設、<b>action permission</b>（含個別 allow/deny override）、object-level ownership 限制、邀請流程、移除與擁有權移交、公開頁協作權限。權限判斷一律走 action permission，不把角色名稱寫死在頁面。</p>
+    <div class="chips">
+      <span class="badge approved"><span class="d" style="background:var(--must)"></span>participants.html</span>
+      <span class="badge">Membership / Invitation / Override</span>
+      <span class="badge">8 權限群組 · 36 動作</span>
+      <span class="demo-only">Demo interaction only</span>
+    </div>
+  </div>
+
+  <section>
+    <div class="sh"><span class="ix">01</span><h2>可點擊頁面</h2><span class="en">Clickable</span><span class="rule"></span></div>
+    <p class="note">用側欄左下「視角」切換 主持／參與／預覽，即時改變可用操作與權限面板。選不同成員看其角色預設、自訂權限與 ownership 邊界。</p>
+    <div class="pages" style="margin-top:var(--s4)">
+      <a class="pcard" href="pages/participants.html?project=tokoyo"><span class="n">參與者（常夜國）</span><span class="d">5 成員 + 邀請 + 權限面板。open 共創、有自訂權限與待接受邀請。</span></a>
+      <a class="pcard" href="pages/participants.html?project=hoshi"><span class="n">個人企劃（星海）</span><span class="d">只有擁有者一人——空參與者狀態。</span></a>
+    </div>
+    <img class="shot" src="screenshots/s5b-participants.png" alt="參與者頁面：成員清單／成員詳情／權限面板三欄">
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">02</span><h2>資料邊界</h2><span class="en">Membership · Invitation · Override</span><span class="rule"></span></div>
+    <table>
+      <thead><tr><th style="width:26%">概念</th><th>說明</th></tr></thead>
+      <tbody>
+        <tr><td class="f">ProjectMembership</td><td>id / projectId / userId / rolePreset / status / joinedAt / invitedBy。<b>Visitor 不是 Membership</b>，不出現在成員名單（公開預覽進此頁＝Forbidden）。</td></tr>
+        <tr><td class="f">ProjectInvitation</td><td>pending / accepted / declined / expired / revoked。<b>接受前不建立 active Membership</b>。撤銷後連結即失效（外洩防護）。</td></tr>
+        <tr><td class="f">Permission Override</td><td>per-membership 的 allow / deny，疊加在角色預設之上。可：用預設、個別允許、個別禁止、恢復預設。</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">03</span><h2>角色預設 → Action Permission</h2><span class="en">Presets resolve to actions</span><span class="rule"></span></div>
+    <p class="note">角色預設只給<b>初始</b>權限，畫面實際依 action permission 顯示操作。權限面板分 8 群組（企劃內容／角色與世界觀／故事與圖片／申請與投稿／公開頁／版型與發布／成員管理／危險操作），每項標來源：<span class="src preset" style="font-family:var(--font-mono);font-size:10px;padding:2px 6px;border-radius:8px;background:var(--bg-tint)">預設</span> <span class="src" style="font-family:var(--font-mono);font-size:10px;padding:2px 6px;border-radius:8px;background:var(--must-soft);color:#1F6B43">額外允許</span> <span class="src" style="font-family:var(--font-mono);font-size:10px;padding:2px 6px;border-radius:8px;background:var(--avoid-soft);color:#9E332B">明確禁止</span> <span class="src" style="font-family:var(--font-mono);font-size:10px;padding:2px 6px;border-radius:8px;background:#EDE7F4;color:#5B4A86">擁有者固定</span>。</p>
+    <table>
+      <thead><tr><th>角色預設</th><th>能力範圍</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge role-owner">企劃擁有者</span></td><td>全部權限；可移交企劃、封存企劃（擁有者固定）；不可被一般主持人移除。</td></tr>
+        <tr><td><span class="badge role-owner">主持人</span></td><td>管理內容、申請／投稿、公開頁、依政策管理成員；<b>不可</b>移交擁有權。</td></tr>
+        <tr><td><span class="badge role-member">共同主持</span></td><td>協助內容與審核、編輯公開頁草稿；邀請／移除由政策決定。</td></tr>
+        <tr><td><span class="badge role-member">參與者</span></td><td>查看內容、管理自己的 ProjectCharacterLink／投稿／頁面 Override；不可改模板本體或他人資料。</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">04</span><h2>Object-level Ownership</h2><span class="en">Permission ≠ ownership</span><span class="rule"></span></div>
+    <p class="note">action permission 通過後，仍檢查資料 ownership。成員詳情明示「此權限仍受內容 ownership 限制」。UI 不只用模糊的 <span class="mono">Owner</span>，分清四種：</p>
+    <table>
+      <thead><tr><th style="width:30%">擁有權</th><th>主持人不能做的事</th></tr></thead>
+      <tbody>
+        <tr><td>企劃擁有者 / 角色擁有者</td><td>主持人可管理 ProjectCharacterLink，但<b>不可修改他人的角色本體</b>（名稱／外觀／圖文設定）。</td></tr>
+        <tr><td>素材擁有者</td><td>可管理企劃圖庫關聯，但<b>不可永久刪除</b>他人擁有的 Asset。</td></tr>
+        <tr><td>頁面擁有者</td><td><span class="mono">pageOverride:update_own</span> 只允許改<b>自己</b>的公開頁 Override。</td></tr>
+        <tr><td>私人資料</td><td>Host 看得到 submitted 申請，但<b>看不到</b>申請者私人筆記／未分享靈感。</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">05</span><h2>流程</h2><span class="en">Invite · Remove · Transfer</span><span class="rule"></span></div>
+    <table>
+      <thead><tr><th style="width:24%">流程</th><th>展示</th></tr></thead>
+      <tbody>
+        <tr><td class="f">邀請</td><td>輸入 Email/Handle → 選角色預設 → <b>預覽可取得權限</b> → 寄出。偵測：已是成員／已有待接受邀請（改重寄）。重寄、撤銷（連結失效）、過期重新邀請。</td></tr>
+        <tr><td class="f">移除成員</td><td>先列影響（ProjectCharacterLink／投稿／頁面 Override／AssetLink／未完成申請），提供：保留並標示原作者／封存其內容／轉交管理權／取消。<b>不靜默刪除</b>角色或原始 Asset。</td></tr>
+        <tr><td class="f">移交擁有權</td><td>僅擁有者可執行；接收者須為 active member；不可逆警告 + 輸入企劃名重新驗證；成功後舊擁有者降為主持人。</td></tr>
+        <tr><td class="f">離開企劃</td><td>唯一擁有者<b>不可直接離開</b>，需先移交或封存。</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">06</span><h2>公開頁協作權限</h2><span class="en">Separate page perms</span><span class="rule"></span></div>
+    <p class="note">Draft Preview／Publish／Rollback／Slug／Visibility 是<b>不同權限</b>，未合成單一「管理公開頁」。成員詳情逐項顯示「可／否」：</p>
+    <ul class="issues">
+      <li><b>Host 設計版型</b>：有 <span class="mono">pageTemplate:update</span>。</li>
+      <li><b>Member 編輯自己頁面</b>：有 <span class="mono">publicPage:update</span> + <span class="mono">pageOverride:update_own</span>，但不能改鎖定 Block 或模板本體。</li>
+      <li><b>Publisher 發布</b>：須有 <span class="mono">publicPage:publish</span>——能編輯 Draft 不代表能發布。</li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">07</span><h2>狀態（已涵蓋）</h2><span class="en">States</span><span class="rule"></span></div>
+    <p class="note">無參與者（星海）· Active Member · Pending／Expired／Revoked 邀請 · 自訂權限（Rin 有 allow override）· 權限被降低（Kazuki 有 deny override）· 沒權限查看（公開預覽＝Forbidden）· 唯一擁有者不可離開 · 移除影響預覽 · 擁有權移交 · 已是成員／已有邀請偵測。儲存失敗、跨分頁被移除為 Demo 提示。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">08</span><h2>Responsive / A11y</h2><span class="en">RWD · A11y</span><span class="rule"></span></div>
+    <p class="note">桌機三欄（清單＋詳情＋權限）；≤1100px 權限面板移到整列下方；≤760px 單欄堆疊。權限群組為 <span class="mono">&lt;details&gt;</span> accordion 有清楚標題；開關為 <span class="mono">role="switch"</span> + aria-checked + aria-label；Modal 有 focus、Esc 關閉；角色／狀態用文字 badge + 圖示（不只靠顏色）。危險操作獨立紅框區。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">09</span><h2>Contract / API Status</h2><span class="en">Status</span><span class="rule"></span></div>
+    <div class="gap-card"><div class="gt">DOMAIN CONTRACT PARTIAL · Membership / Invitation / Permission Override</div><div class="gd">本地已有 project_members 與基礎 permission guard 概念，但<b>完整 Membership、Invitation、Permission Override 與前端管理流程尚未完成</b>。角色預設→action 映射、override 疊加邏輯已在 OCData 定義作為前端 UI 依據。</div></div>
+    <div class="gap-card bad"><div class="gt">API STATUS · NOT IMPLEMENTED / PARTIAL SKELETON</div><div class="gd">正式成員 API、邀請、權限覆寫、Ownership Transfer 與 Auth Session <b>皆未實作</b>。本頁所有寫入皆為 Demo。</div></div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">10</span><h2>Demo-only / 尚未完成</h2><span class="en">Demo · Open issues</span><span class="rule"></span></div>
+    <div class="demo-row"><span class="demo-only">demo</span>邀請、重寄、撤銷、變更角色、調整／儲存／恢復權限</div>
+    <div class="demo-row"><span class="demo-only">demo</span>移除成員（含影響選項）、移交擁有權、離開企劃</div>
+    <ul class="issues" style="margin-top:var(--s4)">
+      <li><b>真人測試未做</b>：權限編輯的可理解性、邀請流程步驟數需真人任務驗證。</li>
+      <li><b>儲存失敗／跨分頁被移除</b>目前只以 Demo Toast 表示，未做樂觀更新與衝突回復。</li>
+      <li><b>政策設定</b>（cohost 能否邀請／移除由企劃政策決定）尚未做成可調 UI。</li>
+      <li><b>角色預設變更</b>後保留個別 override 的合併視覺尚為簡化版。</li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">11</span><h2>安全與契約交接註記</h2><span class="en">Security · Contract handoff</span><span class="rule"></span></div>
+    <p class="note">以下為交接給本地端正式實作的規則（本輪不另開 Slice，僅記錄為契約）：</p>
+    <div class="gap-card ok"><div class="gt">1 · Permission Resolution（統一順序）</div><div class="gd">Membership active → Project capability enabled → Owner fixed permissions → Explicit deny → Explicit allow → Role preset → Resource ownership/scope → 最終結果。規則：<b>非 active 一律拒絕</b>；<b>deny 優先於 allow/preset</b>；<b>擁有者核心權限不可被 override 移除</b>；模組未啟用時有權限也不顯示操作；action 通過後仍檢查 object ownership。</div></div>
+    <div class="gap-card ok"><div class="gt">2 · Grant Ceiling（防權限升級）</div><div class="gd">改他人權限時不可授予超過自己委派範圍：Host 不可授予 <span class="mono">project:transfer_ownership</span>；Cohost 不可自升 Host/Owner；Member 不可改自己的角色或權限；個別 allow 不可繞過 Owner-only 危險操作。<b>「能執行某動作」與「能把該動作授予他人」是兩種不同權限。</b></div></div>
+    <div class="gap-card ok"><div class="gt">3 · Membership Lifecycle</div><div class="gd">status：<span class="mono">active / suspended / left / removed</span>。Invitation 的 pending/expired/revoked <b>不</b>放進 Membership。left/removed <b>歷史保留不硬刪</b>，確保作者資訊、投稿、ProjectCharacterLink 與 Audit 可追溯。</div></div>
+    <div class="gap-card ok"><div class="gt">4 · Invitation Security</div><div class="gd">單次使用 token + token hash + <span class="mono">expiresAt</span>；revoke 後立即失效；接受時確認登入帳號符合受邀 Email/Handle；<b>open invite 必須是另一種明確政策</b>，不與私人邀請混用。</div></div>
+    <div class="gap-card ok"><div class="gt">5 · Ownership Transfer（原子）</div><div class="gd">確認接收者為 active member ＋更新 Project owner ＋更新雙方 Membership preset ＋處理 Permission Override ＋寫入 Audit Event。<b>任一步失敗整體回復。</b></div></div>
+    <div class="gap-card"><div class="gt">CONTRACT GAP · ProjectAuditEvent（本輪不做 UI）</div><div class="gd">至少追蹤：Invitation create/resend/revoke/accept、Role 與 Permission Override 修改、Suspend/Remove Member、Ownership Transfer、Public Page 權限重大變更。</div></div>
+  </section>
+
+  <div class="foot">
+    <p class="q">Slice 5B 完成 · 先停</p>
+    <p>依指示完成後停止，不直接進 Character Application 或 Content Submission。確認後再決定下一輪。</p>
+  </div>
+</div>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#5B4A86"/>
+    <circle cx="38" cy="42" r="11" fill="#fff"/><circle cx="64" cy="46" r="8" fill="#fff" opacity=".7"/>
+    <path d="M22 78a16 16 0 0 1 32 0Z" fill="#fff"/><path d="M54 78a12 12 0 0 1 24 0Z" fill="#fff" opacity=".7"/>
+  </svg>
+</template>
+</body>
+</html>

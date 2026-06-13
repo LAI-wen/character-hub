@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>角色卡模板 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/ds.css">
+<link rel="stylesheet" href="../assets/shell.css">
+<link rel="stylesheet" href="../assets/components.css">
+<link rel="stylesheet" href="../assets/template.css">
+</head>
+<body>
+<div class="page" id="root"></div>
+
+<script src="../assets/data.js"></script>
+<script src="../assets/components.js"></script>
+<script>
+  (function () {
+    var root = document.getElementById('root');
+    var pid = new URLSearchParams(location.search).get('project') || localStorage.getItem('ch:proj') || 'tokoyo';
+    if (!OCData.project(pid)) pid = OCData.projects[0].id;
+    var p = OCData.project(pid);
+    var ROLE = OCData.getRole(pid);
+    var isPreview = ROLE === 'visitor';
+    var canManage = OCData.can('viewManage', pid);
+    var A = function (act) { return OCData.canAction(act, pid) && !isPreview; };
+
+    var loadError = false;
+    var editTpl = null;     // template being edited (draft preferred)
+    var selField = null, previewAs = 'owner', mobileMode = 'fields';
+    var fields = [];
+
+    function gate() {
+      if (isPreview || !canManage) return 'forbidden';   // template管理 is host-only
+      return null;
+    }
+    function ctx() { root.innerHTML = OCUI.contextHeader({ scope: 'project', crumbs: [p.name, '角色卡模板'] }); }
+
+    function render() {
+      ctx();
+      if (gate() === 'forbidden') { root.appendChild(OCUI.forbiddenState({ title: '只有主持人能管理角色卡模板。', body: '角色卡模板定義企劃限定欄位，需要管理權限。切換到「主持」視角檢視。' })); return; }
+      if (loadError) { root.appendChild(OCUI.errorState({ title: '模板載入失敗。', code: 'LOAD_ERROR', onRetry: function () { loadError = false; boot(); } })); return; }
+
+      var templates = OCData.templatesOf(pid);
+      if (!templates.length) {
+        header(null);
+        root.appendChild(OCUI.emptyState({ title: '這個企劃還沒有角色卡模板。', body: A('template:create') ? '建立模板來定義角色加入本企劃時要填的限定欄位（不影響角色本體）。' : '尚未建立。', ctaLabel: A('template:create') ? '＋ 建立模板' : null, onCta: function () { OCUI.toast('建立模板（Draft v1）', { demo: true }); } }));
+        return;
+      }
+      editTpl = editTpl || OCData.draftTemplate(pid) || OCData.publishedTemplate(pid);
+      fields = OCData.fieldsOf(editTpl.id);
+      header(editTpl);
+
+      var cols = document.createElement('div'); cols.className = 'tb-cols';
+      cols.innerHTML = '<div id="left"></div><div id="center"></div><div class="tb-settings" id="right"></div>';
+      root.appendChild(cols);
+      buildList(); buildPreview(); buildSettings();
+    }
+
+    function header(tpl) {
+      var head = document.createElement('div'); head.className = 'pageh';
+      var pub = OCData.publishedTemplate(pid), draft = OCData.draftTemplate(pid);
+      var vers = '';
+      if (pub) vers += '<span class="tb-ver published">Published v' + pub.version + '</span>';
+      if (draft) vers += '<span class="tb-ver draft">Draft v' + draft.version + '</span>';
+      var hasUnpub = pub && draft && draft.version > pub.version;
+      head.innerHTML = '<div class="ht"><h1>角色卡模板 <span class="en">Template</span></h1><p class="sub">定義角色加入「' + p.name + '」時要填的<b>企劃限定欄位</b>——不修改角色本體（名稱／圖設定／文設定）。欄位值寫在 ProjectCharacterLink，不存在模板裡。</p>'
+        + (tpl ? '<div class="vers">' + vers + (hasUnpub ? '<span style="font-size:11.5px;color:var(--accent-ink)">· 有未發布修改</span>' : '') + '</div>' : '') + '</div>'
+        + '<div class="acts">'
+        + (tpl && A('templateField:create') ? '<button class="btn btn-sm" id="addField">＋ 欄位</button>' : '')
+        + (tpl && hasUnpub && A('template:publish') ? '<button class="btn btn-sm" id="diffBtn">查看差異</button><button class="btn btn-accent btn-sm" id="pubBtn">發布 v' + draft.version + '</button>' : '')
+        + '</div>';
+      root.appendChild(head);
+      var af = head.querySelector('#addField'); if (af) af.onclick = addField;
+      var db = head.querySelector('#diffBtn'); if (db) db.onclick = showDiff;
+      var pb = head.querySelector('#pubBtn'); if (pb) pb.onclick = publish;
+      // mobile seg
+      var seg = document.createElement('div'); seg.className = 'tb-mseg ed-mseg'; seg.style.marginBottom = 'var(--s4)';
+      seg.innerHTML = '<button data-m="fields" class="' + (mobileMode === 'fields' ? 'on' : '') + '">欄位</button><button data-m="preview" class="' + (mobileMode === 'preview' ? 'on' : '') + '">預覽</button>';
+      root.appendChild(seg);
+      seg.querySelectorAll('[data-m]').forEach(function (b) { b.onclick = function () { mobileMode = b.dataset.m; render(); }; });
+    }
+
+    function buildList() {
+      var left = document.getElementById('left');
+      var canReorder = A('templateField:reorder');
+      var html = '<div class="tb-fields"><div class="fh">欄位 · ' + fields.filter(function (f) { return f.type !== 'section'; }).length + (canReorder ? ' · 可拖曳' : '') + '</div><div class="tb-list" id="flist">';
+      fields.forEach(function (f, i) {
+        var icon = OCIcon({ text: 'text', textarea: 'paragraph', number: 'hash', select: 'radio', multiselect: 'checkbox', checkbox: 'check', date: 'calendar', color: 'swatch', image: 'image', relation: 'link', section: 'section' }[f.type] || 'dot'); || '·';
+        html += '<div class="tb-fi' + (f.type === 'section' ? ' section' : '') + (selField === f.id ? ' sel' : '') + '" data-f="' + f.id + '" tabindex="0"' + (canReorder ? ' draggable="true"' : '') + '>'
+          + '<span class="ico">' + icon + '</span><div class="b"><div class="lbl">' + f.label + (f.required ? '<span class="req" title="必填">＊</span>' : '') + '</div><div class="sub">' + OCData.fieldTypeLabel(f.type) + ' · ' + OCData.fieldVisLabel(f.visibility) + '</div></div>'
+          + (canReorder && f.type !== 'section' ? '<div class="reorder"><button data-up="' + f.id + '"' + (i === 0 ? ' disabled' : '') + ' aria-label="上移">▲</button><button data-down="' + f.id + '"' + (i === fields.length - 1 ? ' disabled' : '') + ' aria-label="下移">▼</button></div>' : '')
+          + '</div>';
+      });
+      html += '</div></div>';
+      left.innerHTML = html;
+      left.querySelectorAll('[data-f]').forEach(function (it) {
+        it.onclick = function (e) { if (e.target.closest('.reorder')) return; selField = it.dataset.f; render(); };
+        it.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selField = it.dataset.f; render(); } else if (canReorder && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) { e.preventDefault(); OCUI.toast('已' + (e.key === 'ArrowUp' ? '上移' : '下移') + '欄位（Demo）', { demo: true }); } };
+        if (canReorder) {
+          it.ondragstart = function () { it.classList.add('dragging'); };
+          it.ondragend = function () { it.classList.remove('dragging'); };
+          it.ondragover = function (e) { e.preventDefault(); it.classList.add('dragover'); };
+          it.ondragleave = function () { it.classList.remove('dragover'); };
+          it.ondrop = function (e) { e.preventDefault(); it.classList.remove('dragover'); OCUI.toast('已重新排序欄位（Demo）', { demo: true }); };
+        }
+      });
+      left.querySelectorAll('[data-up]').forEach(function (b) { b.onclick = function () { OCUI.toast('已上移（Demo）', { demo: true }); }; });
+      left.querySelectorAll('[data-down]').forEach(function (b) { b.onclick = function () { OCUI.toast('已下移（Demo）', { demo: true }); }; });
+    }
+
+    function buildPreview() {
+      var center = document.getElementById('center');
+      var views = [['owner', '角色擁有者'], ['member', '成員'], ['host', '主持人']];
+      var html = '<div class="tb-preview"><div class="ph"><span class="t">即時預覽</span><div class="seg" role="group" aria-label="預覽視角">'
+        + views.map(function (v) { return '<button data-pv="' + v[0] + '"' + (previewAs === v[0] ? ' class="on"' : '') + '>' + v[1] + '</button>'; }).join('') + '</div></div><div class="tb-card">';
+      var visibleToView = function (f) {
+        if (f.visibility === 'public') return true;
+        if (f.visibility === 'members') return previewAs !== 'public';
+        if (f.visibility === 'host') return previewAs === 'host';
+        if (f.visibility === 'owner_only') return previewAs === 'owner' || previewAs === 'host';
+        return true;
+      };
+      var anyHidden = false;
+      fields.forEach(function (f) {
+        if (f.type === 'section') { html += '<div class="tb-section-h">' + f.label + '</div>'; return; }
+        if (!visibleToView(f)) { anyHidden = true; return; }
+        var editable = f.editableBy === 'both' || (previewAs === 'host' && (f.editableBy === 'host' || f.editableBy === 'both')) || ((previewAs === 'owner') && (f.editableBy === 'character_owner' || f.editableBy === 'both'));
+        var lockedCls = editable ? '' : ' locked';
+        var control = previewControl(f);
+        html += '<div class="cf' + lockedCls + '"><label>' + f.label + (f.required ? '<span class="reqd">必填</span>' : '') + '<span class="vb vis-b ' + (f.visibility === 'public' ? 'public' : f.visibility === 'members' ? 'members' : 'host') + '"><span class="d"></span>' + OCData.fieldVisLabel(f.visibility) + '</span></label>' + control + (f.description ? '<div class="hint">' + f.description + '</div>' : '') + (!editable ? '<div class="hint">' + OCIcon('lock') + ' 此視角唯讀（可編輯：' + OCData.fieldEditLabel(f.editableBy) + '）</div>' : '') + '</div>';
+      });
+      if (anyHidden) html += '<div class="tb-hidden-note">' + OCIcon('lock') + ' 有欄位在此視角不顯示（依可見性裁切）。</div>';
+      html += '</div></div>';
+      center.innerHTML = html;
+      center.querySelectorAll('[data-pv]').forEach(function (b) { b.onclick = function () { previewAs = b.dataset.pv; buildPreview(); }; });
+    }
+    function previewControl(f) {
+      switch (f.type) {
+        case 'textarea': return '<textarea class="input" rows="2" placeholder="' + (f.defaultValue || '') + '"></textarea>';
+        case 'number': return '<input class="input" type="number" placeholder="' + (f.validation && f.validation.min != null ? f.validation.min + '–' + f.validation.max : '') + '">';
+        case 'select': return '<select class="select"><option>—</option>' + (f.options || []).map(function (o) { return '<option>' + o + '</option>'; }).join('') + '</select>';
+        case 'multiselect': return '<div style="display:flex;gap:5px;flex-wrap:wrap">' + (f.options || []).map(function (o) { return '<span class="chip">' + o + '</span>'; }).join('') + '</div>';
+        case 'checkbox': return '<label style="font-weight:400;font-size:13px"><input type="checkbox"> ' + f.label + '</label>';
+        case 'color': return '<span class="sw" style="display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:var(--r-pill);padding:4px 11px 4px 5px;font-size:12px"><span style="width:20px;height:20px;border-radius:50%;background:' + (f.defaultValue || '#888') + '"></span>' + (f.defaultValue || '#888') + '</span>';
+        case 'image': return '<div class="ph" style="height:80px;border:1px dashed var(--border-strong);border-radius:8px;display:grid;place-items:center;color:var(--text-faint);font-size:12px">圖片／Asset</div>';
+        case 'relation': return '<div class="input" style="color:var(--text-faint)">選擇 角色／世界觀…</div>';
+        default: return '<input class="input" placeholder="' + (f.defaultValue || '') + '"' + (f.validation && f.validation.max ? ' maxlength="' + f.validation.max + '"' : '') + '>';
+      }
+    }
+
+    function buildSettings() {
+      var right = document.getElementById('right');
+      var f = selField ? OCData.templateField(selField) : null;
+      if (!f) { right.innerHTML = '<div class="sh3">欄位設定</div><div class="tb-empty-set">選擇左側欄位以編輯設定。</div>'; return; }
+      var editable = A('templateField:update');
+      var typeOpts = ['text', 'textarea', 'number', 'select', 'multiselect', 'checkbox', 'date', 'color', 'image', 'relation', 'section'];
+      var html = '<div class="sh3">欄位設定</div>'
+        + setField('標籤', '<input class="input" id="s-label" value="' + f.label + '"' + (editable ? '' : ' disabled') + '>')
+        + setField('鍵值 key', '<input class="input" value="' + f.key + '" disabled style="font-family:var(--font-mono);font-size:12px">')
+        + setField('類型', '<select class="select" id="s-type"' + (editable ? '' : ' disabled') + '>' + typeOpts.map(function (t) { return '<option value="' + t + '"' + (f.type === t ? ' selected' : '') + '>' + OCData.fieldTypeLabel(t) + '</option>'; }).join('') + '</select>')
+        + setField('說明', '<input class="input" id="s-desc" value="' + (f.description || '') + '"' + (editable ? '' : ' disabled') + '>')
+        + (f.type !== 'section' ? setField('必填', '<label style="font-size:13px;font-weight:400"><input type="checkbox" id="s-req"' + (f.required ? ' checked' : '') + (editable ? '' : ' disabled') + '> 此欄位必填</label>') : '')
+        + setField('可見性', '<select class="select" id="s-vis"' + (editable ? '' : ' disabled') + '>' + ['public', 'members', 'host', 'owner_only'].map(function (v) { return '<option value="' + v + '"' + (f.visibility === v ? ' selected' : '') + '>' + OCData.fieldVisLabel(v) + '</option>'; }).join('') + '</select>')
+        + (f.type !== 'section' ? setField('可編輯者', '<select class="select" id="s-edit"' + (editable ? '' : ' disabled') + '>' + ['character_owner', 'host', 'both'].map(function (e) { return '<option value="' + e + '"' + (f.editableBy === e ? ' selected' : '') + '>' + OCData.fieldEditLabel(e) + '</option>'; }).join('') + '</select>') : '');
+      if (f.type === 'select' || f.type === 'multiselect') {
+        html += '<div class="tb-set-field"><label>選項</label><div class="tb-opts">' + (f.options || []).map(function (o) { return '<div class="tb-opt"><input class="input" value="' + o + '"' + (editable ? '' : ' disabled') + '>' + (editable ? '<span class="del" data-opt="' + o + '">✕</span>' : '') + '</div>'; }).join('') + (editable ? '<button class="btn btn-sm" id="addOpt" style="margin-top:4px">＋ 選項</button>' : '') + '</div></div>';
+      }
+      if (f.validation && (f.validation.max != null || f.validation.min != null)) {
+        html += setField('驗證', '<div class="tb-set-row"><input class="input" placeholder="min" value="' + (f.validation.min != null ? f.validation.min : '') + '"' + (editable ? '' : ' disabled') + '><input class="input" placeholder="max" value="' + (f.validation.max != null ? f.validation.max : '') + '"' + (editable ? '' : ' disabled') + '></div>');
+      }
+      if (editable) html += '<div class="tb-set-foot"><button class="btn btn-sm" id="dupF">複製</button><button class="btn btn-sm" id="delF" style="border-color:var(--avoid);color:var(--avoid)">刪除</button></div>';
+      right.innerHTML = html;
+      // type change → destructive check
+      var st = right.querySelector('#s-type'); if (st) st.onchange = function () { if (st.value !== f.type) destructiveCheck(f, '改變欄位類型（' + OCData.fieldTypeLabel(f.type) + ' → ' + OCData.fieldTypeLabel(st.value) + '）', function () { OCUI.toast('已變更類型（Demo）', { demo: true }); }, function () { st.value = f.type; }); };
+      var sr = right.querySelector('#s-req'); if (sr) sr.onchange = function () { if (sr.checked && !f.required) destructiveCheck(f, '將選填改為必填', function () { OCUI.toast('已改為必填（Demo）', { demo: true }); }, function () { sr.checked = false; }); };
+      right.querySelectorAll('[data-opt]').forEach(function (b) { b.onclick = function () { destructiveCheck(f, '移除選項「' + b.dataset.opt + '」', function () { OCUI.toast('已移除選項（Demo）', { demo: true }); }); }; });
+      var df = right.querySelector('#delF'); if (df) df.onclick = function () { destructiveCheck(f, '刪除欄位「' + f.label + '」', function () { OCUI.toast('已刪除欄位（舊值保留，不立即刪除）', { demo: true }); }); };
+      var du = right.querySelector('#dupF'); if (du) du.onclick = function () { OCUI.toast('已複製欄位（Demo）', { demo: true }); };
+      var ao = right.querySelector('#addOpt'); if (ao) ao.onclick = function () { OCUI.toast('新增選項（Demo）', { demo: true }); };
+      var sl = right.querySelector('#s-label'); if (sl) sl.oninput = function () { /* live preview would update */ };
+    }
+    function setField(label, ctrl) { return '<div class="tb-set-field"><label>' + label + '</label>' + ctrl + '</div>'; }
+
+    // destructive change: show affected count + options, not a plain confirm
+    function destructiveCheck(f, action, onProceed, onCancel) {
+      var n = OCData.links.filter(function (l) { return l.project === pid && l.fieldValues && (l.fieldValues[f.key] != null || l.fieldValues[f.label] != null); }).length;
+      if (n === 0) { // no values affected → simple confirm
+        OCUI.confirm({ title: action + '？', message: '目前沒有角色填過這個欄位，可安全變更。', confirmLabel: '確認', onConfirm: onProceed, onClose: function () {} });
+        return;
+      }
+      var body = document.createElement('div');
+      body.innerHTML = '<p style="margin:0 0 var(--s3)"><span class="dz-affected">⚠ ' + n + ' 個角色</span>已填過這個欄位，' + action + ' 屬於<b>破壞性修改</b>。</p>'
+        + '<table class="dz-table"><tr><td>受影響角色</td><td style="text-align:right;font-weight:600">' + n + '</td></tr></table>'
+        + '<div style="font-size:12.5px;color:var(--text-dim);margin-top:8px">處理方式：</div>'
+        + '<label style="display:flex;gap:8px;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:6px;cursor:pointer"><input type="radio" name="dz" value="keep" checked><span><b>保留舊值</b><br><span style="font-size:12px;color:var(--text-dim)">建立新 Draft 版本，舊值在既有角色卡保留（依 templateVersionId）。</span></span></label>'
+        + '<label style="display:flex;gap:8px;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:6px;cursor:pointer"><input type="radio" name="dz" value="migrate"><span><b>標記待遷移</b><br><span style="font-size:12px;color:var(--text-dim)">發布後提示成員更新受影響欄位。</span></span></label>';
+      OCUI.modal({ title: '破壞性修改', body: body, actions: [ { label: '取消', onClick: function () { if (onCancel) onCancel(); } }, { label: '建立 Draft 變更', kind: 'danger', onClick: function () { if (onProceed) onProceed(); } } ] });
+    }
+
+    function showDiff() {
+      var d = OCData.templateDiff(pid); if (!d) return;
+      var body = document.createElement('div');
+      function rows(arr, color) { return arr.length ? arr.map(function (x) { return '<div style="font-size:13px;padding:4px 0;color:' + color + '">' + x + '</div>'; }).join('') : '<div style="font-size:12.5px;color:var(--text-faint)">無</div>'; }
+      body.innerHTML = '<p style="margin:0 0 var(--s3);font-size:13px;color:var(--text-dim)">Draft v' + d.draft.version + ' 相對 Published v' + d.pub.version + ' 的變更。發布不會破壞既有角色資料（保留 templateVersionId、移除欄位不刪舊值）。</p>'
+        + '<div style="font-family:var(--font-mono);font-size:10px;color:#1F6B43;margin-bottom:4px">新增</div>' + rows(d.added, '#1F6B43')
+        + '<div style="font-family:var(--font-mono);font-size:10px;color:#355C86;margin:10px 0 4px">修改</div>' + rows(d.modified, '#355C86')
+        + '<div style="font-family:var(--font-mono);font-size:10px;color:#9E332B;margin:10px 0 4px">移除（舊值保留）</div>' + rows(d.removed, '#9E332B');
+      OCUI.modal({ title: '版本差異 · 發布影響預覽', body: body, actions: [ { label: '關閉' }, { label: '發布 v' + d.draft.version, kind: 'accent', onClick: publish } ] });
+    }
+    function publish() { OCUI.toast('已發布新版本（Demo · 既有角色卡保留 templateVersionId）', { demo: true }); }
+    function addField() {
+      var f = document.createElement('div');
+      var types = ['text', 'textarea', 'number', 'select', 'multiselect', 'checkbox', 'date', 'color', 'image', 'relation', 'section'];
+      f.innerHTML = '<div class="tb-set-field"><label>標籤</label><input class="input" id="nf-label" placeholder="例：能力類型"></div>'
+        + '<div class="tb-set-field"><label>類型</label><select class="select" id="nf-type">' + types.map(function (t) { return '<option value="' + t + '">' + OCData.fieldTypeLabel(t) + '</option>'; }).join('') + '</select></div>'
+        + '<div style="font-size:12px;color:var(--text-dim)">新增欄位會進入 Draft 版本，發布後才套用。</div>';
+      OCUI.modal({ title: '新增欄位', body: f, actions: [ { label: '取消' }, { label: '新增', kind: 'accent', onClick: function () { if (!f.querySelector('#nf-label').value.trim()) { OCUI.toast('請輸入標籤'); return true; } OCUI.toast('已新增欄位到 Draft（Demo）', { demo: true }); } } ] });
+    }
+
+    function boot() {
+      ctx();
+      var sk = document.createElement('div'); sk.appendChild(OCUI.skeletonCards(4)); root.appendChild(sk);
+      setTimeout(function () { render(); }, 300);
+    }
+    boot();
+  })();
+</script>
+<script src="../assets/shell.js"></script>
+</body>
+</html>

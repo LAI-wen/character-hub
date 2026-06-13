@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>角色編輯器 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/ds.css">
+<link rel="stylesheet" href="../assets/shell.css">
+<link rel="stylesheet" href="../assets/components.css">
+<link rel="stylesheet" href="../assets/character.css">
+</head>
+<body>
+<div class="page" id="root"></div>
+
+<script src="../assets/data.js"></script>
+<script src="../assets/components.js"></script>
+<script src="../assets/char-fields.js"></script>
+<script src="../assets/char-templates.js"></script>
+<script src="../assets/char-form.js"></script>
+<script src="../assets/char-visual.js"></script>
+<script src="../assets/character.js"></script>
+<script>
+  (function () {
+    var root = document.getElementById('root');
+    var params = new URLSearchParams(location.search);
+    var cid = params.get('c') || 'yoi';
+    var full = OCData.characterFull(cid);
+    if (!full) { root.innerHTML = ''; root.appendChild(OCUI.errorState({ title: '找不到這個角色。', code: 'NOT_FOUND · 404' })); throw 0; }
+
+    var ROLE = OCData.getRole();
+    var canEditBody = full.mine;
+    var isHost = ['owner', 'host', 'cohost'].indexOf(ROLE) >= 0;
+    var M = JSON.parse(JSON.stringify(full.detail || {}));
+    M.general = M.general || {}; M.art = M.art || {}; M.text = M.text || {};
+    function toArr(v) { if (Array.isArray(v)) return v.slice(); if (!v) return []; return String(v).split(/[、,，\n]/).map(function (x) { return x.trim(); }).filter(Boolean); }
+    // flat seed map: template fields with a `seed` key pre-fill from here
+    var seedMap = {
+      name: full.name, tagline: M.general.tagline || '', blurb: M.general.blurb || full.blurb || '',
+      basics: M.general.basics || [], personality: toArr(M.general.personality), tags: M.general.tags || [],
+      palette: M.art.palette || [], background: M.text.background || '', motivation: M.text.motivation || '',
+      speech: toArr(M.text.speech), relations: M.text.relations || '', taboo: toArr(M.text.taboo),
+    };
+
+    // ---- per-character structure (prototype: session-persisted, own key) ----
+    var STORE_KEY = 'oc:chartpl:' + cid + ':v1';
+    var tpl, vals;
+    function applyTemplate(t, seed) {
+      tpl = JSON.parse(JSON.stringify(t)); vals = {};
+      tpl.sections.forEach(function (s) {
+        s.fields.forEach(function (fd) {
+          vals[fd.id] = (seed && fd.seed && seedMap[fd.seed] != null) ? JSON.parse(JSON.stringify(seedMap[fd.seed])) : OCForm.emptyFor(fd.type);
+        });
+      });
+    }
+    function persistStruct() { try { sessionStorage.setItem(STORE_KEY, JSON.stringify({ tpl: tpl, vals: vals })); } catch (e) {} }
+    (function initTemplate() {
+      var saved = null; try { saved = JSON.parse(sessionStorage.getItem(STORE_KEY)); } catch (e) {}
+      if (saved && saved.tpl) { tpl = saved.tpl; vals = saved.vals || {}; }
+      else { applyTemplate(OCTemplates.get('basic'), true); persistStruct(); }
+    })();
+
+    var bodyName = (function () { var f = findFieldBySeed('name'); return f ? (vals[f.id] || full.name) : full.name; })();
+    function findFieldBySeed(seed) { for (var i = 0; i < tpl.sections.length; i++) { var f = tpl.sections[i].fields.filter(function (x) { return x.seed === seed; })[0]; if (f) return f; } return null; }
+    function syncBodyName() { var f = findFieldBySeed('name'); bodyName = f ? (vals[f.id] || full.name) : full.name; var n = document.getElementById('edTopName'); if (n) n.textContent = bodyName; }
+
+    var curProject = params.get('project') || (full.links[0] && full.links[0].project) || null;
+    var dirty = { body: false, links: {} };
+    function linkDirty(p) { return !!dirty.links[p || curProject]; }
+    function anyLinkDirty() { return Object.keys(dirty.links).some(function (k) { return dirty.links[k]; }); }
+    function anyDirty() { return dirty.body || anyLinkDirty(); }
+    function touchBody() { dirty.body = true; if (saveEl) saveEl.set('dirty'); persistStruct(); buildTplBar(); buildRail(); if (previewOpen) buildPreviewBody(); }
+
+    var saveEl, previewOpen = false;
+    var scope = 'body';          // 'body' (template) | 'link' (project version)
+    var mode = 'fill';           // 'fill' | 'struct'
+    var secId = tpl.sections[0] ? tpl.sections[0].id : null;
+
+    function curLink() { return full.links.filter(function (l) { return l.project === curProject; })[0]; }
+    function curRoster() { return curProject ? (OCData.roster(curProject, { includeArchived: true }).filter(function (r) { return r.character === cid; })[0] || null) : null; }
+
+    // ---------- top chrome ----------
+    function ctxAndTop() {
+      root.innerHTML = OCUI.contextHeader({ scope: 'account', crumbs: [full.mine ? '我的角色' : '角色', full.name, '編輯'] });
+      if (!full.mine) { var on = document.createElement('div'); on.innerHTML = OCChar.ownerNotice(full.ownerSummary, cid); root.appendChild(on.firstChild); }
+      var top = document.createElement('div'); top.className = 'ed-top';
+      top.innerHTML = '<div class="id"><span class="av" style="background:' + full.c + '">' + full.name[0] + '</span><span class="nm" id="edTopName">' + bodyName + '</span></div><span class="spacer"></span>';
+      saveEl = OCChar.saveStatus();
+      var prevBtn = document.createElement('button'); prevBtn.className = 'ed-prevbtn'; prevBtn.id = 'edPrevBtn'; prevBtn.innerHTML = OCIcon('eye') + '預覽';
+      prevBtn.onclick = function () { previewOpen ? closePreview() : openPreview(); };
+      var saveBtn = document.createElement('button'); saveBtn.className = 'btn btn-accent'; saveBtn.textContent = '儲存'; saveBtn.onclick = doSave;
+      top.appendChild(saveEl); top.appendChild(prevBtn); top.appendChild(saveBtn);
+      root.appendChild(top);
+      buildScopeBar();
+    }
+
+    function buildScopeBar() {
+      var old = root.querySelector('.ed-scopebar'); if (old) old.remove();
+      var bar = document.createElement('div'); bar.className = 'ed-scopebar';
+      var bBody = document.createElement('button'); bBody.className = 'ed-scope' + (scope === 'body' ? ' on' : '');
+      bBody.innerHTML = OCIcon('user') + '角色本體';
+      bBody.onclick = function () { switchScope('body'); };
+      bar.appendChild(bBody);
+      bar.appendChild(Object.assign(document.createElement('span'), { className: 'sep' }));
+      if (curProject) {
+        var lc = OCData.linkCompletion(curLink() ? curLink().id : '');
+        var bLink = document.createElement('button'); bLink.className = 'ed-scope' + (scope === 'link' ? ' on' : '');
+        bLink.innerHTML = OCIcon('grid') + '企劃版本 <span class="cnt">' + lc + '%</span>';
+        bLink.onclick = function () { switchScope('link'); };
+        bar.appendChild(bLink);
+        var vsHost = document.createElement('span'); vsHost.className = 'vshost';
+        if (full.links.length) {
+          var vs = OCChar.versionSwitcher({ links: full.links, current: curProject,
+            guardDirty: function () { return linkDirty(curProject); }, onSaveSwitch: function () { doSave(); },
+            onDiscardCurrent: function () { dirty.links[curProject] = false; },
+            onChange: function (np) { curProject = np; saveEl.set(anyDirty() ? 'dirty' : 'clean'); buildScopeBar(); renderBody(); } });
+          vsHost.appendChild(vs);
+        }
+        bar.appendChild(vsHost);
+      } else if (full.mine) {
+        var add = document.createElement('button'); add.className = 'ed-scope'; add.innerHTML = OCIcon('plus') + '將角色加入企劃';
+        add.onclick = function () { OCUI.toast('將角色加入企劃', { demo: true }); };
+        bar.appendChild(add);
+      }
+      root.appendChild(bar);
+    }
+    function switchScope(s) { if (s === scope) return; scope = s; if (s === 'body') { secId = tpl.sections[0] && tpl.sections[0].id; } buildScopeBar(); renderBody(); }
+
+    // ---------- template bar (body scope) ----------
+    function buildTplBar() {
+      var old = root.querySelector('.ed-tplbar'); if (old) old.remove();
+      if (scope !== 'body' || !canEditBody) return;
+      var c = OCForm.completion(tpl, vals);
+      var fieldsPct = c.fields.total ? Math.round(c.fields.filled / c.fields.total * 100) : 0;
+      var bar = document.createElement('div'); bar.className = 'ed-tplbar';
+      bar.innerHTML = '<div class="tpl-id"><span class="tpl-ic" style="background:' + (tpl.tone || '#A67F0E') + '1f;color:' + (tpl.tone || 'var(--accent-ink)') + '">' + OCIcon(tpl.icon || 'user') + '</span>'
+        + '<span class="tpl-meta"><span class="tpl-k">設定模板</span><span class="tpl-nm">' + tpl.name + '</span></span></div>'
+        + '<span class="tpl-complete"><span class="ring" style="--p:' + fieldsPct + '"></span>' + (c.required.total ? ('必填 <b>' + c.required.filled + '/' + c.required.total + '</b> · ') : '') + '欄位 <b>' + c.fields.filled + '/' + c.fields.total + '</b></span>'
+        + '<span class="spacer"></span>'
+        + '<span class="ed-modeseg"><button data-mode="fill"' + (mode === 'fill' ? ' class="on"' : '') + '>' + OCIcon('edit') + '填寫</button><button data-mode="struct"' + (mode === 'struct' ? ' class="on"' : '') + '>' + OCIcon('list') + '編輯欄位</button></span>'
+        + '<span class="tpl-acts"><button class="btn" id="tplSwitch">更換模板</button><button class="btn" id="tplSave">存成我的模板</button></span>';
+      root.appendChild(bar);
+      bar.querySelectorAll('[data-mode]').forEach(function (b) { b.onclick = function () { mode = b.dataset.mode; buildTplBar(); buildForm(); }; });
+      bar.querySelector('#tplSwitch').onclick = openPicker;
+      bar.querySelector('#tplSave').onclick = function () { OCForm.saveDialog(tpl); };
+    }
+
+    function openPicker() {
+      OCForm.picker({ currentId: tpl.id, onPick: function (t) {
+        OCUI.confirm({ title: '套用「' + t.name + '」模板？', message: '會用這個模板的<b>欄位結構</b>重新組織設定。符合的欄位會沿用你已填的內容，其餘欄位清空。', confirmLabel: '套用', onConfirm: function () {
+          applyTemplate(t, true); secId = tpl.sections[0] && tpl.sections[0].id; mode = 'fill'; touchBody(); buildTplBar(); renderBody();
+          OCUI.toast('已套用模板「' + t.name + '」', { demo: true });
+        } });
+      } });
+    }
+
+    // ---------- body render: rail + form ----------
+    function renderBody() {
+      var old = root.querySelector('.ed-cols'); if (old) old.remove();
+      var oldBar = root.querySelector('.ed-mobilebar'); if (oldBar) oldBar.remove();
+      buildTplBar();
+      var cols = document.createElement('div'); cols.className = 'ed-cols';
+      cols.innerHTML = '<div class="ed-rail" id="edRail"></div><div class="ed-form" id="edForm"></div>';
+      root.appendChild(cols);
+      buildRail(); buildForm();
+      var mb = document.createElement('div'); mb.className = 'ed-mobilebar';
+      mb.innerHTML = '<button class="btn" data-nav="prev">上一節</button><button class="btn" data-nav="next">下一節</button><button class="btn btn-accent" data-nav="save">儲存</button>';
+      root.appendChild(mb);
+      mb.querySelector('[data-nav="save"]').onclick = doSave;
+      mb.querySelector('[data-nav="prev"]').onclick = function () { stepSection(-1); };
+      mb.querySelector('[data-nav="next"]').onclick = function () { stepSection(1); };
+      ensureDrawer(); if (previewOpen) buildPreviewBody();
+    }
+
+    function buildRail() {
+      var rail = document.getElementById('edRail'); if (!rail) return;
+      if (scope === 'link') {
+        rail.innerHTML = '<div class="grp-t">企劃限定 · PROJECT</div>';
+        var lc = OCData.linkCompletion(curLink() ? curLink().id : '');
+        var b = document.createElement('button'); b.className = 'ed-railitem on' + (linkDirty(curProject) ? ' dirty' : '');
+        b.innerHTML = '<div class="rl-top"><span class="rl-ic">' + OCIcon('grid') + '</span><span class="rl-t">' + (OCData.project(curProject) || {}).name + ' 角色卡</span><span class="rl-dirty"></span><span class="rl-pct">' + lc + '%</span></div><div class="rl-meter"><i style="width:' + lc + '%"></i></div>';
+        rail.appendChild(b);
+        return;
+      }
+      var comp = OCForm.completion(tpl, vals);
+      rail.innerHTML = '<div class="grp-t">角色本體 · ' + tpl.name + '</div>';
+      tpl.sections.forEach(function (s) {
+        var cs = comp.bySection[s.id] || { filled: 0, total: 0 };
+        var pct = cs.total ? Math.round(cs.filled / cs.total * 100) : 0;
+        var done = cs.total > 0 && cs.filled === cs.total;
+        var b = document.createElement('button'); b.className = 'ed-railitem' + (s.id === secId ? ' on' : '') + (done ? ' done' : '') + (dirty.body ? ' dirty' : '');
+        b.innerHTML = '<div class="rl-top"><span class="rl-ic">' + OCIcon('section') + '</span><span class="rl-t">' + (s.title || '未命名區塊') + '</span><span class="rl-dirty"></span><span class="rl-pct">' + cs.filled + '/' + cs.total + '</span></div><div class="rl-meter"><i style="width:' + pct + '%"></i></div>';
+        b.onclick = function () { secId = s.id; buildRail(); buildForm(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+        rail.appendChild(b);
+      });
+    }
+
+    function buildForm() {
+      var form = document.getElementById('edForm'); if (!form) return;
+      if (scope === 'link') return buildLinkForm(form);
+      if (!canEditBody) {
+        form.innerHTML = '<div class="ed-region locked"><div class="rh"><span class="rt">角色本體 · Character</span><span class="en">locked</span></div>'
+          + '<div class="ed-locked-note">' + OCIcon('lock') + ' 角色本體由 <b>' + full.ownerSummary.label + '</b> 維護，你不能修改。' + (curProject ? '你可以改「企劃版本」。' : '') + ' <a href="character.html?c=' + cid + '" style="margin-left:8px;color:var(--accent-ink);font-weight:600">查看角色</a></div></div>';
+        return;
+      }
+      if (mode === 'struct') {
+        OCForm.renderStructure(form, { tpl: tpl, secId: secId, vals: vals, onChange: function (opt) {
+          opt = opt || {};
+          if (opt.goto) secId = opt.goto;
+          if (tpl.sections.length && !tpl.sections.filter(function (s) { return s.id === secId; })[0]) secId = tpl.sections[0].id;
+          syncBodyName(); touchBody();
+          if (!opt.light) buildForm();    // structural edits re-render; typing (light) doesn't (keeps focus)
+        } });
+      } else {
+        OCForm.renderFill(form, { tpl: tpl, vals: vals, secId: secId, canEdit: canEditBody,
+          onChange: function () { syncBodyName(); touchBody(); },
+          onStructure: function () { touchBody(); buildForm(); } });
+      }
+    }
+
+    function stepSection(dir) {
+      if (scope !== 'body') return;
+      var order = tpl.sections.map(function (s) { return s.id; });
+      var i = order.indexOf(secId); i = Math.max(0, Math.min(order.length - 1, i + dir));
+      secId = order[i]; buildRail(); buildForm(); window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ---------- link form (project version) ----------
+    function field(label, visKind, inputHtml) {
+      return '<div class="ed-field"><div class="ed-flabel"><label>' + label + (visKind ? ' ' + OCChar.visBadge(visKind) : '') + '</label></div>' + inputHtml + '</div>';
+    }
+    function buildLinkForm(form) {
+      if (!curProject) return;
+      var r = curRoster(); var p = OCData.project(curProject);
+      var canEditLink = full.mine || isHost; var factions = OCData.factionsOf(curProject);
+      var status = r ? r.status : 'approved';
+      if (status === 'archived' || status === 'removed') {
+        form.innerHTML = '<div class="ed-region locked"><div class="rh"><span class="rt">' + p.name + ' · 企劃限定設定</span><span class="en">' + status + '</span></div>'
+          + '<div class="ed-locked-note">' + (status === 'archived' ? OCIcon('archive') + ' 這個企劃版本已封存，唯讀。' : OCIcon('ban') + ' 這個角色已從企劃移除。') + ' 角色本體仍保留在你的帳號。</div></div>';
+        return;
+      }
+      if (!canEditLink) {
+        form.innerHTML = '<div class="ed-region locked"><div class="rh"><span class="rt">' + p.name + ' · 企劃限定設定</span><span class="en">locked</span></div><div class="ed-locked-note">' + OCIcon('lock') + ' 你不是這個企劃的主持人，且這不是你的角色，無法編輯企劃限定設定。</div></div>';
+        return;
+      }
+      var rejected = status === 'rejected' ? '<div class="ed-sec" style="background:var(--avoid-soft);border-top:none"><h3 style="color:#9E332B">⚠ 已退回</h3><p style="font-size:13px;color:#9E332B;margin:0 0 10px">' + (r.reviewMessage || '主持人退回了這個版本。') + '</p><button class="btn" id="resubmitBtn">調整後重新提交</button></div>' : '';
+      var hostField = isHost ? '<div class="ed-sec"><h3>主持人限定欄位 ' + OCChar.visBadge('host') + '</h3>' + field('內部備註（僅主持人）', null, '<textarea class="input" data-f rows="2" placeholder="這個欄位不會出現在公開分享。"></textarea>') + '</div>' : '';
+      var inner = '<div class="ed-sec"><h3>企劃定位 ' + OCChar.visBadge('members') + '</h3>'
+        + field('陣營', null, '<select class="select" data-f>' + factions.map(function (f) { return '<option' + (r && r.faction === f.id ? ' selected' : '') + '>' + f.name + '</option>'; }).join('') + '</select>')
+        + field('企劃職位', null, '<input class="input" data-f value="' + ((r && r.projectRole) || '') + '">')
+        + '</div><div class="ed-sec"><h3>企劃限定背景 ' + OCChar.visBadge('members') + '</h3>' + field('只屬於這個企劃的設定', null, '<textarea class="input" data-f rows="3" placeholder="例如：在這個 AU 裡的職業、關係…"></textarea>') + '</div>' + hostField;
+      var chip = status === 'pending' ? '<span class="badge pending">待審</span>' : status === 'rejected' ? '<span class="badge" style="background:var(--avoid-soft);color:#9E332B;border-color:#F0CFCB">已退回</span>' : '<span class="badge approved">已通過</span>';
+      form.innerHTML = '<div class="ed-region"><div class="rh"><span class="rt">' + p.name + ' · 企劃限定設定</span>' + chip + '<span class="en" style="margin-left:auto">' + (full.mine ? '你的角色' : '主持人可管理') + '</span></div>' + rejected + inner + '</div>';
+      wireDirty(form);
+      var rsb = form.querySelector('#resubmitBtn'); if (rsb) rsb.onclick = function () { OCUI.toast('已重新提交審核 · Demo', { demo: true }); };
+    }
+    function wireDirty(scopeEl) { scopeEl.querySelectorAll('[data-f]').forEach(function (inp) { var fn = function () { dirty.links[curProject] = true; saveEl.set('dirty'); buildScopeBar(); buildRail(); }; inp.addEventListener('input', fn); inp.addEventListener('change', fn); }); }
+
+    // ---------- preview drawer (renders generically from tpl + vals) ----------
+    function ensureDrawer() {
+      if (document.getElementById('edDrawer')) return;
+      var scrim = document.createElement('div'); scrim.className = 'ed-drawer-scrim'; scrim.id = 'edDrawerScrim'; scrim.onclick = closePreview;
+      var dr = document.createElement('aside'); dr.className = 'ed-drawer'; dr.id = 'edDrawer'; dr.setAttribute('aria-label', '即時預覽');
+      dr.innerHTML = '<div class="dh"><span class="t">預覽</span><span class="live">即時</span><button class="dx" id="edDrawerX" aria-label="關閉預覽">' + OCIcon('x') + '</button></div><div class="pb" id="pvBody"></div>';
+      document.body.appendChild(scrim); document.body.appendChild(dr);
+      dr.querySelector('#edDrawerX').onclick = closePreview;
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && previewOpen) closePreview(); });
+    }
+    function openPreview() { ensureDrawer(); previewOpen = true; document.getElementById('edDrawer').classList.add('open'); document.getElementById('edDrawerScrim').classList.add('open'); var b = document.getElementById('edPrevBtn'); if (b) b.classList.add('on'); buildPreviewBody(); }
+    function closePreview() { previewOpen = false; var d = document.getElementById('edDrawer'); if (d) d.classList.remove('open'); var s = document.getElementById('edDrawerScrim'); if (s) s.classList.remove('open'); var b = document.getElementById('edPrevBtn'); if (b) b.classList.remove('on'); }
+    function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+    function fieldPreview(fd, v) {
+      if (!OCForm.valFilled(fd.type, v)) return '';
+      var body = '';
+      if (fd.type === 'text' || fd.type === 'textarea') body = '<div class="pv-text">' + esc(v).replace(/\n/g, '<br>') + '</div>';
+      else if (fd.type === 'tags' || fd.type === 'list' || fd.type === 'chips') body = '<div class="tagrow">' + v.filter(Boolean).map(function (t) { return '<span class="chip">' + esc(t) + '</span>'; }).join('') + '</div>';
+      else if (fd.type === 'keyvalue') body = '<div class="kvs">' + v.filter(function (p) { return p[0] || p[1]; }).map(function (p) { return '<div class="r"><span class="k">' + esc(p[0]) + '</span>' + esc(p[1]) + '</div>'; }).join('') + '</div>';
+      else if (fd.type === 'color') body = '<div class="palette">' + v.map(function (p) { return '<span class="sw"><span class="c" style="background:' + (p[1] || '#ccc') + '"></span>' + esc(p[0]) + '</span>'; }).join('') + '</div>';
+      else if (fd.type === 'image') body = '<div style="aspect-ratio:16/9;max-width:240px;border-radius:var(--r-img);background:' + v + '"></div>';
+      return '<div class="pv-field"><div class="pv-flabel">' + esc(fd.label) + '</div>' + body + '</div>';
+    }
+    function buildPreviewBody() {
+      var body = document.getElementById('pvBody'); if (!body) return;
+      var nmeF = findFieldBySeed('name'), tagF = findFieldBySeed('tagline');
+      var nm = (nmeF && vals[nmeF ? nmeF.id : '']) || bodyName || full.name;
+      nm = (nmeF && vals[nmeF.id]) || bodyName || full.name;
+      var tagline = tagF && vals[tagF.id] ? vals[tagF.id] : '';
+      var heroF = null; tpl.sections.forEach(function (s) { s.fields.forEach(function (fd) { if (!heroF && fd.type === 'image' && vals[fd.id]) heroF = fd; }); });
+      var h = (heroF ? '<div style="aspect-ratio:16/8;border-radius:var(--r-img);background:' + vals[heroF.id] + ';margin-bottom:12px"></div>' : '')
+        + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px"><span style="width:40px;height:40px;border-radius:11px;background:' + full.c + ';display:grid;place-items:center;color:#fff;font-family:var(--font-serif);font-weight:800">' + esc(nm[0] || '?') + '</span><div><div style="font-family:var(--font-serif);font-weight:800;font-size:16px">' + esc(nm) + '</div><div style="font-size:11px;color:var(--text-faint)">' + esc(tagline) + '</div></div></div>';
+      tpl.sections.forEach(function (s) {
+        var inner = s.fields.map(function (fd) { return fieldPreview(fd, vals[fd.id]); }).join('');
+        if (!inner.trim()) return;
+        h += '<div class="pv-sec"><div class="pv-sect">' + esc(s.title) + '</div>' + inner + '</div>';
+      });
+      body.innerHTML = h;
+    }
+
+    // ---------- save (Demo) ----------
+    function doSave() {
+      if (!anyDirty()) { OCUI.toast('沒有需要儲存的修改'); return; }
+      saveEl.set('saving');
+      var willFail = params.get('fail') === '1';
+      setTimeout(function () {
+        if (willFail) { saveEl.set('error'); OCUI.toast('儲存失敗，請稍後再試 · Demo', { demo: true }); return; }
+        dirty.body = false; dirty.links[curProject] = false; persistStruct();
+        // sync the canonical name back so other pages reflect it
+        if (full.mine && window.OCDemo) { OCDemo.updateCharacter(cid, { name: bodyName || full.name }); full.name = bodyName || full.name; }
+        saveEl.set('saved'); buildRail(); buildScopeBar(); buildTplBar();
+        OCUI.toast('已儲存 · Demo interaction only', { demo: true });
+      }, 850);
+    }
+
+    // ---------- leave guard ----------
+    window.addEventListener('beforeunload', function (e) { if (anyDirty()) { e.preventDefault(); e.returnValue = ''; } });
+    document.addEventListener('click', function (e) {
+      var a = e.target.closest && e.target.closest('a[href]'); if (!a) return;
+      var href = a.getAttribute('href'); if (!href || href[0] === '#' || a.target === '_blank') return;
+      if (anyDirty()) { e.preventDefault(); e.stopPropagation();
+        OCChar.unsavedDialog({ context: 'leave', onSave: function () { doSave(); setTimeout(function () { location.href = href; }, 950); }, onDiscard: function () { dirty.body = false; dirty.links = {}; location.href = href; } });
+      }
+    }, true);
+
+    ctxAndTop();
+    renderBody();
+  })();
+</script>
+<script src="../assets/shell.js"></script>
+</body>
+</html>

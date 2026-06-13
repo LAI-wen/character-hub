@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CharacterHub · 設計原型總覽</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/ds.css">
+<style>
+  body { background: var(--bg); }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: var(--s16) var(--s8) var(--s16); }
+  .hero { border-bottom: 1px solid var(--border-strong); padding-bottom: var(--s8); margin-bottom: var(--s10); }
+  .hero .eyebrow { margin-bottom: 14px; }
+  .hero h1 { font-family: var(--font-serif); font-size: 46px; font-weight: 900; margin: 0; letter-spacing: -.025em; line-height: 1.05; }
+  .hero .sub { font-size: 16px; color: var(--text-dim); margin: var(--s4) 0 0; max-width: 62ch; line-height: 1.65; text-wrap: pretty; }
+  .hero .links { display: flex; gap: var(--s2); margin-top: var(--s5); flex-wrap: wrap; }
+  .hero .links a { font-size: 13px; font-weight: 600; padding: 9px 15px; border-radius: var(--r-btn); border: 1px solid var(--border-strong); background: var(--surface); display: inline-flex; align-items: center; gap: 7px; }
+  .hero .links a:hover { background: var(--bg-tint); }
+  .hero .links a.primary { background: var(--text); color: #fff; border-color: var(--text); }
+
+  .scope-h { display: flex; align-items: baseline; gap: var(--s3); margin: var(--s10) 0 var(--s5); }
+  .scope-h .dot { width: 11px; height: 11px; border-radius: 50%; align-self: center; }
+  .scope-h h2 { font-family: var(--font-serif); font-size: 24px; font-weight: 800; margin: 0; }
+  .scope-h .en { font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); }
+  .scope-h .rule { flex: 1; height: 1px; background: var(--border); align-self: center; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(248px, 1fr)); gap: var(--s4); }
+  .card { display: flex; flex-direction: column; gap: 4px; padding: var(--s5); border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--sh-1); text-decoration: none; color: inherit; transition: box-shadow .15s, transform .15s, border-color .15s; position: relative; }
+  .card:hover { box-shadow: var(--sh-2); transform: translateY(-2px); border-color: var(--border-strong); }
+  .card .tt { font-family: var(--font-serif); font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .card .en { font-family: var(--font-mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); }
+  .card .ds { font-size: 12.5px; color: var(--text-dim); line-height: 1.55; margin-top: 6px; text-wrap: pretty; }
+  .card .tag { position: absolute; top: 14px; right: 14px; font-family: var(--font-mono); font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: var(--r-pill); }
+  .tag.new { background: var(--must-soft); color: #1F6B43; border: 1px solid #CDE8D8; }
+  .tag.proto { background: var(--bg-tint); color: var(--text-faint); border: 1px solid var(--border); }
+  .tag.b2 { background: #E8EEF6; color: #355C86; border: 1px solid #CBDDF0; }
+  .note { font-size: 12.5px; color: var(--text-faint); margin: var(--s2) 0 0; }
+  footer { margin-top: var(--s16); padding-top: var(--s6); border-top: 1px solid var(--border-strong); font-size: 13px; color: var(--text-faint); line-height: 1.7; }
+  @media (max-width: 760px) { .hero h1 { font-size: 32px; } .wrap { padding: var(--s10) var(--s4); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">CharacterHub · 設計原型 · 2026.06</div>
+    <h1>角色委託平台<br>設計原型總覽</h1>
+    <p class="sub">一套可點擊的 UI／UX 原型，分成三個範圍：<b style="color:var(--text)">我的空間</b>、<b style="color:var(--text)">目前企劃</b>、<b style="color:var(--text)">公開頁</b>。共用同一個 App Shell 與單一 mock 資料（OCData）。每頁可直接開啟操作；側欄可切換範圍、企劃與「視角」（主持／參與／訪客）。所有儲存皆為 <span class="mono">Demo interaction only</span>。</p>
+    <div class="links">
+      <a class="primary" href="pages/workspace.html">▶ 進入工作台</a>
+      <a href="pb0-report.html">PB0 驗收 ↗</a>
+      <a href="slice5b-report.html">Slice 5B 驗收 ↗</a>
+      <a href="slice5a-report.html">Slice 5A 驗收 ↗</a>
+      <a href="slice4c-report.html">Slice 4C 驗收 ↗</a>
+      <a href="slice4b-report.html">Slice 4B 驗收 ↗</a>
+      <a href="slice4a-report.html">Slice 4A 驗收 ↗</a>
+      <a href="docs/index.html">文件與報告總覽 ↗</a>
+      <a href="cleanup-plan.html">整理規劃 ↗</a>
+    </div>
+  </div>
+
+  <div id="scopes"></div>
+
+  <footer>
+    綠標 <b style="color:#1F6B43">已重設計</b> 為本輪 Slice 1 完成的頁面；灰標 <b>原型</b> 為沿用既有、尚待整理的頁面；藍標 <b style="color:#355C86">第二批</b> 為後續批次。封存內容見 <span class="mono">_archive/</span>。
+  </footer>
+</div>
+
+<script>
+  const SCOPES = [
+    { key: 'account', name: '我的空間', en: 'Account', color: '#A67F0E', pages: [
+      { t: '工作台', en: 'Workspace', url: 'pages/workspace.html', ds: '帳號層首頁：企劃總覽、最近活動、角色快覽。', tag: 'new' },
+      { t: '我的角色', en: 'My Characters', url: 'pages/dashboard.html', ds: '角色本體庫，含尚未加入企劃的角色；卡片顯示加入的企劃。', tag: 'new' },
+      { t: '角色詳情', en: 'Character', url: 'pages/character.html?c=yoi', ds: '以角色本體為主，六分頁＋分享；加入的企劃獨立呈現。', tag: 'new' },
+      { t: '角色編輯器', en: 'Editor', url: 'pages/editor.html?c=yoi&project=tokoyo', ds: '本體 vs 企劃限定分區、版本切換、儲存／未儲存。', tag: 'new' },
+      { t: '我的企劃', en: 'Projects', url: 'pages/my-projects.html', ds: '所有企劃的卡片，含可見性、共創模式與你的身分。', tag: 'new' },
+      { t: '委託收件匣', en: 'Commissions', url: 'pages/commissions.html', ds: '跨角色的委託管線看板。', tag: 'proto' },
+      { t: '身高比較', en: 'Height', url: 'pages/height-compare.html', ds: '等比例剪影工具。', tag: 'proto' },
+      { t: '設定', en: 'Settings', url: 'pages/settings.html', ds: '個人檔案、委託預設、隱私、帳號。', tag: 'proto' },
+    ]},
+    { key: 'project', name: '目前企劃', en: 'Project', color: '#3B5E6B', pages: [
+      { t: '企劃總覽', en: 'Overview', url: 'pages/overview.html', ds: '企劃首頁：摘要、快速新增、共創管理（依權限）。', tag: 'new' },
+      { t: '企劃角色', en: 'Roster', url: 'pages/roster.html', ds: 'ProjectCharacterLink 名冊：陣營／職位／限定欄位／審核。', tag: 'new' },
+      { t: '角色名冊', en: 'Cast', url: 'pages/cast.html', ds: '已通過審核的角色，成員／公開瀏覽用，無管理操作。', tag: 'new' },
+      { t: '世界觀', en: 'Worldview', url: 'pages/worldview.html', ds: '階層條目、關聯角色（EntityLink）、master-detail。', tag: 'new' },
+      { t: '關係圖', en: 'Relationships', url: 'pages/relationships.html', ds: '畫布＋關係詳情；手機清單／唯讀模式。', tag: 'new' },
+      { t: '故事', en: 'Story', url: 'pages/story.html', ds: '章節檢視＋時間軸檢視、StoryEvent、EntityLink。', tag: 'new' },
+      { t: '圖庫', en: 'Gallery', url: 'pages/gallery.html', ds: 'Asset／AssetLink、未分類 Inbox、上傳 Queue、燈箱、公開裁切。', tag: 'new' },
+      { t: '靈感匣', en: 'Inspiration', url: 'pages/inspiration.html', ds: '快速捕捉、整理、轉換為正式內容；Account／Project 分範圍。', tag: 'new' },
+      { t: '角色卡模板', en: 'Template', url: 'pages/template-builder.html', ds: '企劃限定欄位 Builder、即時預覽、版本與破壞性修改。', tag: 'new' },
+      { t: '投稿審核', en: 'Submissions', url: 'pages/submissions.html', ds: '角色加入申請 + 主持人審核；通過後建立企劃角色。', tag: 'new' },
+      { t: '參與者', en: 'Participants', url: 'pages/participants.html', ds: '主持／協作／參與者權限。', tag: 'b2' },
+    ]},
+    { key: 'public', name: '公開頁', en: 'Public', color: '#2F8F5B', pages: [
+      { t: '公開企劃頁', en: 'Portal', url: 'pages/public-pages.html', ds: '公開頁 Builder：列表、建立流程、版型編輯、Published Renderer。', tag: 'new' },
+    ]},
+    { key: 'pre', name: '登入前 & 文件', en: 'Pre-login & docs', color: '#8A857C', pages: [
+      { t: '落地頁', en: 'Landing', url: 'pages/landing.html', ds: '產品介紹首頁。', tag: 'proto' },
+      { t: '登入', en: 'Login', url: 'pages/login.html', ds: '社群登入 + email。', tag: 'proto' },
+      { t: '整理規劃報告', en: 'Cleanup plan', url: 'cleanup-plan.html', ds: '現況盤點與 IA 規劃。', tag: 'proto' },
+      { t: 'Slice 1 驗收', en: 'Slice 1', url: 'slice1-report.html', ds: '全站範圍與導覽 + 1.1 校正。', tag: 'proto' },
+      { t: 'Slice 2 驗收', en: 'Slice 2', url: 'slice2-report.html', ds: '角色詳情與角色編輯器。', tag: 'proto' },
+      { t: 'Slice 3 驗收', en: 'Slice 3', url: 'slice3-report.html', ds: '世界觀與關係圖。', tag: 'proto' },
+    ]},
+  ];
+
+  var root = document.getElementById('scopes');
+  SCOPES.forEach(function (s) {
+    var sec = document.createElement('div');
+    var cards = s.pages.map(function (p) {
+      var tagTxt = { new: '已重設計', proto: '原型', b2: '第二批' }[p.tag];
+      return '<a class="card" href="' + p.url + '"><span class="tag ' + p.tag + '">' + tagTxt + '</span>'
+        + '<div class="tt">' + p.t + '</div><div class="en">' + p.en + '</div><div class="ds">' + p.ds + '</div></a>';
+    }).join('');
+    sec.innerHTML = '<div class="scope-h"><span class="dot" style="background:' + s.color + '"></span><h2>' + s.name + '</h2><span class="en">' + s.en + '</span><span class="rule"></span></div><div class="grid">' + cards + '</div>';
+    root.appendChild(sec);
+  });
+</script>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#1C1B19"/>
+    <text x="50" y="64" font-family="serif" font-size="46" fill="#FAFAF8" text-anchor="middle">霧</text>
+  </svg>
+</template>
+</body>
+</html>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Slice 5A 驗收 · 角色卡模板 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/ds.css">
+<link rel="stylesheet" href="assets/components.css">
+<style>
+  body { background: var(--bg); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: var(--s12) var(--s8) var(--s16); }
+  .hero { border-bottom: 1px solid var(--border-strong); padding-bottom: var(--s8); margin-bottom: var(--s10); }
+  .hero .eyebrow { margin-bottom: 12px; }
+  .hero h1 { font-family: var(--font-serif); font-size: 40px; font-weight: 900; margin: 0; letter-spacing: -.025em; line-height: 1.06; }
+  .hero .lead { color: var(--text-dim); font-size: 16px; margin: var(--s4) 0 0; max-width: 64ch; line-height: 1.65; text-wrap: pretty; }
+  .hero .chips { display: flex; gap: var(--s2); margin-top: var(--s5); flex-wrap: wrap; }
+  section { margin-top: var(--s12); }
+  .sh { display: flex; align-items: baseline; gap: var(--s4); margin-bottom: var(--s5); }
+  .sh .ix { font-family: var(--font-mono); font-size: 13px; color: var(--text-faint); }
+  .sh h2 { font-family: var(--font-serif); font-size: 24px; font-weight: 800; margin: 0; }
+  .sh .en { font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); }
+  .sh .rule { flex: 1; height: 1px; background: var(--border); align-self: center; }
+  p.note { font-size: 14.5px; color: var(--text-dim); line-height: 1.7; max-width: 74ch; text-wrap: pretty; }
+  p.note b { color: var(--text); }
+  .pages { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: var(--s3); }
+  .pcard { display: flex; flex-direction: column; gap: 3px; padding: var(--s4) var(--s5); border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--sh-1); text-decoration: none; color: inherit; transition: box-shadow .15s, transform .15s; }
+  .pcard:hover { box-shadow: var(--sh-2); transform: translateY(-2px); }
+  .pcard .n { font-family: var(--font-serif); font-size: 16px; font-weight: 700; }
+  .pcard .d { font-size: 12.5px; color: var(--text-dim); margin-top: 4px; line-height: 1.5; }
+  .pcard .sc { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--accent-ink); margin-top: 6px; }
+  .shots { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s4); }
+  .shot { border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--sh-1); overflow: hidden; }
+  .shot img { width: 100%; display: block; border-bottom: 1px solid var(--border); }
+  .shot .cap { padding: var(--s3) var(--s4); font-size: 12.5px; color: var(--text-dim); }
+  .shot .cap b { color: var(--text); }
+  .split { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--s4); }
+  .col { border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); padding: var(--s5); }
+  .col h3 { margin: 0 0 var(--s2); font-size: 14px; font-weight: 700; }
+  .col ul { margin: 0; padding-left: 1.1em; font-size: 12.5px; color: var(--text-dim); line-height: 1.8; }
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); overflow: hidden; margin-top: var(--s2); }
+  thead th { text-align: left; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); padding: var(--s3) var(--s4); border-bottom: 1px solid var(--border); background: var(--surface-2); }
+  tbody td { padding: var(--s3) var(--s4); border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: top; line-height: 1.5; }
+  tbody tr:last-child td { border-bottom: 0; }
+  td .f { font-family: var(--font-mono); font-size: 12px; font-weight: 600; }
+  .gap-card { border: 1px solid #ECDFA8; background: var(--accent-soft); border-radius: var(--r-card); padding: var(--s4) var(--s5); margin-bottom: var(--s3); }
+  .gap-card .gt { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--accent-ink); }
+  .gap-card .gd { font-size: 13px; color: var(--text-dim); margin-top: 5px; line-height: 1.6; }
+  .gap-card .gd b { color: var(--text); }
+  .gap-card.bad { border-color: #F0CFCB; background: var(--avoid-soft); } .gap-card.bad .gt { color: #9E332B; }
+  .gap-card.ok { border-color: #CDE8D8; background: var(--must-soft); } .gap-card.ok .gt { color: #1F6B43; }
+  .demo-list { display: flex; flex-direction: column; gap: 8px; }
+  .demo-row { display: flex; align-items: center; gap: 10px; font-size: 13.5px; padding: 9px 13px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+  .open-issues { border: 1px solid #F0CFCB; background: var(--avoid-soft); border-radius: var(--r-card); padding: var(--s4) var(--s5); }
+  .open-issues ul { margin: 0; padding-left: 1.1em; font-size: 13.5px; color: var(--text-dim); line-height: 1.8; }
+  .foot { margin-top: var(--s16); padding-top: var(--s6); border-top: 1px solid var(--border-strong); }
+  .foot .q { font-family: var(--font-serif); font-size: 19px; font-weight: 700; margin: 0 0 var(--s2); }
+  .foot p { font-size: 14px; color: var(--text-dim); line-height: 1.7; }
+  @media (max-width: 860px) { .hero h1 { font-size: 30px; } .shots, .split { grid-template-columns: 1fr; } .wrap { padding: var(--s10) var(--s4); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">CharacterHub · Slice 5A · 角色卡模板</div>
+    <h1>Slice 5A 驗收</h1>
+    <p class="lead">角色卡模板 Builder 完成。主持人設計「角色加入本企劃要填的<b>企劃限定欄位</b>」——只定義企劃欄位，<b>不修改 Character 本體</b>；欄位值寫在 ProjectCharacterLink，不存在模板裡。含版本管理與破壞性修改防護。</p>
+    <div class="chips">
+      <span class="badge approved"><span class="d" style="background:var(--must)"></span>template-builder.html</span>
+      <span class="badge">Draft v3 / Published v2</span>
+      <span class="demo-only">所有儲存為 Demo only</span>
+    </div>
+  </div>
+
+  <section>
+    <div class="sh"><span class="ix">01</span><h2>可點擊頁面</h2><span class="en">Clickable</span><span class="rule"></span></div>
+    <div class="pages">
+      <a class="pcard" href="pages/template-builder.html?project=tokoyo"><span class="n">模板 · 常夜國</span><span class="d">Published v2 + Draft v3、欄位清單、即時預覽、欄位設定、版本差異。</span><span class="sc">template-builder.html</span></a>
+      <a class="pcard" href="pages/template-builder.html?project=commset"><span class="n">空模板</span><span class="d">委託角色集尚無模板的空狀態 + 建立 CTA。</span><span class="sc">?project=commset</span></a>
+      <a class="pcard" href="pages/template-builder.html?project=school"><span class="n">已發布模板</span><span class="d">校園 AU v1（社團／年級）。</span><span class="sc">?project=school</span></a>
+    </div>
+    <p class="note" style="margin-top:var(--s4)">模板管理是<b>主持人限定</b>——切「視角」到 參與／預覽 會看到 Forbidden（403）。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">02</span><h2>畫面</h2><span class="en">Screens</span><span class="rule"></span></div>
+    <div class="shots">
+      <div class="shot"><img src="screenshots/s5a-builder.png" alt="模板 Builder"><div class="cap"><b>三欄 Builder</b>：左欄位清單（型別／可見性／排序）、中即時預覽（角色擁有者／成員／主持人視角）、右欄位設定。版本徽章 Published v2 / Draft v3。</div></div>
+      <div class="shot"><div class="cap" style="padding:var(--s5)"><b>即時預覽視角</b><br><span style="color:var(--text-dim)">切換 Owner／Member／Host 視角：依 visibility 裁切顯示哪些欄位、依 editableBy 顯示唯讀鎖；主持人限定欄位只在 Host 視角出現。</span></div></div>
+      <div class="shot"><div class="cap" style="padding:var(--s5)"><b>版本差異</b><br><span style="color:var(--text-dim)">「查看差異」列出 Draft v3 相對 Published v2 的新增（能力類型/主題色）、修改（立場 改必填+選項）、移除（主持人備註，舊值保留）。發布不破壞既有資料。</span></div></div>
+      <div class="shot"><div class="cap" style="padding:var(--s5)"><b>破壞性修改</b><br><span style="color:var(--text-dim)">改型別／刪欄位／移除選項／改必填時，顯示<b>受影響角色數</b>（⚠ N 個角色）＋處理選項（保留舊值／標記待遷移）——不是一般確認框。</span></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">03</span><h2>Template／Field／FieldValues 邊界</h2><span class="en">Data boundary</span><span class="rule"></span></div>
+    <div class="split">
+      <div class="col"><h3>ProjectTemplate</h3><ul><li>projectId · name · status</li><li>version · publishedAt?</li></ul></div>
+      <div class="col"><h3>ProjectTemplateField</h3><ul><li>key · label · description · type</li><li>required · visibility · editableBy</li><li>sortOrder · validation · options? · defaultValue?</li></ul></div>
+      <div class="col"><h3>FieldValues</h3><ul><li><b>不存在模板裡</b></li><li>寫入 <span class="mono">ProjectCharacterLink.fieldValues[fieldId]</span></li><li>主持人限定欄位的值也在這，不另建重複欄位</li></ul></div>
+    </div>
+    <p class="note" style="margin-top:var(--s3)">模板只定義<b>企劃限定欄位</b>（陣營／職位／能力類型／主持人備註…），<b>絕不</b>碰 Character 本體（名稱／圖設定／文設定）。欄位型別 11 種：單行／多行／數字／單選／多選／勾選／日期／色票／圖片／關聯／分隔標題。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">04</span><h2>Visibility / EditableBy</h2><span class="en">Permissions</span><span class="rule"></span></div>
+    <p class="note"><b>可見性</b>：public／members／host／owner_only（即時預覽依視角裁切）。<b>可編輯者</b>：character_owner／host／both（非可編輯視角顯示唯讀鎖）。主持人限定欄位的值仍寫在 <span class="mono">fieldValues</span>，由 renderer 依 viewer 裁切——不另建重複資料欄位。動作權限：template:create/update/publish/archive、templateField:create/update/delete/reorder。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">05</span><h2>版本與破壞性修改</h2><span class="en">Versioning</span><span class="rule"></span></div>
+    <p class="note">模板發布後不直接破壞既有角色資料：修改已發布模板＝<b>建立新 Draft 版本</b>；發布前以「查看差異」預覽新增／修改／移除；既有 <span class="mono">ProjectCharacterLink</span> 保留 <span class="mono">templateVersionId</span>；<b>移除欄位不立即刪除舊值</b>。破壞性修改（改型別／刪有值欄位／移除 select 選項／選填改必填／降字數上限）顯示受影響角色數與處理選項，不只跳一般確認框（已驗證：刪「立場」→ ⚠ 1 個角色 + 2 處理選項）。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">06</span><h2>Responsive / A11y</h2><span class="en">Responsive · Accessibility</span><span class="rule"></span></div>
+    <p class="note"><b>桌機</b>三欄；<b>平板</b>欄位清單＋預覽／設定切換（手機段）；<b>手機</b>欄位清單＋單欄位設定＋預覽分頁＋<b>上移／下移按鈕</b>（不強迫拖曳）。A11y：欄位排序鍵盤替代（方向鍵）、表單控制有 label、必填用「必填」徽章不只顏色、Modal Focus Trap＋Esc、變更 aria 公告、預覽視角切換可鍵盤操作。請在實機 360／390／768／1024／1440px 確認。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">07</span><h2>狀態</h2><span class="en">States</span><span class="rule"></span></div>
+    <div class="demo-list">
+      <div class="demo-row"><span class="demo-only">1-3</span>尚未建立模板（空態）/ Draft / Published</div>
+      <div class="demo-row"><span class="demo-only">4-6</span>有未發布修改 / Archived / 載入失敗</div>
+      <div class="demo-row"><span class="demo-only">7-9</span>無權限（Forbidden）/ Member 填寫預覽 / Host 管理預覽</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">08</span><h2>修改檔案</h2><span class="en">Files</span><span class="rule"></span></div>
+    <table>
+      <thead><tr><th style="width:28%">檔案</th><th>變更</th></tr></thead>
+      <tbody>
+        <tr><td class="f">assets/data.js</td><td>ProjectTemplate／ProjectTemplateField fixtures（v2 published + v3 draft + school v1，含各型別、host-only、破壞性差異）＋helper（templatesOf/fieldsOf/templateDiff/fieldAffectedCount…）；ACTION_GRANTS 補 template／templateField 動作。</td></tr>
+        <tr><td class="f">assets/template.css</td><td>三欄 Builder、欄位清單＋排序、即時預覽、欄位設定、破壞性 modal、響應式。</td></tr>
+        <tr><td class="f">pages/template-builder.html</td><td>Builder、即時預覽視角、版本差異、破壞性修改、動作權限、Forbidden、A11y。</td></tr>
+        <tr><td class="f">index.html</td><td>角色卡模板標記為已重設計，加 Slice 5A 報告連結。</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">09</span><h2>Contract / API Status</h2><span class="en">Status</span><span class="rule"></span></div>
+    <div class="gap-card ok"><div class="gt">DOMAIN CONTRACT READY · ProjectTemplate / ProjectTemplateField</div><div class="gd">UI 與欄位概念已確定（見 §03）。FieldValues 寫入 ProjectCharacterLink.fieldValues，不存模板。</div></div>
+    <div class="gap-card q" style="border-color:#CBDDF0;background:#E8EEF6"><div class="gt" style="color:#355C86">5A.1 交接 · 版本結構</div><div class="gd"><span class="mono">ProjectTemplate{currentPublishedVersionId, currentDraftVersionId}</span> + <span class="mono">ProjectTemplateVersion{id, templateId, versionNumber, status, publishedAt}</span>；Field 屬於特定 templateVersionId。Draft v3 與 Published v2 並存。</div></div>
+    <div class="gap-card q" style="border-color:#CBDDF0;background:#E8EEF6"><div class="gt" style="color:#355C86">5A.1 交接 · 穩定欄位識別</div><div class="gd">跨版本用 <span class="mono">fieldKey</span>（或 stable fieldDefinitionId）；<span class="mono">fieldValues[fieldKey]</span> 優先，不假設 field row id 跨版本不變。</div></div>
+    <div class="gap-card q" style="border-color:#CBDDF0;background:#E8EEF6"><div class="gt" style="color:#355C86">5A.1 交接 · 系統欄位 vs 自訂欄位</div><div class="gd">平台系統欄位（factionId／projectRole／status）與模板自訂欄位分離，模板不可重建與系統欄位衝突的第二份資料。可見性命名改 <span class="mono">public／members／hosts／character_owner</span>（避免與企劃 Owner 混淆）；預覽 Owner 標為「角色擁有者」。關聯型欄位存 entity reference（不自動建 EntityLink）、圖片型存 assetId（不複製 metadata）；Host-only 必填不阻擋角色擁有者提交。</div></div>
+    <div class="gap-card"><div class="gt">DATA GAP · 版本遷移策略</div><div class="gd">破壞性修改的「標記待遷移」需後端遷移流程；templateVersionId 對應的舊值保留策略需正式 schema。</div></div>
+    <div class="gap-card bad"><div class="gt">API STATUS · NOT IMPLEMENTED</div><div class="gd">本地正式 Template API、D1 CRUD、發布版本管理、roundtrip 尚未完成。本輪全為 Demo。</div></div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">10</span><h2>Demo-only / 尚未完成</h2><span class="en">Demo · Open issues</span><span class="rule"></span></div>
+    <div class="open-issues">
+      <ul>
+        <li>新增／編輯／刪除欄位、排序、複製、發布皆為 Demo toast（不寫回）。</li>
+        <li>欄位設定編輯（標籤／選項／驗證）即時預覽未雙向綁定。</li>
+        <li>validation 規則（字數／數值範圍）為示意，未做即時驗證。</li>
+        <li>關聯型欄位（Character／WorldEntry）的選擇器未做。</li>
+        <li>真實 persistence／版本遷移未接。</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="foot">
+    <p class="q">Slice 5A 完成，先停（不進審核中心）。等你驗收。</p>
+    <p>維持單一 OCData、Demo interaction only，未建立 Repository／API／Auth／第二套 Store。</p>
+  </div>
+</div>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#3B5E6B"/>
+    <text x="50" y="64" font-family="monospace" font-size="34" font-weight="700" fill="#fff" text-anchor="middle">5A</text>
+  </svg>
+</template>
+</body>
+</html>

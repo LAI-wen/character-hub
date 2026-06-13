@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>故事 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/ds.css">
+<link rel="stylesheet" href="../assets/shell.css">
+<link rel="stylesheet" href="../assets/components.css">
+<link rel="stylesheet" href="../assets/story.css">
+</head>
+<body>
+<div class="page" id="root"></div>
+
+<script src="../assets/data.js"></script>
+<script src="../assets/components.js"></script>
+<script>
+  (function () {
+    var root = document.getElementById('root');
+    var pid = new URLSearchParams(location.search).get('project') || localStorage.getItem('ch:proj') || 'tokoyo';
+    if (!OCData.project(pid)) pid = OCData.projects[0].id;
+    var p = OCData.project(pid);
+    var ROLE = OCData.getRole(pid);
+    var isPreview = ROLE === 'visitor';
+    var publicOnly = isPreview;
+    var A = function (act) { return OCData.canAction(act, pid) && !isPreview; };
+
+    var loadError = false;
+    var view = 'chapters';        // 'chapters' | 'timeline'
+    var stories = [], curStory = null, curChapter = null, selEvent = null;
+    var tlChar = '*';
+
+    function gate() {
+      if (!OCData.hasFeature(pid, 'story')) return 'feature';
+      if (isPreview && p.visibility !== 'public') return 'forbidden';
+      return null;
+    }
+
+    function ctx() {
+      var html = OCUI.contextHeader({ scope: 'project', crumbs: [p.name, '故事'] });
+      root.innerHTML = html;
+    }
+
+    function render() {
+      ctx();
+      var g = gate();
+      if (g === 'feature') { root.appendChild(OCUI.emptyState({ title: '故事模組未啟用。', body: '這個企劃尚未開啟故事模組，可在企劃設定中啟用。', icon: 'plug' })); return; }
+      if (g === 'forbidden') { root.appendChild(OCUI.forbiddenState({ title: '沒有檢視權限。', body: '這個企劃的故事未公開，只有企劃成員能檢視。' })); return; }
+      if (loadError) { root.appendChild(OCUI.errorState({ title: '故事載入失敗。', code: 'LOAD_ERROR', onRetry: function () { loadError = false; boot(); } })); return; }
+      if (!stories.length) { root.appendChild(OCUI.emptyState({ title: '故事模組已啟用，但還沒有故事。', body: A('story:create') ? '建立第一個故事，開始寫章節與時間軸。' : '擁有者還沒有建立公開故事。', ctaLabel: A('story:create') ? '＋ 新增故事' : null, onCta: addStory })); return; }
+
+      if (!curStory) curStory = stories[0];
+      // archived story note
+      header();
+      var cols = document.createElement('div'); cols.className = 'st-cols';
+      cols.innerHTML = '<div id="left"></div><div id="center"></div><div class="st-side" id="side"></div>';
+      root.appendChild(cols);
+      if (view === 'chapters') { buildOutline(); buildChapter(); }
+      else { document.getElementById('left').style.display = 'none'; buildTimeline(); }
+      buildSide();
+      mobileBar();
+    }
+
+    function header() {
+      var head = document.createElement('div'); head.className = 'st-head';
+      var statusBadge = '<span class="badge ' + (curStory.status === 'completed' ? 'approved' : curStory.status === 'archived' ? 'draft' : 'pending') + '">' + OCData.storyStatusLabel(curStory.status) + '</span>';
+      var vis = '<span class="badge ' + (curStory.visibility === 'public' ? 'public' : 'private') + '"><span class="d" style="background:' + (curStory.visibility === 'public' ? 'var(--must)' : 'var(--text-faint)') + '"></span>' + (curStory.visibility === 'public' ? '公開' : curStory.visibility === 'private' ? '私人' : '僅成員') + '</span>';
+      head.innerHTML = '<div class="st-sel"><button class="btn2" id="stBtn">' + curStory.title + ' <span class="cv">▼</span></button><div class="menu" id="stMenu"></div></div>'
+        + '<div style="flex:1;min-width:200px"><div class="meta">' + statusBadge + vis + '</div><p class="summary">' + (curStory.summary || '') + '</p></div>'
+        + '<div class="acts"><div class="st-toggle"><button id="vCh" class="' + (view === 'chapters' ? 'on' : '') + '">章節</button><button id="vTl" class="' + (view === 'timeline' ? 'on' : '') + '">時間軸</button></div>'
+        + (A('chapter:create') && view === 'chapters' ? '<button class="btn btn-sm" id="addCh">＋ 章節</button>' : '')
+        + (A('storyEvent:create') && view === 'timeline' ? '<button class="btn btn-sm" id="addEv">＋ 事件</button>' : '')
+        + (A('story:update') ? '<button class="btn btn-sm" id="editSt">⚙ 故事設定</button>' : '') + '</div>';
+      root.appendChild(head);
+
+      if (curStory.status === 'archived') {
+        var note = document.createElement('div'); note.className = 'rl-mobile-note'; note.style.marginBottom = 'var(--s4)';
+        note.innerHTML = OCIcon('archive') + ' 這個故事已封存，唯讀。';
+        root.appendChild(note);
+      }
+
+      var btn = head.querySelector('#stBtn'), menu = head.querySelector('#stMenu');
+      menu.innerHTML = stories.map(function (s) { return '<button class="mi' + (s.id === curStory.id ? ' cur' : '') + '" data-s="' + s.id + '"><span class="nm">' + s.title + '</span><span class="badge ' + (s.status === 'completed' ? 'approved' : s.status === 'archived' ? 'draft' : 'pending') + '">' + OCData.storyStatusLabel(s.status) + '</span></button>'; }).join('');
+      btn.onclick = function (e) { e.stopPropagation(); menu.classList.toggle('open'); };
+      document.addEventListener('click', function () { menu.classList.remove('open'); });
+      menu.querySelectorAll('[data-s]').forEach(function (b) { b.onclick = function () { curStory = OCData.story(b.dataset.s); curChapter = null; selEvent = null; render(); }; });
+      head.querySelector('#vCh').onclick = function () { view = 'chapters'; render(); };
+      head.querySelector('#vTl').onclick = function () { view = 'timeline'; render(); };
+      var ac = head.querySelector('#addCh'); if (ac) ac.onclick = addChapter;
+      var ae = head.querySelector('#addEv'); if (ae) ae.onclick = addEvent;
+      var es = head.querySelector('#editSt'); if (es) es.onclick = function () { editStory(curStory); };
+    }
+
+    // ---- chapter view ----
+    function buildOutline() {
+      var left = document.getElementById('left');
+      var chs = OCData.chaptersOf(curStory.id);
+      if (!curChapter && chs.length) curChapter = chs[0];
+      var canReorder = A('chapter:reorder');
+      var html = '<div class="ch-outline"><div class="oh">章節 · ' + chs.length + (canReorder ? ' · 可拖曳排序' : '') + '</div><div class="list" id="chList">';
+      if (!chs.length) { html += '</div></div>'; left.innerHTML = html; left.querySelector('.list').appendChild(OCUI.emptyState({ title: '這個故事還沒有章節。', body: A('chapter:create') ? '新增第一章。' : '尚無章節。', ctaLabel: A('chapter:create') ? '＋ 新增章節' : null, onCta: addChapter })); return; }
+      chs.forEach(function (c, i) {
+        var st = c.status === 'completed' ? 'approved' : 'pending';
+        html += '<div class="ch-item' + (curChapter && c.id === curChapter.id ? ' sel' : '') + '" data-ch="' + c.id + '" tabindex="0"' + (canReorder ? ' draggable="true"' : '') + '>'
+          + '<span class="num">' + (i + 1) + '</span><div class="b"><div class="t">' + (c.title || '（未命名）') + '</div><div class="s">' + (c.summary || '尚無摘要') + ' · <span style="color:' + (c.status === 'completed' ? 'var(--must)' : 'var(--accent-ink)') + '">' + OCData.chapterStatusLabel(c.status) + '</span></div></div>'
+          + (canReorder ? '<div class="reorder"><button data-up="' + c.id + '"' + (i === 0 ? ' disabled' : '') + ' aria-label="上移">▲</button><button data-down="' + c.id + '"' + (i === chs.length - 1 ? ' disabled' : '') + ' aria-label="下移">▼</button></div>' : '')
+          + '</div>';
+      });
+      html += '</div></div>';
+      left.innerHTML = html;
+      var listEl = left.querySelector('#chList');
+      listEl.querySelectorAll('[data-ch]').forEach(function (it) {
+        it.onclick = function (e) { if (e.target.closest('.reorder')) return; curChapter = OCData.chapter(it.dataset.ch); buildOutline(); buildChapter(); buildSide(); };
+        it.onkeydown = function (e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); it.click(); }
+          else if (canReorder && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) { e.preventDefault(); reorder(it.dataset.ch, e.key === 'ArrowUp' ? -1 : 1); }
+        };
+        if (canReorder) {
+          it.ondragstart = function (e) { it.classList.add('dragging'); e.dataTransfer.setData('text/plain', it.dataset.ch); };
+          it.ondragend = function () { it.classList.remove('dragging'); };
+          it.ondragover = function (e) { e.preventDefault(); it.classList.add('dragover'); };
+          it.ondragleave = function () { it.classList.remove('dragover'); };
+          it.ondrop = function (e) { e.preventDefault(); it.classList.remove('dragover'); var from = e.dataTransfer.getData('text/plain'); var to = it.dataset.ch; if (from && from !== to) {
+            var ids = OCData.chaptersOf(curStory.id).map(function (x) { return x.id; });
+            var fi = ids.indexOf(from); ids.splice(fi, 1);
+            var ti = ids.indexOf(to); ids.splice(ti, 0, from);
+            OCDemo.reorderChapters(curStory.id, ids);
+            buildOutline(); buildChapter();
+            OCUI.toast('已重新排序章節', { demo: true });
+          } };
+        }
+      });
+      listEl.querySelectorAll('[data-up]').forEach(function (b) { b.onclick = function () { reorder(b.dataset.up, -1); }; });
+      listEl.querySelectorAll('[data-down]').forEach(function (b) { b.onclick = function () { reorder(b.dataset.down, 1); }; });
+    }
+    function reorder(chId, dir) {
+      OCDemo.reorderChapter(chId, dir);
+      buildOutline(); buildChapter();
+      OCUI.toast('已' + (dir < 0 ? '上移' : '下移') + '章節', { demo: true });
+    }
+
+    function buildChapter() {
+      var center = document.getElementById('center'); if (!center) return;
+      var c = curChapter;
+      if (!c) { center.innerHTML = '<div class="ch-main"><div class="ch-empty">選擇左側章節以檢視內容。</div></div>'; return; }
+      var chs = OCData.chaptersOf(curStory.id);
+      var idx = chs.map(function (x) { return x.id; }).indexOf(c.id);
+      var acts = '';
+      if (A('chapter:update') && curStory.status !== 'archived') acts += '<button class="btn btn-sm" data-act="editch">✎ 編輯</button>';
+      if (A('chapter:archive') && curStory.status !== 'archived') acts += '<button class="btn btn-sm" data-act="archch">封存</button>';
+      var body = c.content
+        ? '<div class="ch-body">' + c.content + '</div>'
+        : '<div class="ch-empty">這個章節還沒有內容。' + (A('chapter:update') ? '點「編輯」開始撰寫。' : '') + '</div>';
+      center.innerHTML = '<div class="ch-main"><div class="ch-h"><div class="top"><span class="num">第 ' + (idx + 1) + ' 章</span><h2>' + (c.title || '（未命名）') + '</h2><span class="badge ' + (c.status === 'completed' ? 'approved' : 'pending') + '">' + OCData.chapterStatusLabel(c.status) + '</span><div class="acts">' + acts + '</div></div>' + (c.summary ? '<p class="ch-sum">' + c.summary + '</p>' : '') + '</div>' + body + '</div>';
+      var ec = center.querySelector('[data-act="editch"]'); if (ec) ec.onclick = function () { editChapter(c); };
+      var ar = center.querySelector('[data-act="archch"]'); if (ar) ar.onclick = function () { archiveChapter(c); };
+    }
+
+    // ---- timeline view ----
+    function buildTimeline() {
+      var center = document.getElementById('center'); if (!center) return;
+      var chars = OCData.characters(pid);
+      var filter = '<div class="tl-filter"><span class="lbl">角色篩選</span><div class="filterbar"><button class="fbtn' + (tlChar === '*' ? ' on' : '') + '" data-c="*">全部</button>'
+        + chars.slice(0, 6).map(function (ch) { return '<button class="fbtn' + (tlChar === ch.id ? ' on' : '') + '" data-c="' + ch.id + '"><span class="dot" style="background:' + ch.c + '"></span>' + ch.name + '</button>'; }).join('') + '</div></div>';
+      var evs = OCData.eventsOf(pid, { storyId: curStory.id, publicOnly: publicOnly });
+      // char filter via EntityLink
+      if (tlChar !== '*') evs = evs.filter(function (e) { return OCData.linksOfSource(pid, e.id, { publicOnly: publicOnly }).some(function (l) { return l.targetId === tlChar; }); });
+      if (!evs.length) { center.innerHTML = '<div class="ch-main">'; center.firstChild ? 0 : 0; var wrap = document.createElement('div'); wrap.innerHTML = filter; var box = document.createElement('div'); box.className = 'ch-main'; box.style.padding = 'var(--s2)'; wrap.appendChild(box); box.appendChild(OCUI.emptyState({ title: '沒有符合的時間軸事件。', body: '換個篩選，或新增事件。' })); center.innerHTML = ''; center.appendChild(wrap); return; }
+      // group by timeLabel (same sortKey/time point → grouped)
+      var groups = [], lastKey = null;
+      evs.forEach(function (e) { if (e.timeLabel !== lastKey) { groups.push({ label: e.timeLabel, items: [] }); lastKey = e.timeLabel; } groups[groups.length - 1].items.push(e); });
+      var html = filter + '<div class="ch-main"><div class="tl">';
+      var order = 0;
+      groups.forEach(function (g) {
+        html += '<div class="tl-group"><div class="tl-time"><span class="dot"></span><span class="lbl">' + g.label + '</span>' + (g.items.length > 1 ? '<span class="tl-samebadge">· 同一時間點 ' + g.items.length + " 事件</span>" : '') + '</div><div class="tl-events">';
+        g.items.forEach(function (e) {
+          order++;
+          var links = OCData.linksOfSource(pid, e.id, { publicOnly: publicOnly });
+          var chips = links.map(function (l) { return '<span class="badge"><span class="d" style="background:' + l.color + '"></span>' + l.name + '</span>'; }).join('');
+          html += '<div class="tl-card' + (selEvent === e.id ? ' sel' : '') + '" data-ev="' + e.id + '" tabindex="0" role="button"><div class="tt"><span class="order">#' + order + '</span>' + e.title + (e.visibility !== 'public' ? ' <span class="vis-b ' + (e.visibility === 'private' ? 'private' : 'members') + '"><span class="d"></span>' + (e.visibility === 'private' ? '私人' : '僅成員') + '</span>' : '') + '</div><div class="ds">' + (e.description || '') + '</div>' + (chips ? '<div class="chips">' + chips + '</div>' : '') + '</div>';
+        });
+        html += '</div></div>';
+      });
+      html += '</div></div>';
+      center.innerHTML = html;
+      center.querySelectorAll('[data-c]').forEach(function (b) { b.onclick = function () { tlChar = b.dataset.c; buildTimeline(); }; });
+      center.querySelectorAll('[data-ev]').forEach(function (card) {
+        card.onclick = function () { selEvent = card.dataset.ev; buildTimeline(); buildSide(); };
+        card.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); } };
+      });
+    }
+
+    // ---- relation panel ----
+    function buildSide() {
+      var side = document.getElementById('side'); if (!side) return;
+      var srcId, srcName, srcType;
+      if (view === 'timeline' && selEvent) { var e = OCData.storyEvent(selEvent); srcId = selEvent; srcName = e ? e.title : ''; srcType = '事件'; }
+      else if (curChapter) { srcId = curChapter.id; srcName = curChapter.title || '（未命名）'; srcType = '章節'; }
+      if (!srcId) { side.innerHTML = '<div class="st-panel"><p class="ph">關聯</p><div style="font-size:13px;color:var(--text-faint)">選擇章節或事件以查看關聯。</div></div>'; return; }
+      var links = OCData.linksOfSource(pid, srcId, { publicOnly: publicOnly });
+      var chars = links.filter(function (l) { return l.isChar; });
+      var others = links.filter(function (l) { return !l.isChar; });
+      var html = '<div class="st-panel"><p class="ph">' + srcType + '關聯 · ' + srcName + '</p>';
+      html += '<div style="font-family:var(--font-mono);font-size:9px;color:var(--text-faint);margin-bottom:6px">角色</div>';
+      html += chars.length ? chars.map(function (l) { return '<span class="st-relchip" data-char="' + l.targetId + '"><span class="av" style="background:' + l.color + '">' + l.name[0] + '</span>' + l.name + '<span class="rel">' + l.label + '</span></span>'; }).join('') : '<div style="font-size:12px;color:var(--text-faint)">無</div>';
+      if (others.length) { html += '<div style="font-family:var(--font-mono);font-size:9px;color:var(--text-faint);margin:10px 0 6px">世界觀／其他</div>' + others.map(function (l) { return '<span class="st-relchip" data-go="' + l.targetId + '"><span class="sq" style="background:' + l.color + '">' + l.name[0] + '</span>' + l.name + '<span class="rel">' + l.label + '</span></span>'; }).join(''); }
+      html += '</div>';
+      // distinction note
+      html += '<div class="st-panel"><p class="ph">提示</p><div style="font-size:12px;color:var(--text-dim);line-height:1.6">StoryEvent 是<b>劇情節點</b>，與世界觀的<b>歷史事件</b>（WorldEntry Event）不同；兩者可用 EntityLink 互相關聯。</div></div>';
+      side.innerHTML = html;
+      side.querySelectorAll('[data-char]').forEach(function (a) { a.onclick = function () { location.href = 'character.html?c=' + a.dataset.char; }; });
+      side.querySelectorAll('[data-go]').forEach(function (a) { a.onclick = function () { location.href = 'worldview.html?project=' + pid; }; });
+    }
+
+    function mobileBar() {}
+
+    // ---- mutations (Demo, cross-page via OCDemo) ----
+    function refreshStories(selId) {
+      stories = OCData.storiesOf(pid, { publicOnly: publicOnly, includeArchived: !publicOnly });
+      if (selId) curStory = OCData.story(selId) || curStory;
+      render();
+    }
+    function field(label, id, value, type) {
+      value = value || '';
+      if (type === 'textarea') return '<div class="field" style="margin-bottom:var(--s3)"><label>' + label + '</label><textarea class="input" id="' + id + '" rows="4">' + value + '</textarea></div>';
+      return '<div class="field" style="margin-bottom:var(--s3)"><label>' + label + '</label><input class="input" id="' + id + '" value="' + value + '"></div>';
+    }
+    function visField(v) {
+      return '<div class="field"><label>可見性</label><select class="select" id="f-vis"><option value="public"' + (v === 'public' ? ' selected' : '') + '>公開</option><option value="members"' + (v === 'members' ? ' selected' : '') + '>僅成員</option><option value="private"' + (v === 'private' ? ' selected' : '') + '>私人</option></select></div>';
+    }
+    function addStory() {
+      var f = document.createElement('div');
+      f.innerHTML = field('故事標題', 'f-t', '') + field('摘要', 'f-s', '', 'textarea') + visField('private');
+      OCUI.modal({ title: '新增故事', body: f, actions: [ { label: '取消' }, { label: '建立', kind: 'accent', onClick: function () {
+        var t = f.querySelector('#f-t').value.trim(); if (!t) { OCUI.toast('請輸入故事標題'); return true; }
+        var ns = OCDemo.createStory({ projectId: pid, title: t, summary: f.querySelector('#f-s').value.trim(), visibility: f.querySelector('#f-vis').value });
+        curChapter = null; selEvent = null; refreshStories(ns.id);
+        OCUI.toast('已建立故事「' + t + '」', { demo: true });
+      } } ] });
+    }
+    function editStory(s) {
+      var f = document.createElement('div');
+      f.innerHTML = field('故事標題', 'f-t', s.title) + field('摘要', 'f-s', s.summary || '', 'textarea')
+        + '<div class="field" style="margin-bottom:var(--s3)"><label>狀態</label><select class="select" id="f-st"><option value="draft"' + (s.status === 'draft' ? ' selected' : '') + '>草稿</option><option value="completed"' + (s.status === 'completed' ? ' selected' : '') + '>已完成</option><option value="archived"' + (s.status === 'archived' ? ' selected' : '') + '>已封存</option></select></div>'
+        + visField(s.visibility);
+      OCUI.modal({ title: '故事設定', body: f, actions: [ { label: '取消' }, { label: '儲存', kind: 'accent', onClick: function () {
+        var t = f.querySelector('#f-t').value.trim(); if (!t) { OCUI.toast('請輸入故事標題'); return true; }
+        OCDemo.updateStory(s.id, { title: t, summary: f.querySelector('#f-s').value.trim(), status: f.querySelector('#f-st').value, visibility: f.querySelector('#f-vis').value });
+        refreshStories(s.id);
+        OCUI.toast('已儲存故事設定', { demo: true });
+      } } ] });
+    }
+    function addChapter() {
+      var f = document.createElement('div');
+      f.innerHTML = field('章節標題', 'f-t', '') + field('摘要', 'f-s', '', 'textarea');
+      OCUI.modal({ title: '新增章節', body: f, actions: [ { label: '取消' }, { label: '建立', kind: 'accent', onClick: function () {
+        var t = f.querySelector('#f-t').value.trim(); if (!t) { OCUI.toast('請輸入章節標題'); return true; }
+        var nc = OCDemo.createChapter({ storyId: curStory.id, title: t, summary: f.querySelector('#f-s').value.trim() });
+        curChapter = OCData.chapter(nc.id); render();
+        OCUI.toast('已新增章節「' + t + '」', { demo: true });
+      } } ] });
+    }
+    function editChapter(c) {
+      var f = document.createElement('div');
+      f.innerHTML = field('章節標題', 'f-t', c.title) + field('摘要', 'f-s', c.summary || '', 'textarea') + field('內容', 'f-c', c.content || '', 'textarea')
+        + '<div class="field"><label>狀態</label><select class="select" id="f-st"><option value="draft"' + (c.status === 'draft' ? ' selected' : '') + '>未完成</option><option value="completed"' + (c.status === 'completed' ? ' selected' : '') + '>已完成</option></select></div>';
+      OCUI.modal({ title: '編輯章節', body: f, actions: [ { label: '取消' }, { label: '儲存', kind: 'accent', onClick: function () {
+        var t = f.querySelector('#f-t').value.trim(); if (!t) { OCUI.toast('請輸入章節標題'); return true; }
+        OCDemo.updateChapter(c.id, { title: t, summary: f.querySelector('#f-s').value.trim(), content: f.querySelector('#f-c').value.trim(), status: f.querySelector('#f-st').value });
+        curChapter = OCData.chapter(c.id); render();
+        OCUI.toast('已儲存章節「' + t + '」', { demo: true });
+      } } ] });
+    }
+    function archiveChapter(c) {
+      OCUI.confirm({ title: '封存章節？', message: '確定要封存「' + (c.title || '未命名') + '」嗎？', confirmLabel: '封存', danger: true, onConfirm: function () {
+        OCDemo.archiveChapter(c.id);
+        if (curChapter && curChapter.id === c.id) curChapter = null;
+        render();
+        OCUI.toast('已封存章節「' + (c.title || '未命名') + '」', { demo: true });
+      } });
+    }
+    function addEvent() {
+      var f = document.createElement('div');
+      f.innerHTML = '<div class="field" style="margin-bottom:var(--s3)"><label>事件名稱</label><input class="input" id="f-t"></div>'
+        + '<div class="field" style="margin-bottom:var(--s3)"><label>時間標籤（模糊時間文字）</label><input class="input" id="f-tl" placeholder="例：月蝕前夕、第三章後"></div>'
+        + '<div class="field"><label>說明</label><textarea class="input" id="f-d" rows="3"></textarea></div>';
+      OCUI.modal({ title: '新增時間軸事件', body: f, actions: [ { label: '取消' }, { label: '建立', kind: 'accent', onClick: function () {
+        var t = f.querySelector('#f-t').value.trim(); if (!t) { OCUI.toast('請輸入事件名稱'); return true; }
+        var ne = OCDemo.createStoryEvent({ projectId: pid, storyId: curStory.id, title: t, timeLabel: f.querySelector('#f-tl').value.trim() || '未定時間', description: f.querySelector('#f-d').value.trim() });
+        selEvent = ne.id; render();
+        OCUI.toast('已新增事件「' + t + '」', { demo: true });
+      } } ] });
+    }
+
+    function boot() {
+      ctx();
+      var sk = document.createElement('div'); sk.className = 'st-cols';
+      sk.innerHTML = '<div></div><div></div><div></div>';
+      root.appendChild(sk); sk.firstChild.appendChild(OCUI.skeletonCards(1));
+      setTimeout(function () {
+        stories = OCData.storiesOf(pid, { publicOnly: publicOnly, includeArchived: !publicOnly });
+        render();
+      }, 320);
+    }
+    boot();
+  })();
+</script>
+<script src="../assets/shell.js"></script>
+</body>
+</html>

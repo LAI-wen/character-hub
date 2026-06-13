@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Slice 1 驗收 · 全站範圍與導覽 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/ds.css">
+<link rel="stylesheet" href="assets/components.css">
+<style>
+  body { background: var(--bg); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: var(--s12) var(--s8) var(--s16); }
+  .hero { border-bottom: 1px solid var(--border-strong); padding-bottom: var(--s8); margin-bottom: var(--s10); }
+  .hero .eyebrow { margin-bottom: 12px; }
+  .hero h1 { font-family: var(--font-serif); font-size: 40px; font-weight: 900; margin: 0; letter-spacing: -.025em; line-height: 1.06; }
+  .hero .lead { color: var(--text-dim); font-size: 16px; margin: var(--s4) 0 0; max-width: 62ch; line-height: 1.65; text-wrap: pretty; }
+  .hero .chips { display: flex; gap: var(--s2); margin-top: var(--s5); flex-wrap: wrap; }
+  section { margin-top: var(--s12); }
+  .sh { display: flex; align-items: baseline; gap: var(--s4); margin-bottom: var(--s5); }
+  .sh .ix { font-family: var(--font-mono); font-size: 13px; color: var(--text-faint); }
+  .sh h2 { font-family: var(--font-serif); font-size: 24px; font-weight: 800; margin: 0; }
+  .sh .en { font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); }
+  .sh .rule { flex: 1; height: 1px; background: var(--border); align-self: center; }
+  p.note { font-size: 14.5px; color: var(--text-dim); line-height: 1.7; max-width: 74ch; text-wrap: pretty; }
+  p.note b { color: var(--text); }
+
+  .pages { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--s3); }
+  .pcard { display: flex; flex-direction: column; gap: 3px; padding: var(--s4) var(--s5); border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--sh-1); text-decoration: none; color: inherit; transition: box-shadow .15s, transform .15s; }
+  .pcard:hover { box-shadow: var(--sh-2); transform: translateY(-2px); }
+  .pcard .n { font-family: var(--font-serif); font-size: 17px; font-weight: 700; }
+  .pcard .u { font-family: var(--font-mono); font-size: 11px; color: var(--accent-ink); }
+  .pcard .d { font-size: 12.5px; color: var(--text-dim); margin-top: 4px; line-height: 1.5; }
+
+  .roles { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s4); }
+  .role { border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--sh-1); overflow: hidden; }
+  .role img { width: 100%; display: block; border-bottom: 1px solid var(--border); background: var(--bg-tint); }
+  .role .rb { padding: var(--s4); }
+  .role .rt { font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+  .role .rl { font-size: 12.5px; color: var(--text-dim); margin-top: 6px; line-height: 1.55; }
+  .role ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 12px; color: var(--text-dim); line-height: 1.6; }
+
+  .states { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s4); }
+  .state-demo { border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); padding: var(--s4); }
+  .state-demo .lab { font-family: var(--font-mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); margin-bottom: var(--s3); }
+
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); overflow: hidden; margin-top: var(--s2); }
+  thead th { text-align: left; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); padding: var(--s3) var(--s4); border-bottom: 1px solid var(--border); background: var(--surface-2); }
+  tbody td { padding: var(--s3) var(--s4); border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: top; line-height: 1.5; }
+  tbody tr:last-child td { border-bottom: 0; }
+  td .f { font-family: var(--font-mono); font-size: 12px; font-weight: 600; }
+  .gap-card { border: 1px solid #ECDFA8; background: var(--accent-soft); border-radius: var(--r-card); padding: var(--s4) var(--s5); margin-bottom: var(--s3); }
+  .gap-card .gt { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--accent-ink); }
+  .gap-card .gd { font-size: 13px; color: var(--text-dim); margin-top: 5px; line-height: 1.6; }
+  .gap-card .gd b { color: var(--text); }
+  .demo-list { display: flex; flex-direction: column; gap: 8px; }
+  .demo-row { display: flex; align-items: center; gap: 10px; font-size: 13.5px; padding: 9px 13px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+  .foot { margin-top: var(--s16); padding-top: var(--s6); border-top: 1px solid var(--border-strong); }
+  .foot .q { font-family: var(--font-serif); font-size: 19px; font-weight: 700; margin: 0 0 var(--s2); }
+  .foot p { font-size: 14px; color: var(--text-dim); line-height: 1.7; }
+  @media (max-width: 860px) { .hero h1 { font-size: 30px; } .roles, .states { grid-template-columns: 1fr; } .wrap { padding: var(--s10) var(--s4); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">CharacterHub · Slice 1 · 全站範圍與導覽</div>
+    <h1>Slice 1 驗收</h1>
+    <p class="lead">第一個 Slice 完成：<b>App Shell（範圍切換＋權限導覽）</b>、共用元件，以及五個核心頁面——工作台、我的角色、我的企劃、企劃總覽、企劃角色。目標是讓「我的空間 vs 目前企劃」清楚、Character 與企劃角色不混淆、Sidebar 依視角顯示。</p>
+    <div class="chips">
+      <span class="badge approved"><span class="d" style="background:var(--must)"></span>5 頁完成</span>
+      <span class="badge">單一 OCData 資料源</span>
+      <span class="badge">3 視角 · 主持／參與／訪客</span>
+      <span class="demo-only">所有儲存為 Demo only</span>
+    </div>
+  </div>
+
+  <!-- 1 pages -->
+  <section>
+    <div class="sh"><span class="ix">01</span><h2>可點擊頁面</h2><span class="en">Clickable</span><span class="rule"></span></div>
+    <p class="note">點開任一頁直接操作。側欄左下角的 <b>「視角」</b>可切換 主持／參與／訪客，即時改變導覽與權限。⌘K 開啟搜尋。</p>
+    <div class="pages" style="margin-top:var(--s4)">
+      <a class="pcard" href="pages/workspace.html"><span class="n">工作台</span><span class="u">workspace.html</span><span class="d">帳號層首頁：企劃、最近活動、角色快覽。</span></a>
+      <a class="pcard" href="pages/dashboard.html"><span class="n">我的角色</span><span class="u">dashboard.html</span><span class="d">角色本體庫；卡片顯示加入的企劃。</span></a>
+      <a class="pcard" href="pages/my-projects.html"><span class="n">我的企劃</span><span class="u">my-projects.html</span><span class="d">企劃卡片：可見性、共創模式、身分。</span></a>
+      <a class="pcard" href="pages/overview.html"><span class="n">企劃總覽</span><span class="u">overview.html</span><span class="d">摘要、快速新增、共創管理（依權限）。</span></a>
+      <a class="pcard" href="pages/roster.html"><span class="n">企劃角色</span><span class="u">roster.html</span><span class="d">陣營／職位／限定欄位／審核 · 本體與企劃設定分區。</span></a>
+    </div>
+  </section>
+
+  <!-- 2 roles -->
+  <section>
+    <div class="sh"><span class="ix">02</span><h2>三種視角</h2><span class="en">Owner · Member · Visitor</span><span class="rule"></span></div>
+    <p class="note">同一頁「企劃角色」，<b>側欄導覽、可用動作、詳情面板的可編輯性</b>都隨視角改變。視角為 Demo 切換（真實情況是每個企劃的成員身分）。</p>
+    <div class="roles" style="margin-top:var(--s4)">
+      <div class="role"><img src="screenshots/s11-roster-owner.png" alt="主持人視角">
+        <div class="rb"><div class="rt"><span class="badge role-owner">主持人 Owner</span></div>
+          <div class="rl">看得到全部，含「企劃管理」與待審。</div>
+          <ul><li>企劃管理區塊可見</li><li>可管理任一角色的<b>企劃連結</b></li><li>但不可改他人的角色本體</li></ul></div></div>
+      <div class="role"><img src="screenshots/slice1-roster-member.png" alt="參與者視角">
+        <div class="rb"><div class="rt"><span class="badge role-member">參與者 Member</span></div>
+          <div class="rl">可加入／編輯自己的角色，看不到管理。</div>
+          <ul><li>無「企劃管理」</li><li>只有自己的角色可編輯連結</li><li>他人角色唯讀</li></ul></div></div>
+      <div class="role"><img src="screenshots/s11-roster-preview.png" alt="公開預覽">
+        <div class="rb"><div class="rt"><span class="badge role-visitor">公開預覽 Preview</span></div>
+          <div class="rl">頂部明示「公開頁預覽」；正式訪客走 Public Renderer。</div>
+          <ul><li>預覽橫幅 + 「看公開頁」</li><li>無管理、無快速新增</li><li>只顯示已通過、全唯讀</li></ul></div></div>
+    </div>
+  </section>
+
+  <!-- 3 states -->
+  <section>
+    <div class="sh"><span class="ix">03</span><h2>狀態元件</h2><span class="en">Loading · Empty · Error · Forbidden</span><span class="rule"></span></div>
+    <p class="note">統一的狀態元件（<span class="mono">components.css/js</span>）已實際套進頁面：載入時顯示骨架、無資料顯示 Empty、權限不足顯示 Forbidden。下方為實際渲染：</p>
+    <div class="states" id="stateDemos" style="margin-top:var(--s4)"></div>
+  </section>
+
+  <!-- 4 files -->
+  <section>
+    <div class="sh"><span class="ix">04</span><h2>修改檔案</h2><span class="en">Files changed</span><span class="rule"></span></div>
+    <table>
+      <thead><tr><th style="width:32%">檔案</th><th>變更</th></tr></thead>
+      <tbody>
+        <tr><td class="f">assets/shell.js / .css</td><td>App Shell v2：我的空間／目前企劃範圍切換、capability 導覽過濾、快速新增、Demo 視角切換、可捲動側欄。</td></tr>
+        <tr><td class="f">assets/data.js</td><td>OCData v2：viewer、視角＋capability、account 角色與 ProjectCharacterLink、factions、roster/myCharacters 等 helper。單一 mock 源。</td></tr>
+        <tr><td class="f">assets/components.css</td><td>新增：Context/Page Header、Tabs、Badge/Chip、Entity Card、Filter Bar、表單、狀態區塊、Skeleton、Modal、Toast。</td></tr>
+        <tr><td class="f">assets/components.js</td><td>Toast / Modal / Confirm / Context Header / 狀態與骨架 builder。</td></tr>
+        <tr><td class="f">pages/workspace.html</td><td>重構為帳號層工作台（不再四合一）。</td></tr>
+        <tr><td class="f">pages/dashboard.html</td><td>重構為「我的角色」本體庫，顯示加入的企劃。</td></tr>
+        <tr><td class="f">pages/my-projects.html</td><td>新頁：我的企劃列表。</td></tr>
+        <tr><td class="f">pages/overview.html</td><td>新頁：企劃總覽（capability-gated 管理區）。</td></tr>
+        <tr><td class="f">pages/roster.html</td><td>重構為企劃角色：本體 vs 企劃設定分區、master-detail、視角差異。</td></tr>
+        <tr><td class="f">index.html</td><td>改為依新 IA 的原型總覽 / 啟動頁。</td></tr>
+        <tr><td class="f">_archive/</td><td>封存資料層、重複頁、預覽頁、實驗稿，附 README。</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 4.5 slice 1.1 corrections -->
+  <section>
+    <div class="sh"><span class="ix">04.5</span><h2>Slice 1.1 校正</h2><span class="en">Corrections</span><span class="rule"></span></div>
+    <table>
+      <thead><tr><th style="width:30%">項目</th><th>作法</th></tr></thead>
+      <tbody>
+        <tr><td class="f">Visitor = 公開預覽</td><td>視角第三項改為「公開預覽」；進入時頂部出現橫幅，明示這是公開頁預覽，正式訪客走 Public Renderer（無側欄），並提供「看公開頁」與「結束預覽」。</td></tr>
+        <tr><td class="f">Character 擁有權</td><td>主持人只能管理 <b>ProjectCharacterLink</b>（陣營／職位／審核／限定欄位／企劃內可見性）；<b>不可修改參與者的角色本體</b>（名稱／外觀／圖文設定）。詳情面板明分「角色本體（由擁有者維護）」與「此企劃中的設定（依權限）」。</td></tr>
+        <tr><td class="f">資料命名同步</td><td><span class="mono">viewer.projectRoles[]</span>、<span class="mono">fieldValues</span>、<span class="mono">templateVersionId</span>、<span class="mono">collaborationMode</span>、<span class="mono">ownerUserId</span>/<span class="mono">ownerSummary</span>；Project 能力拆成 visibility／collaborationMode／portalEnabled／joinPolicy／submissionsEnabled／enabledFeatures 分開使用。</td></tr>
+        <tr><td class="f">企劃角色 vs 角色名冊</td><td><span class="mono">roster.html</span>（企劃角色）＝工作台管理，含 pending／approved／archived 與管理操作；新增 <span class="mono">cast.html</span>（角色名冊）＝成員／公開瀏覽，只顯 approved、無管理。共用卡片。</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 5 data gaps -->
+  <section>
+    <div class="sh"><span class="ix">05</span><h2>Data Gap</h2><span class="en">尚未支援 · 已同步命名</span><span class="rule"></span></div>
+    <div class="gap-card"><div class="gt">DATA GAP · viewer.projectRoles[projectId] / currentProjectMembership.role</div><div class="gd">歸屬 <b>ProjectMembership</b>。角色是每個企劃各自的成員身分；原型的「視角」只是當前企劃的 Demo 覆寫。<b>需儲存</b>；可見：本人。</div></div>
+    <div class="gap-card"><div class="gt">DATA GAP · ProjectCharacterLink.fieldValues + templateVersionId + projectVisibility</div><div class="gd">歸屬 <b>ProjectCharacterLink</b>。依該企劃角色卡模板版本（templateVersionId）填寫的欄位值；projectVisibility = public／members／private。<b>需儲存</b>。</div></div>
+    <div class="gap-card"><div class="gt">DATA GAP · Project 能力旗標（分開使用）</div><div class="gd">歸屬 <b>Project</b>，互不推論：<span class="mono">visibility</span> · <span class="mono">collaborationMode</span> · <span class="mono">portalEnabled</span> · <span class="mono">joinPolicy</span> · <span class="mono">submissionsEnabled</span> · <span class="mono">enabledFeatures</span>。公開頁看 portalEnabled、投稿看 submissionsEnabled。<b>需儲存</b>。</div></div>
+    <div class="gap-card"><div class="gt">DATA GAP · character.ownerUserId（畫面用 ownerSummary）</div><div class="gd">歸屬 <b>Character</b>。角色本體的擁有帳號；畫面顯示衰生的 <span class="mono">ownerSummary</span>（你／@handle）。<b>需儲存</b>。</div></div>
+  </section>
+
+  <!-- 6 demo-only -->
+  <section>
+    <div class="sh"><span class="ix">06</span><h2>Demo-only 互動</h2><span class="en">Demo interaction only</span><span class="rule"></span></div>
+    <p class="note">以下動作只模擬 UI 回饋（Toast／關閉 Modal），<b>不做正式 persistence</b>，重新整理不保留：</p>
+    <div class="demo-list" style="margin-top:var(--s3)">
+      <div class="demo-row"><span class="demo-only">demo</span>＋ 新角色 / 加入角色 / 建立企劃（快速新增）</div>
+      <div class="demo-row"><span class="demo-only">demo</span>企劃角色：儲存設定 / 通過審核 / 移除（含確認對話框）</div>
+      <div class="demo-row"><span class="demo-only">demo</span>企劃設定、建立新企劃、新靈感等入口</div>
+      <div class="demo-row"><span class="demo-only">demo</span>切換企劃、切換視角＝即時改變導覽（這是真的，存在 localStorage 偏好）</div>
+    </div>
+  </section>
+
+  <!-- 7 verification -->
+  <section>
+    <div class="sh"><span class="ix">07</span><h2>驗證情境</h2><span class="en">Try it</span><span class="rule"></span></div>
+    <p class="note">點下方連結可直接驗證對應情境（含長企劃名稱）。視角用側欄左下角的「視角」切換。</p>
+    <div class="pages" style="margin-top:var(--s4)">
+      <a class="pcard" href="pages/dashboard.html"><span class="n">建立不屬於企劃的角色</span><span class="d">我的角色 →「灰」顯示「尚未加入任何企劃」；＋新角色為 Demo。</span></a>
+      <a class="pcard" href="pages/roster.html?project=tokoyo"><span class="n">找到某企劃的企劃角色</span><span class="d">常夜國 → 企劃角色，依陣營分組、可篩 pending/archived。</span></a>
+      <a class="pcard" href="pages/roster.html?project=tokoyo"><span class="n">改自己角色的企劃限定資料</span><span class="d">選「宵霧」→ 此企劃中的設定可編輯；本體唯讀。</span></a>
+      <a class="pcard" href="pages/overview.html?project=tokoyo"><span class="n">主持人查看待審核角色</span><span class="d">企劃總覽 → 共創管理 → 待審核（緋）→ 投稿審核。</span></a>
+      <a class="pcard" href="pages/portal.html?project=tokoyo"><span class="n">訪客進入公開頁預覽</span><span class="d">切「預覽」視角看橫幅，或直接開公開頁 Renderer。</span></a>
+      <a class="pcard" href="pages/cast.html?project=tokoyo"><span class="n">角色名冊（公開瀏覽）</span><span class="d">只顯示 approved、無管理操作，與企劃角色區隔。</span></a>
+      <a class="pcard" href="pages/overview.html?project=yobanagari"><span class="n">20 字以上企劃名稱</span><span class="d">「常夜國：永夜之章與失落的燈火記錄」測側欄與標題截斷。</span></a>
+      <a class="pcard" href="pages/overview.html?project=hoshi"><span class="n">切換企劃仍知道範圍</span><span class="d">星海計畫（個人企劃）→ 無共創管理，Context Header 標明範圍。</span></a>
+    </div>
+    <p class="note" style="margin-top:var(--s4)"><b>響應式：</b>側欄在 ≤860px 收成抽屜（漢堡開關），內容網格自動降欄；已針對 <b>360 / 390 / 1024 / 1440px</b> 與 <b>125% 縮放</b>設計（字級用 px、容器 max-width + auto-fill 網格、長名稱 ellipsis）。請在實際瀏覽器縮放確認；預覽工具無法真正改視窗寬度。</p>
+  </section>
+
+  <div class="foot">
+    <p class="q">Slice 1.1 完成後，下一步：Slice 2 · 角色體驗</p>
+    <p>角色詳情 + 角色編輯器——優先建立 Character 本體與企劃限定設定的清楚分區、企劃版本切換、分享視圖、儲存／未儲存狀態、離開頁面提示、手機編輯／預覽切換。確認 Slice 1.1 沒問題我就接著做。</p>
+  </div>
+</div>
+
+<script src="assets/data.js"></script>
+<script src="assets/components.js"></script>
+<script>
+  var host = document.getElementById('stateDemos');
+  function box(lab, node) { var d = document.createElement('div'); d.className = 'state-demo'; d.innerHTML = '<div class="lab">' + lab + '</div>'; d.appendChild(node); return d; }
+  host.appendChild(box('LOADING · 骨架', OCUI.skeletonCards(2)));
+  host.appendChild(box('EMPTY · 無資料', OCUI.emptyState({ title: '這個企劃還沒有角色。', body: '從你的角色庫把角色加入這個企劃。', ctaLabel: '＋ 加入角色', onCta: function () { OCUI.toast('加入角色', { demo: true }); } })));
+  host.appendChild(box('ERROR · 載入失敗', OCUI.errorState({ title: '載入角色時發生問題。', code: 'NETWORK · 重試', onRetry: function () {} })));
+  host.appendChild(box('FORBIDDEN · 權限不足', OCUI.forbiddenState({ title: '只有主持人能管理參與者。', body: '切換到「主持」視角即可檢視。' })));
+</script>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#2F8F5B"/>
+    <text x="50" y="64" font-family="monospace" font-size="40" font-weight="700" fill="#fff" text-anchor="middle">S1</text>
+  </svg>
+</template>
+</body>
+</html>

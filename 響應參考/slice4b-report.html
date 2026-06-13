@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Slice 4B 驗收 · 圖庫 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/ds.css">
+<link rel="stylesheet" href="assets/components.css">
+<style>
+  body { background: var(--bg); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: var(--s12) var(--s8) var(--s16); }
+  .hero { border-bottom: 1px solid var(--border-strong); padding-bottom: var(--s8); margin-bottom: var(--s10); }
+  .hero .eyebrow { margin-bottom: 12px; }
+  .hero h1 { font-family: var(--font-serif); font-size: 40px; font-weight: 900; margin: 0; letter-spacing: -.025em; line-height: 1.06; }
+  .hero .lead { color: var(--text-dim); font-size: 16px; margin: var(--s4) 0 0; max-width: 64ch; line-height: 1.65; text-wrap: pretty; }
+  .hero .chips { display: flex; gap: var(--s2); margin-top: var(--s5); flex-wrap: wrap; }
+  section { margin-top: var(--s12); }
+  .sh { display: flex; align-items: baseline; gap: var(--s4); margin-bottom: var(--s5); }
+  .sh .ix { font-family: var(--font-mono); font-size: 13px; color: var(--text-faint); }
+  .sh h2 { font-family: var(--font-serif); font-size: 24px; font-weight: 800; margin: 0; }
+  .sh .en { font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); }
+  .sh .rule { flex: 1; height: 1px; background: var(--border); align-self: center; }
+  p.note { font-size: 14.5px; color: var(--text-dim); line-height: 1.7; max-width: 74ch; text-wrap: pretty; }
+  p.note b { color: var(--text); }
+  .pages { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: var(--s3); }
+  .pcard { display: flex; flex-direction: column; gap: 3px; padding: var(--s4) var(--s5); border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--sh-1); text-decoration: none; color: inherit; transition: box-shadow .15s, transform .15s; }
+  .pcard:hover { box-shadow: var(--sh-2); transform: translateY(-2px); }
+  .pcard .n { font-family: var(--font-serif); font-size: 16px; font-weight: 700; }
+  .pcard .d { font-size: 12.5px; color: var(--text-dim); margin-top: 4px; line-height: 1.5; }
+  .pcard .sc { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--accent-ink); margin-top: 6px; }
+  .shots { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s4); }
+  .shot { border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--sh-1); overflow: hidden; }
+  .shot img { width: 100%; display: block; border-bottom: 1px solid var(--border); }
+  .shot .cap { padding: var(--s3) var(--s4); font-size: 12.5px; color: var(--text-dim); }
+  .shot .cap b { color: var(--text); }
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s4); }
+  .col { border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); padding: var(--s5); }
+  .col h3 { margin: 0 0 var(--s2); font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .col h3 .tag { font-family: var(--font-mono); font-size: 9px; padding: 2px 7px; border-radius: var(--r-pill); }
+  .col ul { margin: 0; padding-left: 1.1em; font-size: 12.5px; color: var(--text-dim); line-height: 1.8; }
+  .col.a h3 .tag { background: #E8EEF6; color: #355C86; } .col.b h3 .tag { background: var(--accent-soft); color: var(--accent-ink); }
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); overflow: hidden; margin-top: var(--s2); }
+  thead th { text-align: left; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); padding: var(--s3) var(--s4); border-bottom: 1px solid var(--border); background: var(--surface-2); }
+  tbody td { padding: var(--s3) var(--s4); border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: top; line-height: 1.5; }
+  tbody tr:last-child td { border-bottom: 0; }
+  td .f { font-family: var(--font-mono); font-size: 12px; font-weight: 600; }
+  .gap-card { border: 1px solid #ECDFA8; background: var(--accent-soft); border-radius: var(--r-card); padding: var(--s4) var(--s5); margin-bottom: var(--s3); }
+  .gap-card .gt { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--accent-ink); }
+  .gap-card .gd { font-size: 13px; color: var(--text-dim); margin-top: 5px; line-height: 1.6; }
+  .gap-card .gd b { color: var(--text); }
+  .gap-card.bad { border-color: #F0CFCB; background: var(--avoid-soft); } .gap-card.bad .gt { color: #9E332B; }
+  .gap-card.ok { border-color: #CDE8D8; background: var(--must-soft); } .gap-card.ok .gt { color: #1F6B43; }
+  .demo-list { display: flex; flex-direction: column; gap: 8px; }
+  .demo-row { display: flex; align-items: center; gap: 10px; font-size: 13.5px; padding: 9px 13px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+  .open-issues { border: 1px solid #F0CFCB; background: var(--avoid-soft); border-radius: var(--r-card); padding: var(--s4) var(--s5); }
+  .open-issues ul { margin: 0; padding-left: 1.1em; font-size: 13.5px; color: var(--text-dim); line-height: 1.8; }
+  .foot { margin-top: var(--s16); padding-top: var(--s6); border-top: 1px solid var(--border-strong); }
+  .foot .q { font-family: var(--font-serif); font-size: 19px; font-weight: 700; margin: 0 0 var(--s2); }
+  .foot p { font-size: 14px; color: var(--text-dim); line-height: 1.7; }
+  @media (max-width: 860px) { .hero h1 { font-size: 30px; } .shots, .split { grid-template-columns: 1fr; } .wrap { padding: var(--s10) var(--s4); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">CharacterHub · Slice 4B · Gallery</div>
+    <h1>Slice 4B 驗收</h1>
+    <p class="lead">圖庫完成。<b>Asset（檔案＋自身 metadata）</b>與 <b>AssetLink（與內容的關聯）</b>嚴格分離；未分類 Inbox、上傳 Queue、圖片詳情、Lightbox、批次整理、公開裁切、動作權限、A11y 齊備。</p>
+    <div class="chips">
+      <span class="badge approved"><span class="d" style="background:var(--must)"></span>gallery.html</span>
+      <span class="badge">Asset ↔ AssetLink</span>
+      <span class="demo-only">所有儲存為 Demo only</span>
+    </div>
+  </div>
+
+  <section>
+    <div class="sh"><span class="ix">01</span><h2>可點擊頁面</h2><span class="en">Clickable</span><span class="rule"></span></div>
+    <div class="pages">
+      <a class="pcard" href="pages/gallery.html?project=tokoyo"><span class="n">圖庫 · 常夜國</span><span class="d">10 張不同尺寸圖、未分類 Inbox、網格／瀑布流、詳情、Lightbox。</span><span class="sc">gallery.html</span></a>
+      <a class="pcard" href="pages/gallery.html?project=hoshi"><span class="n">空 Gallery</span><span class="d">星海計畫尚無圖片的空狀態（如已啟用）。</span><span class="sc">?project=hoshi</span></a>
+      <a class="pcard" href="pages/gallery.html?project=school"><span class="n">模組情境</span><span class="d">校園 AU（gallery 在 enabledFeatures）。</span><span class="sc">?project=school</span></a>
+      <a class="pcard" href="pages/gallery.html?project=commset"><span class="n">模組未啟用</span><span class="d">委託角色集未啟用圖庫 → plug 空狀態。</span><span class="sc">?project=commset</span></a>
+    </div>
+    <p class="note" style="margin-top:var(--s4)">切側欄左下「視角」看 主持／參與／公開預覽 差異。上傳按鈕開啟 Demo 上傳 Queue。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">02</span><h2>畫面</h2><span class="en">Screens</span><span class="rule"></span></div>
+    <div class="shots">
+      <div class="shot"><img src="screenshots/s4b-detail.png" alt="圖庫"><div class="cap"><b>圖庫</b>：篩選側欄、網格／瀑布流、未分類 Inbox（批次關聯）、不同尺寸保留比例的圖卡。</div></div>
+      <div class="shot"><img src="screenshots/s4b-preview.png" alt="公開預覽"><div class="cap"><b>公開預覽</b>：橫幅；只顯示公開且 ready 的圖片（10→6）；無上傳／多選／Inbox；作者依設定顯示。</div></div>
+      <div class="shot"><div class="cap" style="padding:var(--s5)"><b>圖片詳情 Drawer</b><br><span style="color:var(--text-dim)">大圖、標題／說明／Alt Text、<b>Creator／Uploader／Owner 三個不同概念</b>、來源／授權、尺寸格式、所有 AssetLink；設代表圖／封面、從內容移除、刪除圖片。</span></div></div>
+      <div class="shot"><div class="cap" style="padding:var(--s5)"><b>上傳 Queue（Demo）</b><br><span style="color:var(--text-dim)">queued→uploading→processing→ready／failed；進度條＋aria-live；不支援格式／過大顯示失敗＋重試；部分成功部分失敗摘要。完成的圖進入未分類 Inbox。</span></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">03</span><h2>Asset 與 AssetLink 分區</h2><span class="en">Data boundary</span><span class="rule"></span></div>
+    <div class="split">
+      <div class="col a"><h3>Asset <span class="tag">檔案＋metadata</span></h3><ul><li>fileName · mimeType · width/height · fileSize</li><li>title · description · altText</li><li><b>creatorName／creatorUrl</b>（作者）</li><li><b>uploaderUserId／ownerUserId</b>（上傳者／擁有者，各自不同）</li><li>sourceUrl · license · visibility · processingStatus</li></ul></div>
+      <div class="col b"><h3>AssetLink <span class="tag">與內容關聯</span></h3><ul><li>assetId · targetType · targetId</li><li>role（avatar/cover/reference/gallery…）</li><li>sortOrder · caption · visibility?</li><li><b>同一 Asset 可有多筆 AssetLink</b></li></ul></div>
+    </div>
+    <p class="note" style="margin-top:var(--s3)"><b>不把完整圖片 metadata 複製到每個 Character／WorldEntry／Story</b>——它們只持有 AssetLink，指回同一個 Asset。範例：宵霧正面立繪同時是 宵霧 的 avatar＋gallery，也是 守燈人記 的 cover（同一 Asset、三筆 Link）。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">04</span><h2>移除 vs 刪除</h2><span class="en">Unlink vs delete</span><span class="rule"></span></div>
+    <div class="split">
+      <div class="col"><h3>從此內容移除</h3><ul><li>＝刪除 <b>AssetLink</b></li><li>原圖片仍存在於圖庫</li><li>其他引用不受影響</li></ul></div>
+      <div class="col"><h3>刪除圖片</h3><ul><li>＝刪除／封存 <b>Asset</b></li><li>影響<b>所有</b>引用位置</li><li>刪除前列出目前被哪些內容引用</li></ul></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">05</span><h2>公開裁切</h2><span class="en">Public gating</span><span class="rule"></span></div>
+    <p class="note">公開 Gallery 顯示圖片需同時滿足：<b>Asset 可公開 ∧ AssetLink 可公開 ∧ target entity 可公開</b>，且僅 <b>ready</b> 狀態。私人圖片即使被公開角色引用也不顯示（已驗證：灰的私人草稿在公開預覽隱藏；10→6）。公開頁不顯示：私人備註、原始儲存 key、uploader 內部資訊、未完成／failed 檔案、未授權來源；作者與來源依設定顯示，不省略為無署名。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">06</span><h2>動作權限</h2><span class="en">Action permissions</span><span class="rule"></span></div>
+    <table>
+      <thead><tr><th>動作</th><th>Owner/Host</th><th>Member（本原型政策）</th><th>Visitor 預覽</th></tr></thead>
+      <tbody>
+        <tr><td class="f">asset:upload / update</td><td>✓</td><td>✓（自己的）</td><td>✕</td></tr>
+        <tr><td class="f">asset:archive / delete</td><td>✓</td><td>✕（不可刪他人原始 Asset）</td><td>✕</td></tr>
+        <tr><td class="f">assetLink:create / update / delete</td><td>✓</td><td>✓（自己角色的關聯）</td><td>✕</td></tr>
+        <tr><td class="f">gallery:manage</td><td>✓</td><td>✕</td><td>✕</td></tr>
+      </tbody>
+    </table>
+    <p class="note" style="margin-top:var(--s3)">角色擁有者可管理自己角色的 AssetLink，<b>不代表可刪除別人上傳／擁有的原始 Asset</b>。權限依動作概念，不依 fixture 角色名寫死。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">07</span><h2>Responsive / A11y</h2><span class="en">Responsive · Accessibility</span><span class="rule"></span></div>
+    <p class="note"><b>≥1200px</b> 篩選側欄＋網格＋詳情面板；<b>768–1199px</b> 網格＋詳情 Drawer（側欄收起）；<b>&lt;768px</b> 2 欄網格、全螢幕 Lightbox、詳情滿版。圖片<b>保留比例</b>（aspect-ratio，不固定高度裁切）。A11y：Alt Text 欄位、圖卡鍵盤 Focus＋Enter、Lightbox Esc 關閉＋Focus Trap＋左右鍵切換、處理狀態用<b>文字＋字形</b>非僅顏色、上傳進度 aria-live、prefers-reduced-motion。請在實機 360／390／768／1024／1440px 確認。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">08</span><h2>修改檔案</h2><span class="en">Files</span><span class="rule"></span></div>
+    <table>
+      <thead><tr><th style="width:28%">檔案</th><th>變更</th></tr></thead>
+      <tbody>
+        <tr><td class="f">assets/data.js</td><td>Asset／AssetLink fixtures（含未分類、failed、他人擁有、多重關聯）＋helper（assetsOf/linksForAsset/assetsForTarget/unclassifiedAssets/isTargetPublic…）；ACTION_GRANTS 補 asset/assetLink/gallery 動作。</td></tr>
+        <tr><td class="f">assets/gallery.css</td><td>篩選側欄、網格／瀑布流、圖卡、狀態徽章、詳情 Drawer、Lightbox、上傳 Queue、批次列、響應式、reduced-motion。</td></tr>
+        <tr><td class="f">pages/gallery.html</td><td>圖庫頁：Inbox、上傳 Queue、詳情、Lightbox、多選批次、公開裁切、動作權限、A11y。</td></tr>
+        <tr><td class="f">index.html</td><td>圖庫標記為已重設計，加 Slice 4B 報告連結。</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">08.5</span><h2>Slice 4B.1 Scope／Lifecycle 校正</h2><span class="en">Corrections</span><span class="rule"></span></div>
+    <table>
+      <thead><tr><th style="width:26%">項目</th><th>作法</th></tr></thead>
+      <tbody>
+        <tr><td class="f">我的素材庫 vs 企劃圖庫</td><td><b>Account Scope（我的素材庫）</b>＝使用者擁有的全部 Asset（含未加入任何企劃、跨企劃重用）；<b>Project Scope（企劃圖庫）</b>＝經 AssetLink 關聯到該企劃內容的圖。Asset 由<b>帳號擁有</b>，不因出現在某 Project Gallery 而變成 Project-owned。</td></tr>
+        <tr><td class="f">Scope Gap · 未關聯圖的企劃歸屬</td><td>未關聯到 Character／WorldEntry／Story 的圖，用<b>顯式 project-level Link</b>歸屬企劃 Inbox：<span class="mono">AssetLink{targetType:'project', targetId:projectId, role:'inbox'}</span>（未來可為 ProjectAssetInboxItem）——<b>不靠前端目前頁面判斷歸屬</b>。</td></tr>
+        <tr><td class="f">技術狀態 vs 分類狀態</td><td><b>processingStatus</b>（queued/uploading/processing/ready/failed）與 <b>classificationStatus</b>（unclassified/organized）分開。一張圖可以是 ready + unclassified。</td></tr>
+        <tr><td class="f">AssetLink visibility</td><td><b>inherit / private / members / public</b>（inherit 跟 Asset 本身）。公開有效可見：Asset 可見 ∧ Link 有效可見 ∧ Target 可見 ∧ 已發布頁面。QA 可記 10→6，但<b>公開 UI 不顯示隱藏圖總數也不洩存在</b>。</td></tr>
+        <tr><td class="f">role 約束</td><td>單一 role（<b>avatar / cover</b>）：同一 target 同一 role 只一筆有效 Link，換圖走取代流程。多筆 role（gallery/reference/illustration/event_image/relationship_album/world_entry_album）：sortOrder 排序範圍為 <b>targetType + targetId + role</b>。</td></tr>
+        <tr><td class="f">生命週期四層</td><td><b>從此內容移除</b>（刪 content Link）· <b>從企劃圖庫移除</b>（刪 project-level Link）· <b>封存</b>（保留復原與歷史引用）· <b>永久刪除</b>（列出所有引用、需 <b>Asset Owner</b> 權限，不等同 gallery:manage）。主持人可管 Link，但不能永久刪除他人擁有的原始 Asset。</td></tr>
+        <tr><td class="f">Attribution 狀態</td><td>Creator／Uploader／Owner 維持分離；attributionStatus：<b>complete / incomplete / not_required</b>（本人創作或無公開網址的委託不強制）。License：copyright / commissioned / permission_granted / creative_commons / public_domain / custom / unknown。缺 attribution 顯示提醒，不完全阻擋上傳。</td></tr>
+        <tr><td class="f">processingStatus ownership</td><td>為系統／上傳管線控制，<b>非一般使用者可直接編輯的 metadata</b>。UI 只提供：取消／重試／查看失敗原因。</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">09</span><h2>資料契約狀態</h2><span class="en">Contract status</span><span class="rule"></span></div>
+    <div class="gap-card ok"><div class="gt">DOMAIN CONTRACT READY · Asset / AssetLink</div><div class="gd">UI 與欄位概念已確定（見 §03）。Creator／Uploader／Owner 為三個獨立概念，不混成單一「作者」。</div></div>
+    <div class="gap-card"><div class="gt">SCHEMA DRAFT AVAILABLE</div><div class="gd">Asset／AssetLink／生命週期狀態的 schema 草稿可供交接（processingStatus 與 classificationStatus 分離、AssetLink visibility inherit/private/members/public、project-inbox link）。</div></div>
+    <div class="gap-card bad"><div class="gt">API / R2 PIPELINE NOT IMPLEMENTED</div><div class="gd">本地正式 Asset API、<b>R2 上傳／finalize</b>、縮圖處理管線、D1 CRUD 與 roundtrip 尚未完成。上傳為 Demo。</div></div>
+    <div class="gap-card"><div class="gt">DATA GAP · thumbnailUrl / displayUrl</div><div class="gd">原型用色塊佔位（保留 width/height 比例）；正式需縮圖與顯示 URL（R2 + 處理管線）。</div></div>
+    <div class="gap-card"><div class="gt">DATA GAP · AssetLink 唯一性約束</div><div class="gd">同一內容只能有一張 avatar／cover：選新圖時 UI 已提示「會取代舊 Link」，正式需後端約束。</div></div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">10</span><h2>Demo-only 操作</h2><span class="en">Demo interaction only</span><span class="rule"></span></div>
+    <div class="demo-list">
+      <div class="demo-row"><span class="demo-only">demo</span>上傳（Queue 模擬 queued→ready／failed＋重試）、批次關聯／補作者</div>
+      <div class="demo-row"><span class="demo-only">demo</span>設代表圖／封面（提示取代）、從內容移除（刪 Link）、刪除圖片（列出引用）</div>
+      <div class="demo-row"><span class="demo-only">demo</span>網格／瀑布流、搜尋、篩選、多選＝真實 UI-only 狀態；Lightbox 為真實互動</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">11</span><h2>尚未完成的 UX</h2><span class="en">Open issues</span><span class="rule"></span></div>
+    <div class="open-issues">
+      <ul>
+        <li>真實縮圖／R2 上傳未接（佔位色塊）。</li>
+        <li>AssetLinkPicker（選關聯內容的選擇器）為 Demo toast，未做完整挑選 UI。</li>
+        <li>批次操作（關聯／可見性／封存）為 Demo toast。</li>
+        <li>拖曳排序圖庫 sortOrder 未做。</li>
+        <li>授權／來源欄位的正式驗證（必填規則）待定。</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="foot">
+    <p class="q">Slice 4B 完成，先停（不進 Inspiration）。等你驗收。</p>
+    <p>維持單一 OCData、Demo interaction only，未建立 Repository／API／R2／Auth／第二套 Store。</p>
+  </div>
+</div>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#5E7E55"/>
+    <text x="50" y="64" font-family="monospace" font-size="36" font-weight="700" fill="#fff" text-anchor="middle">4B</text>
+  </svg>
+</template>
+</body>
+</html>

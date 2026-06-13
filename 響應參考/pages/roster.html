@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>企劃角色 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/ds.css">
+<link rel="stylesheet" href="../assets/shell.css">
+<link rel="stylesheet" href="../assets/components.css">
+<style>
+  .rs-cols { display: grid; grid-template-columns: 1fr 360px; gap: var(--s6); align-items: start; }
+  .rs-list { display: flex; flex-direction: column; gap: var(--s2); }
+  .rrow { display: flex; align-items: center; gap: var(--s3); border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--sh-1); padding: var(--s3) var(--s4); cursor: pointer; text-align: left; font: inherit; width: 100%; transition: border-color .14s, box-shadow .14s; }
+  .rrow:hover { border-color: var(--border-strong); box-shadow: var(--sh-2); }
+  .rrow.sel { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+  .rrow .av { width: 42px; height: 42px; border-radius: 50%; flex: none; display: grid; place-items: center; font-family: var(--font-serif); font-size: 18px; font-weight: 700; color: #fff; }
+  .rrow .id { min-width: 0; flex: 1; }
+  .rrow .nm { font-family: var(--font-serif); font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .rrow .meta { font-size: 12px; color: var(--text-dim); margin-top: 2px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .rrow .fac { display: inline-flex; align-items: center; gap: 5px; }
+  .rrow .fac .d { width: 8px; height: 8px; border-radius: 50%; }
+  .rrow .owner { font-family: var(--font-mono); font-size: 10px; color: var(--text-faint); }
+  .grouph { font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint); margin: var(--s4) 0 var(--s1); display: flex; align-items: center; gap: 8px; }
+  .grouph .d { width: 8px; height: 8px; border-radius: 50%; }
+  .grouph:first-child { margin-top: 0; }
+
+  .rs-detail { position: sticky; top: var(--s4); }
+  .dp { border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--sh-1); overflow: hidden; }
+  .dp .strip { height: 8px; }
+  .dp .dh { padding: var(--s5) var(--s5) var(--s4); display: flex; gap: var(--s3); align-items: center; }
+  .dp .dh .av { width: 52px; height: 52px; border-radius: 50%; flex: none; display: grid; place-items: center; font-family: var(--font-serif); font-size: 22px; font-weight: 700; color: #fff; }
+  .dp .dh .nm { font-family: var(--font-serif); font-size: 21px; font-weight: 800; line-height: 1.1; }
+  .dp .dh .rom { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .12em; color: var(--text-faint); text-transform: uppercase; }
+  .seg-h { display: flex; align-items: center; gap: 8px; padding: var(--s3) var(--s5) 0; }
+  .seg-h .lbl { font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint); }
+  .seg-h .who { margin-left: auto; font-size: 10.5px; color: var(--text-faint); }
+  .seg { padding: var(--s2) var(--s5) var(--s4); }
+  .seg.body-seg { background: var(--surface-2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .kv { display: flex; gap: 10px; padding: 6px 0; font-size: 13.5px; }
+  .kv .k { width: 72px; flex: none; color: var(--text-faint); font-size: 12px; }
+  .kv .v { color: var(--text); }
+  .kv .v .input, .kv .v .select { padding: 6px 9px; font-size: 13px; }
+  .lock { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text-faint); }
+  .dp .df { padding: var(--s4) var(--s5); border-top: 1px solid var(--border); display: flex; gap: var(--s2); background: var(--surface-2); }
+  .ph-empty { color: var(--text-faint); font-size: 13px; padding: var(--s8) var(--s5); text-align: center; }
+
+  @media (max-width: 920px) { .rs-cols { grid-template-columns: 1fr; } .rs-detail { position: static; } }
+</style>
+</head>
+<body>
+<div class="page" id="root"></div>
+
+<script src="../assets/data.js"></script>
+<script src="../assets/components.js"></script>
+<script>
+  (function () {
+    var root = document.getElementById('root');
+    var pid = new URLSearchParams(location.search).get('project') || localStorage.getItem('ch:proj') || 'tokoyo';
+    if (!OCData.project(pid)) pid = OCData.projects[0].id;
+    var p = OCData.project(pid);
+    var ROLE = OCData.getRole();
+    var isVisitor = ROLE === 'visitor';
+    var canManage = OCData.can('viewManage');
+    var factions = OCData.factionsOf(pid);
+    var ROLE_LABEL = { owner: '主持人', member: '參與者', visitor: '訪客' };
+
+    var rosterAll = [];
+    var statusF = isVisitor ? 'approved' : '*';
+    var facF = '*';
+    var q = '';
+    var selId = null;
+
+    function header() {
+      var html = OCUI.contextHeader({ scope: 'project', crumbs: [p.name, '企劃角色'] });
+      html += '<div class="pageh"><div class="ht"><h1>企劃角色 <span class="en">Roster</span></h1>'
+        + '<p class="sub">這裡是角色<b>在「' + p.name + '」中的設定</b>——陣營、企劃職位、限定欄位與審核狀態。<b>角色本體仍屬於各自的創作者</b>，在「我的角色」管理。</p></div>'
+        + (OCData.can('addCharacter') ? '<div class="acts"><button class="btn btn-accent" id="addC">＋ 加入角色</button></div>' : '') + '</div>';
+      html += '<div id="bar"></div><div id="cols"></div>';
+      root.innerHTML = html;
+      var a = document.getElementById('addC'); if (a) a.onclick = function () { OCUI.toast('從你的角色庫加入角色', { demo: true }); };
+    }
+
+    function bar() {
+      var counts = { '*': rosterAll.length, approved: rosterAll.filter(function (r) { return r.status === 'approved'; }).length, pending: rosterAll.filter(function (r) { return r.status === 'pending'; }).length, archived: rosterAll.filter(function (r) { return r.status === 'archived'; }).length };
+      var sBtns = isVisitor ? '' : '<div class="filterbar">'
+        + '<button class="fbtn' + (statusF === '*' ? ' on' : '') + '" data-st="*">全部<span class="ct">' + counts['*'] + '</span></button>'
+        + '<button class="fbtn' + (statusF === 'approved' ? ' on' : '') + '" data-st="approved">已通過<span class="ct">' + counts.approved + '</span></button>'
+        + (counts.pending ? '<button class="fbtn' + (statusF === 'pending' ? ' on' : '') + '" data-st="pending">待審<span class="ct">' + counts.pending + '</span></button>' : '')
+        + (counts.archived ? '<button class="fbtn' + (statusF === 'archived' ? ' on' : '') + '" data-st="archived">已封存<span class="ct">' + counts.archived + '</span></button>' : '')
+        + '</div>';
+      var fBtns = '<div class="filterbar"><button class="fbtn' + (facF === '*' ? ' on' : '') + '" data-fac="*">全部陣營</button>'
+        + factions.map(function (f) { return '<button class="fbtn' + (facF === f.id ? ' on' : '') + '" data-fac="' + f.id + '"><span class="dot" style="background:' + f.c + '"></span>' + f.name + '</button>'; }).join('') + '</div>';
+      var html = '<div class="toolbar"><div class="searchf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="q" type="search" placeholder="搜尋角色…" value="' + q + '"></div>' + sBtns + '<div class="spacer"></div>' + fBtns + '</div>';
+      var bd = document.getElementById('bar'); bd.innerHTML = html;
+      bd.querySelector('#q').oninput = function (e) { q = e.target.value.trim(); paint(); };
+      bd.querySelectorAll('[data-st]').forEach(function (b) { b.onclick = function () { statusF = b.dataset.st; bar(); paint(); }; });
+      bd.querySelectorAll('[data-fac]').forEach(function (b) { b.onclick = function () { facF = b.dataset.fac; bar(); paint(); }; });
+    }
+
+    function visible() {
+      return rosterAll.filter(function (r) {
+        if (statusF !== '*' && r.status !== statusF) return false;
+        if (facF !== '*' && r.faction !== facF) return false;
+        if (q && (r.name + ' ' + (r.projectRole || '') + ' ' + (r.factionName || '')).toLowerCase().indexOf(q.toLowerCase()) < 0) return false;
+        return true;
+      });
+    }
+
+    function paint() {
+      var cols = document.getElementById('cols'); if (!cols) return;
+      cols.innerHTML = '<div class="rs-cols"><div class="rs-list" id="list"></div><div class="rs-detail" id="detail"></div></div>';
+      var list = visible();
+      var listEl = document.getElementById('list');
+      if (!list.length) {
+        listEl.appendChild(OCUI.emptyState({ title: '這個企劃還沒有符合的角色。', body: OCData.can('addCharacter') ? '從你的角色庫把角色加入這個企劃。' : '調整篩選條件再試試。', ctaLabel: OCData.can('addCharacter') ? '＋ 加入角色' : null, onCta: function () { OCUI.toast('加入角色', { demo: true }); } }));
+        document.getElementById('detail').innerHTML = '<div class="dp"><div class="ph-empty">選擇一個角色看設定。</div></div>';
+        return;
+      }
+      // group by faction
+      var groups = {};
+      list.forEach(function (r) { (groups[r.faction] = groups[r.faction] || []).push(r); });
+      var order = factions.map(function (f) { return f.id; }).concat(Object.keys(groups).filter(function (k) { return factions.every(function (f) { return f.id !== k; }); }));
+      var htmlL = '';
+      order.forEach(function (fid) {
+        var rows = groups[fid]; if (!rows || !rows.length) return;
+        var f = factions.filter(function (x) { return x.id === fid; })[0] || { name: '未分組', c: '#8A857C' };
+        htmlL += '<div class="grouph"><span class="d" style="background:' + f.c + '"></span>' + f.name + ' · ' + rows.length + '</div>';
+        rows.forEach(function (r) { htmlL += rrow(r, f); });
+      });
+      listEl.innerHTML = htmlL;
+      listEl.querySelectorAll('[data-r]').forEach(function (b) { b.onclick = function () { selId = b.dataset.r; paint(); }; });
+      if (!selId || !list.some(function (r) { return r.linkId === selId; })) selId = list[0].linkId;
+      detail(rosterAll.filter(function (r) { return r.linkId === selId; })[0]);
+    }
+
+    function rrow(r, f) {
+      var status = r.status === 'pending' ? '<span class="badge pending">待審</span>' : '';
+      var ownerTag = r.mine ? '' : '<span class="owner">' + r.ownerSummary.label + '</span>';
+      return '<button class="rrow' + (r.linkId === selId ? ' sel' : '') + '" data-r="' + r.linkId + '"><span class="av" style="background:' + r.c + '" data-hc-id="' + r.character + '">' + r.name[0] + '</span>'
+        + '<div class="id"><div class="nm">' + r.name + status + '</div><div class="meta"><span class="fac"><span class="d" style="background:' + f.c + '"></span>' + r.factionName + '</span>' + (r.projectRole ? '<span>· ' + r.projectRole + '</span>' : '') + ownerTag + '</div></div></button>';
+    }
+
+    function detail(r) {
+      var host = document.getElementById('detail'); if (!host || !r) return;
+      var editable = !isVisitor && (r.mine || canManage);
+      var f = factions.filter(function (x) { return x.id === r.faction; })[0] || { name: '未分組', c: '#8A857C' };
+      var os = r.ownerSummary;
+      var fieldRows = Object.keys(r.fieldValues || {}).length
+        ? Object.keys(r.fieldValues).map(function (k) { return '<div class="kv"><span class="k">' + k + '</span><span class="v">' + r.fieldValues[k] + '</span></div>'; }).join('')
+        : '<div class="kv"><span class="v" style="color:var(--text-faint)">這個企劃的角色卡模板沒有額外欄位。</span></div>';
+
+      var facSel = editable
+        ? '<select class="select" id="facSel">' + factions.map(function (x) { return '<option value="' + x.id + '"' + (x.id === r.faction ? ' selected' : '') + '>' + x.name + '</option>'; }).join('') + '</select>'
+        : r.factionName;
+      var roleInput = editable ? '<input class="input" id="roleInp" value="' + (r.projectRole || '') + '">' : (r.projectRole || '—');
+      var VIS = { public: '公開（名冊可見）', members: '僅成員', private: '僅主持人' };
+      var visSel = editable
+        ? '<select class="select" id="visSel">' + Object.keys(VIS).map(function (k) { return '<option value="' + k + '"' + (k === r.projectVisibility ? ' selected' : '') + '>' + VIS[k] + '</option>'; }).join('') + '</select>'
+        : (VIS[r.projectVisibility] || '—');
+      var statusBadge = r.status === 'approved' ? '<span class="badge approved">已通過</span>' : r.status === 'pending' ? '<span class="badge pending">待審核</span>' : '<span class="badge draft">已封存</span>';
+
+      var html = '<div class="dp"><div class="strip" style="background:' + r.c + '"></div>'
+        + '<div class="dh"><span class="av" style="background:' + r.c + '">' + r.name[0] + '</span><div><div class="nm">' + r.name + '</div><div class="rom">' + (r.rom || '') + '</div></div></div>'
+        // Character body — maintained by the character OWNER; hosts cannot edit it
+        + '<div class="seg-h"><span class="lbl">角色本體 · Character</span><span class="who">' + (os.mine ? '你維護' : '由 ' + os.label + ' 維護') + '</span></div>'
+        + '<div class="seg body-seg"><div class="kv"><span class="k">物種</span><span class="v">' + (r.sp || '—') + '</span></div>'
+        + '<div class="kv"><span class="k">簡介</span><span class="v">' + (r.blurb || '—') + '</span></div>'
+        + '<div class="kv"><span class="k"></span><span class="v"><a href="character.html?project=' + pid + '&link=' + r.linkId + '&c=' + r.character + '" style="font-size:12px;font-weight:600;color:var(--accent-ink)">看角色本體 →</a> <span class="lock">' + OCIcon('lock') + ' 名稱／外觀／圖文設定由擁有者維護' + (canManage && !os.mine ? '，主持人不可修改' : '') + '</span></span></div></div>'
+        // Project-specific data — managed by permission
+        + '<div class="seg-h"><span class="lbl">此企劃中的設定 · Project</span>' + (editable ? '<span class="who">' + (os.mine ? '你可編輯' : '主持人可管理') + '</span>' : '<span class="who lock">' + OCIcon('lock') + ' ' + (isVisitor ? '公開預覽唯讀' : '非你的角色') + '</span>') + '</div>'
+        + '<div class="seg"><div class="kv"><span class="k">陣營</span><span class="v">' + facSel + '</span></div>'
+        + '<div class="kv"><span class="k">企劃職位</span><span class="v">' + roleInput + '</span></div>'
+        + '<div class="kv"><span class="k">企劃內可見性</span><span class="v">' + visSel + '</span></div>'
+        + '<div class="kv"><span class="k">審核狀態</span><span class="v">' + statusBadge + '</span></div>'
+        + '<div class="seg-h" style="padding-left:0"><span class="lbl">角色卡模板欄位</span><span class="who" style="font-family:var(--font-mono);font-size:9px">' + (r.templateVersionId || '') + '</span></div>' + fieldRows
+        + '</div>';
+      if (editable) {
+        html += '<div class="df"><button class="btn btn-accent" id="saveLink">儲存設定</button>'
+          + (canManage && r.status === 'pending' ? '<button class="btn" id="approve">通過審核</button>' : '')
+          + '<span class="spacer" style="flex:1"></span><button class="btn" id="removeLink" title="從企劃移除">移除</button></div>';
+      }
+      html += '</div>';
+      host.innerHTML = html;
+
+      var sv = document.getElementById('saveLink'); if (sv) sv.onclick = function () { OCUI.toast('已更新「' + r.name + '」在此企劃的設定', { demo: true }); };
+      var ap = document.getElementById('approve'); if (ap) ap.onclick = function () { OCUI.toast('已通過「' + r.name + '」', { demo: true }); };
+      var rm = document.getElementById('removeLink'); if (rm) rm.onclick = function () {
+        OCUI.confirm({ title: '從企劃移除角色？', message: '這只會把「' + r.name + '」從「' + p.name + '」移除，<b>不會刪除角色本體</b>。', confirmLabel: '移除', danger: true, onConfirm: function () { OCUI.toast('已從企劃移除（角色本體保留）', { demo: true }); } });
+      };
+    }
+
+    header();
+    document.getElementById('cols').innerHTML = '<div class="rs-cols"><div id="sk">' + '</div></div>';
+    document.getElementById('sk').appendChild(OCUI.skeletonCards(4));
+    setTimeout(function () { rosterAll = OCData.roster(pid, { includeArchived: true }); bar(); paint(); }, 360);
+  })();
+</script>
+<script src="../assets/shell.js"></script>
+</body>
+</html>

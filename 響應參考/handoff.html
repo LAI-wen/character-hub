@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Integration Handoff · UI Freeze 與本地接線規格 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/ds.css">
+<link rel="stylesheet" href="assets/components.css">
+<style>
+  body { background: var(--bg); }
+  .layout { display: grid; grid-template-columns: 232px 1fr; gap: 0; max-width: 1320px; margin: 0 auto; }
+  /* sticky side nav */
+  .sidenav { position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto; border-right: 1px solid var(--border); padding: var(--s6) var(--s4) var(--s8); background: var(--surface); }
+  .sidenav .brand { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 15px; margin-bottom: var(--s2); }
+  .sidenav .brand .mk { width: 24px; height: 24px; border-radius: 7px; background: var(--text); color: #fff; display: grid; place-items: center; font-family: var(--font-serif); font-size: 14px; }
+  .sidenav .tag { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .08em; color: var(--text-faint); text-transform: uppercase; margin-bottom: var(--s5); display: block; }
+  .sidenav a { display: flex; gap: 9px; align-items: baseline; font-size: 12.5px; color: var(--text-dim); text-decoration: none; padding: 6px 9px; border-radius: 8px; line-height: 1.4; }
+  .sidenav a:hover { background: var(--surface-2); color: var(--text); }
+  .sidenav a .n { font-family: var(--font-mono); font-size: 10px; color: var(--text-faint); flex: none; width: 14px; }
+  .sidenav a.on { background: var(--bg-tint); color: var(--text); font-weight: 600; }
+  .main { padding: var(--s10) var(--s10) var(--s16); min-width: 0; }
+
+  .hero { border-bottom: 1px solid var(--border-strong); padding-bottom: var(--s7); margin-bottom: var(--s8); }
+  .hero .eyebrow { margin-bottom: 10px; }
+  .hero h1 { font-family: var(--font-serif); font-size: 36px; font-weight: 900; margin: 0; letter-spacing: -.025em; line-height: 1.08; }
+  .hero .lead { color: var(--text-dim); font-size: 15.5px; margin: var(--s4) 0 0; max-width: 70ch; line-height: 1.65; text-wrap: pretty; }
+  .freeze { display: inline-flex; align-items: center; gap: 8px; margin-top: var(--s5); font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #1F6B43; background: var(--must-soft); border: 1px solid #CDE8D8; padding: 6px 13px; border-radius: var(--r-pill); }
+
+  section { margin-top: var(--s12); scroll-margin-top: var(--s4); }
+  .sh { display: flex; align-items: baseline; gap: var(--s3); margin-bottom: var(--s2); }
+  .sh .ix { font-family: var(--font-mono); font-size: 13px; color: var(--text-faint); }
+  .sh h2 { font-family: var(--font-serif); font-size: 24px; font-weight: 800; margin: 0; letter-spacing: -.01em; }
+  .sh .en { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); }
+  p.note { font-size: 14px; color: var(--text-dim); line-height: 1.65; max-width: 78ch; margin: var(--s2) 0 var(--s4); text-wrap: pretty; }
+  p.note b { color: var(--text); }
+
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); overflow: hidden; margin-top: var(--s2); font-size: 12.5px; }
+  thead th { text-align: left; font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-faint); padding: 9px 11px; border-bottom: 1px solid var(--border); background: var(--surface-2); white-space: nowrap; }
+  tbody td { padding: 9px 11px; border-bottom: 1px solid var(--border); vertical-align: top; line-height: 1.5; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: var(--surface-2); }
+  td .f, code { font-family: var(--font-mono); font-size: 11.5px; }
+  td .f { font-weight: 600; }
+  code { background: var(--bg-tint); padding: 1px 5px; border-radius: 5px; color: var(--accent-ink); }
+  .scope-pill { display: inline-block; font-family: var(--font-mono); font-size: 9px; padding: 2px 6px; border-radius: var(--r-pill); white-space: nowrap; }
+  .sc-account { background: var(--accent-soft); color: var(--accent-ink); }
+  .sc-project { background: #E8EEF6; color: #355C86; }
+  .sc-public { background: var(--must-soft); color: #1F6B43; }
+  .sc-prelogin { background: var(--bg-tint); color: var(--text-dim); }
+
+  /* status chips for implementation matrix */
+  .st { display: inline-block; font-family: var(--font-mono); font-size: 9.5px; font-weight: 600; padding: 2px 7px; border-radius: var(--r-pill); white-space: nowrap; }
+  .st.ready { background: var(--must-soft); color: #1F6B43; }
+  .st.partial { background: var(--accent-soft); color: var(--accent-ink); }
+  .st.draft { background: #E8EEF6; color: #355C86; }
+  .st.skel { background: #F3EDF8; color: #6B4E8F; }
+  .st.no { background: var(--avoid-soft); color: #9E332B; }
+  .st.dim { background: var(--bg-tint); color: var(--text-faint); }
+  .dot-leg { display: flex; flex-wrap: wrap; gap: 7px; margin: var(--s2) 0 var(--s4); }
+
+  .tttable td:first-child { font-family: var(--font-mono); font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .arrow { color: var(--text-faint); }
+  .cards2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); margin-top: var(--s2); }
+  .gap-card { border: 1px solid var(--border); border-radius: var(--r-card); padding: var(--s4); background: var(--surface); }
+  .gap-card .gt { font-family: var(--font-mono); font-size: 11.5px; font-weight: 700; color: var(--text); }
+  .gap-card .gd { font-size: 12.5px; color: var(--text-dim); margin-top: 5px; line-height: 1.55; }
+  .order-list { counter-reset: ord; list-style: none; padding: 0; margin: var(--s2) 0 0; }
+  .order-list li { counter-increment: ord; display: flex; gap: var(--s3); padding: 11px 0; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+  .order-list li::before { content: counter(ord); font-family: var(--font-serif); font-weight: 800; font-size: 15px; width: 26px; height: 26px; border-radius: 50%; background: var(--text); color: #fff; display: grid; place-items: center; flex: none; }
+  .order-list li b { color: var(--text); } .order-list li .why { color: var(--text-dim); font-size: 12.5px; }
+  .ph-block { border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); margin-bottom: var(--s3); overflow: hidden; }
+  .ph-block summary { padding: 11px 15px; font-weight: 700; font-size: 13.5px; cursor: pointer; display: flex; align-items: center; gap: 10px; list-style: none; }
+  .ph-block summary::-webkit-details-marker { display: none; }
+  .ph-block summary .cv { margin-left: auto; color: var(--text-faint); font-size: 11px; }
+  .ph-block summary code { font-size: 10.5px; }
+  .ph-block .pb-body { padding: 0 15px 14px; font-size: 12.5px; color: var(--text-dim); line-height: 1.6; }
+  .ph-block .pb-body .row { display: flex; gap: 10px; padding: 5px 0; border-top: 1px solid var(--border); }
+  .ph-block .pb-body .row .k { font-family: var(--font-mono); font-size: 10px; color: var(--text-faint); width: 92px; flex: none; text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+  .ph-block .pb-body .row .v { flex: 1; }
+  .legendbar { font-size: 12px; color: var(--text-dim); background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 13px; margin-top: var(--s2); line-height: 1.7; }
+  @media (max-width: 1000px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidenav { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+    .sidenav a { display: inline-flex; }
+    .sidenav .links { display: flex; flex-wrap: wrap; gap: 4px; }
+    .main { padding: var(--s6) var(--s4) var(--s12); }
+    .cards2 { grid-template-columns: 1fr; }
+    table { font-size: 11.5px; } td .f, code { font-size: 10.5px; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <nav class="sidenav">
+    <div class="brand"><span class="mk">霧</span>CharacterHub</div>
+    <span class="tag">Integration Handoff</span>
+    <div class="links" id="nav"></div>
+  </nav>
+  <main class="main">
+    <div class="hero">
+      <div class="eyebrow">CharacterHub · UI Freeze &amp; 本地接線規格</div>
+      <h1>Integration Handoff</h1>
+      <p class="lead">設計原型凍結點。彙整所有 Slice 的 Route、頁面職責、共用元件、Domain Ownership、狀態轉換、權限、Contract/API 成熟度、Data Gap，以及每頁的本地接線資訊與建議實作順序。<b>此文件只整理交接，不改後端、不新增功能。</b>本地正式 Router／Repository／API／D1／Auth 之後在本地專案處理。</p>
+      <div class="freeze">● UI FROZEN · 單一 OCData · Demo interaction only</div>
+    </div>
+
+    <section id="s1"><div class="sh"><span class="ix">01</span><h2>Final Route Map</h2><span class="en">Routes ↔ prototype files</span></div>
+      <p class="note">正式預期 Route 與目前 HTML 原型檔案對應。Builder／Renderer 為不同 route；Visitor 走 Public Renderer，不載入工作台 Shell。</p>
+      <table id="routemap"><thead><tr><th>Scope</th><th>正式 Route（預期）</th><th>原型檔案</th><th>說明</th></tr></thead><tbody></tbody></table>
+    </section>
+
+    <section id="s2"><div class="sh"><span class="ix">02</span><h2>Page Responsibility Matrix</h2><span class="en">Per-page contract</span></div>
+      <p class="note">每頁的範圍、主要 Entity、讀取、Action、權限、公開裁切、四態與 RWD。Demo-only 操作見每頁 Handoff（§9）。</p>
+      <table id="respmatrix"><thead><tr><th>頁面</th><th>Scope</th><th>主要 Entity</th><th>讀取</th><th>Action</th><th>權限</th><th>裁切</th><th>狀態</th><th>RWD</th></tr></thead><tbody></tbody></table>
+    </section>
+
+    <section id="s3"><div class="sh"><span class="ix">03</span><h2>Component Inventory</h2><span class="en">Shared components</span></div>
+      <p class="note">跨頁共用元件與目前實作位置。<span class="st partial">合併</span>＝本地應收斂成單一正式 Component。</p>
+      <table id="components"><thead><tr><th>元件</th><th>實作</th><th>用於</th><th>本地建議</th></tr></thead><tbody></tbody></table>
+    </section>
+
+    <section id="s4"><div class="sh"><span class="ix">04</span><h2>Domain Ownership Matrix</h2><span class="en">Who owns / edits / sees / deletes</span></div>
+      <p class="note">每個 Entity 的擁有、可改、可見、可刪除邊界。<b>Permission ≠ ownership</b>：通過 action 後仍檢查 object-level ownership。</p>
+      <table id="ownership"><thead><tr><th>Entity</th><th>擁有者</th><th>可修改</th><th>可見</th><th>可刪除／封存</th></tr></thead><tbody></tbody></table>
+    </section>
+
+    <section id="s5"><div class="sh"><span class="ix">05</span><h2>Status Transition Tables</h2><span class="en">State machines</span></div>
+      <p class="note">各 Entity 的狀態與允許轉換。終態保留歷史，不硬刪。</p>
+      <div id="transitions"></div>
+    </section>
+
+    <section id="s6"><div class="sh"><span class="ix">06</span><h2>Action Permission Matrix</h2><span class="en">All actions, by module</span></div>
+      <p class="note">所有 Slice 使用的 action 彙總。標示角色預設、Owner-only、object-ownership 限制、grant ceiling 與 capability gate。Resolution：<code>role preset → + allow override → − deny override → 但不得超過 grant ceiling</code>，再過 <b>object ownership</b> 與 <b>capability gate</b>。</p>
+      <div class="dot-leg">
+        <span class="st ready">O 預設有</span><span class="st no">✕ 預設無</span><span class="st draft">OWN 限自己</span><span class="st skel">OWNER-ONLY</span><span class="st partial">GATE 能力旗標</span>
+      </div>
+      <table id="perms"><thead><tr><th>模組 / Action</th><th>Owner</th><th>Host</th><th>Cohost</th><th>Member</th><th>限制 / Gate</th></tr></thead><tbody></tbody></table>
+    </section>
+
+    <section id="s7"><div class="sh"><span class="ix">07</span><h2>Contract / API Implementation Matrix</h2><span class="en">Maturity — not "clickable = done"</span></div>
+      <p class="note">每個 Repository／Entity 的真實成熟度。<b>UI 能點不代表 API 完成。</b></p>
+      <div class="legendbar">階段：<b>UI Ready</b> 原型可操作 · <b>Domain Contract</b> 欄位/狀態定稿 · <b>Schema Draft</b> D1 草案 · <b>API Skeleton</b> 路由樁 · <b>API Impl</b> 實作 · <b>D1 Roundtrip</b> 落地往返 · <b>Prod</b> 上線就緒</div>
+      <table id="apimatrix"><thead><tr><th>Repository / Entity</th><th>UI</th><th>Contract</th><th>Schema</th><th>API Skel</th><th>API Impl</th><th>D1 RT</th><th>Prod</th></tr></thead><tbody></tbody></table>
+    </section>
+
+    <section id="s8"><div class="sh"><span class="ix">08</span><h2>Data Gap Register</h2><span class="en">Merged &amp; de-duped</span></div>
+      <p class="note">所有報告的 Data Gap 合併去重。標籤：<span class="st ready">已決定</span> <span class="st draft">待本地決策</span> <span class="st skel">需 schema</span> <span class="st no">需 API</span> <span class="st partial">純 UI 衍生</span> <span class="st dim">暫不實作</span></p>
+      <table id="gaps"><thead><tr><th>欄位 / 概念</th><th>Entity</th><th>用途</th><th>儲存？</th><th>狀態</th></tr></thead><tbody></tbody></table>
+    </section>
+
+    <section id="s9"><div class="sh"><span class="ix">09</span><h2>Per-page Handoff</h2><span class="en">Wire-up per screen</span></div>
+      <p class="note">每個核心頁的本地接線資訊：Repository calls、request/response、mutation、cache/refresh、error mapping、權限檢查、Demo→正式替換。點開展開。</p>
+      <div id="perpage"></div>
+    </section>
+
+    <section id="s10"><div class="sh"><span class="ix">10</span><h2>Implementation Order</h2><span class="en">By dependency, not visuals</span></div>
+      <p class="note">依相依性的本地正式接線順序（非視覺完成順序）。每層是後續層的前提。</p>
+      <ol class="order-list" id="order"></ol>
+      <p class="note" style="margin-top:var(--s5)"><b>停止點：</b>本 Handoff 文件完成後先停，不自動修改本地 Repository／API／D1。下一步由本地專案依上表逐層接線；每接一層回到對應 §7 列更新成熟度。</p>
+    </section>
+  </main>
+</div>
+
+<script>
+// ---------- 01 Route Map ----------
+var ROUTES = [
+  ['account', '/app', 'workspace.html', '工作台（帳號首頁）'],
+  ['account', '/app/characters', 'dashboard.html', '我的角色（本體庫）'],
+  ['account', '/app/characters/:id', 'character.html', '角色詳情'],
+  ['account', '/app/characters/:id/edit', 'editor.html', '角色編輯器'],
+  ['account', '/app/projects', 'my-projects.html', '我的企劃'],
+  ['account', '/app/commissions', 'commissions.html', '委託收件匣'],
+  ['account', '/app/tools/height', 'height-compare.html', '身高比較'],
+  ['account', '/app/settings', 'settings.html', '帳號設定'],
+  ['project', '/app/p/:pid', 'overview.html', '企劃總覽'],
+  ['project', '/app/p/:pid/roster', 'roster.html', '企劃角色（管理）'],
+  ['project', '/app/p/:pid/cast', 'cast.html', '角色名冊（瀏覽）'],
+  ['project', '/app/p/:pid/worldview', 'worldview.html', '世界觀'],
+  ['project', '/app/p/:pid/relationships', 'relationships.html', '關係圖'],
+  ['project', '/app/p/:pid/story', 'story.html', '故事'],
+  ['project', '/app/p/:pid/gallery', 'gallery.html', '圖庫'],
+  ['project', '/app/p/:pid/inspiration', 'inspiration.html', '靈感匣'],
+  ['project', '/app/p/:pid/applications', 'submissions.html', '角色加入申請＋審核'],
+  ['project', '/app/p/:pid/submissions', 'content-submissions.html', '作品投稿＋審核'],
+  ['project', '/app/p/:pid/template', 'template-builder.html', '角色卡模板'],
+  ['project', '/app/p/:pid/members', 'participants.html', '參與者與權限'],
+  ['builder', '/app/p/:pid/pages', 'public-pages.html', '公開頁 Builder（草稿/版型/發布）'],
+  ['public', '/p/:slug', 'portal.html', 'Public Renderer（訪客，無 Shell）'],
+  ['prelogin', '/', 'landing.html', '落地頁'],
+  ['prelogin', '/login', 'login.html', '登入'],
+];
+var SCOPE_CLS = { account: 'sc-account', project: 'sc-project', builder: 'sc-project', public: 'sc-public', prelogin: 'sc-prelogin' };
+var SCOPE_TXT = { account: 'Account', project: 'Project', builder: 'Builder', public: 'Public', prelogin: 'Pre-login' };
+fill('routemap', ROUTES.map(function (r) {
+  return '<td><span class="scope-pill ' + SCOPE_CLS[r[0]] + '">' + SCOPE_TXT[r[0]] + '</span></td><td><code>' + r[1] + '</code></td><td class="f">' + r[2] + '</td><td>' + r[3] + '</td>';
+}));
+
+// ---------- 02 Page Responsibility ----------
+var RESP = [
+  ['工作台', 'A', 'Project·Character', '我的企劃/角色摘要', '進入企劃·建角色', 'authed', '—', 'L·E', '多→單欄'],
+  ['我的角色', 'A', 'Character', '本體庫+memberships', '建/開角色', 'owner(account)', '本體私可見', 'L·E·Em', '網格降欄'],
+  ['角色詳情', 'A/Pub', 'Character', '本體+links+gallery+rel', '編輯·分享', 'owner / 分享裁切', '分享視圖裁切', 'L·E·Em·F', 'tabs堆疊'],
+  ['角色編輯器', 'A/P', 'Character + Link', '本體+企劃限定', '存/版本切換', 'owner本體·權限改link', 'host不可改本體', 'Save狀態·未存', '三欄→編輯/預覽'],
+  ['我的企劃', 'A', 'Project', '企劃卡', '進入·建企劃', 'authed', '—', 'L·Em', '網格降欄'],
+  ['企劃總覽', 'P', 'Project', 'stats+capability', '快速新增·管理入口', 'capability gate', '管理區依權限', 'L·E·F', '多→單欄'],
+  ['企劃角色', 'P', 'ProjectCharacterLink', 'roster(含pending/archived)', '改link·審核·移除', 'view/own/manage', '本體唯讀·host僅link', 'L·E·Em·F', '清單+詳情堆疊'],
+  ['角色名冊', 'P/Pub', 'ProjectCharacterLink', 'approved only', '瀏覽', 'view', '只 approved·非private', 'L·Em', '網格降欄'],
+  ['世界觀', 'P', 'WorldEntry·EntityLink', '階層+關聯', '增/改/移動·連結', 'editWorld', '私人條目裁切', 'L·E·Em·F', 'master-detail堆疊'],
+  ['關係圖', 'P', 'Relationship·Layout', '節點/邊+layout', '增/改/刪·拖曳', 'editRels', '私人關係裁切', 'L·E·Em·F', '畫布→唯讀清單'],
+  ['故事', 'P', 'Story·Chapter·Event', '章節+時間軸', '增/改/重排', 'story/chapter', '私人故事裁切', 'L·E·Em·F', 'master-detail堆疊'],
+  ['圖庫', 'P', 'Asset·AssetLink', '圖磚+lightbox', '上傳·關聯·移除', 'asset/assetLink', '私/未ready裁切', 'L·E·Em·F', '網格降欄'],
+  ['靈感匣', 'P/A', 'Inspiration', '靈感卡', '記/整理/轉換', 'inspiration', '私人預設', 'L·E·Em·F', '網格降欄'],
+  ['角色申請', 'P', 'CharacterApplication', 'my+queue', '申請/提交/審核', 'application:*', '本體唯讀·私不外洩', 'L·E·Em·F', '三欄→單欄'],
+  ['作品投稿', 'P', 'ContentSubmission', 'my+queue', '投稿/審核/核准', 'submission:* + dest', '私人/失效裁切', 'L·E·Em·F', '三欄→單欄'],
+  ['角色卡模板', 'P', 'ProjectTemplate·Field', '版本+欄位', '編/發布版本', 'template:* (manage)', '—', 'L·E·F', '清單+編輯堆疊'],
+  ['參與者', 'P', 'Membership·Invitation', '成員+邀請+override', '邀/移除/權限/移交', 'member:* (manage)', '—', 'L·E·Em·F', '三欄→單欄'],
+  ['公開頁Builder', 'Builder', 'PublicPage·Template', '區塊樹+草稿', '編/版型/發布/rollback', 'publicPage/pageTemplate', 'Builder≠Renderer', 'L·E·F·未存', '畫布+inspector堆疊'],
+  ['Public Renderer', 'Public', 'PublicPage(published)', 'sanitized payload', '瀏覽', 'public(無Shell)', '只 published+public', 'L·E', '全裝置'],
+];
+fill('respmatrix', RESP.map(function (r) {
+  return '<td class="f">' + r[0] + '</td><td><span class="scope-pill ' + ({A:'sc-account','A/P':'sc-account','A/Pub':'sc-account',P:'sc-project','P/Pub':'sc-project','P/A':'sc-project',Builder:'sc-project',Public:'sc-public'}[r[1]] || 'sc-project') + '">' + r[1] + '</span></td><td>' + r[2] + '</td><td>' + r[3] + '</td><td>' + r[4] + '</td><td>' + r[5] + '</td><td>' + r[6] + '</td><td>' + r[7] + '</td><td>' + r[8] + '</td>';
+}));
+
+// ---------- 03 Components ----------
+var COMP = [
+  ['App Shell', 'shell.js / shell.css', '所有工作台頁', '正式：scope/role 由 router+session 注入，非全域切換'],
+  ['Context / Page Header', 'components.js OCUI.contextHeader / .pageh', '所有內容頁', '合併為單一 Header component'],
+  ['Entity Card', 'components.css .ecard', '角色/名冊/圖庫/靈感', '合併為通用 EntityCard（avatar+meta+foot）'],
+  ['Detail Panel', 'application.css .ap-side / 各頁 master-detail', 'roster/世界觀/關係/申請/投稿', '抽成 DetailPanel slot 模式'],
+  ['Status / Badge', 'components.css .badge / .ap-st', '全站狀態', '單一 StatusBadge（文字+圖示+色）'],
+  ['Modal / Drawer', 'components.js OCUI.modal/confirm', '確認/表單/分享', '單一 Modal + Drawer，focus-trap 內建'],
+  ['Review Shell', 'application.css .ap-cols/.ap-tabs', '角色申請 + 作品投稿', '共用 Review 外殼，核准結果 type-specific'],
+  ['Builder Shell', 'public-pages 內聯 + pagerender.js', '公開頁 Builder', '抽成 BuilderShell（畫布+inspector+blocks）'],
+  ['Public Renderer Blocks', 'pagerender.js BLOCK_REGISTRY', 'Builder 預覽 + Renderer', '共用 block 渲染器（bind to data context）'],
+  ['Loading / Empty / Error / Forbidden', 'components.js OCUI.skeletonCards/emptyState/errorState/forbiddenState', '全站四態', '單一 StateBlock 元件族'],
+  ['Toast', 'components.js OCUI.toast', '全站回饋', '單一 Toast service'],
+  ['Icon set', 'components.js OCIcon', '全站（取代 emoji）', '正式 icon component / sprite'],
+];
+fill('components', COMP.map(function (c) {
+  return '<td class="f">' + c[0] + '</td><td><code>' + c[1] + '</code></td><td>' + c[2] + '</td><td><span class="st partial">合併</span> ' + c[3] + '</td>';
+}));
+
+// ---------- 04 Ownership ----------
+var OWN = [
+  ['Character', '角色擁有者 (ownerUserId)', '擁有者', '依本體可見性 / 分享', '擁有者（host 不可）'],
+  ['ProjectCharacterLink', '角色擁有者（資料）', '擁有者(own)·host(link欄位)', '企劃成員 / projectVisibility', 'host 可移除link（不刪本體）'],
+  ['CharacterApplication', '申請者', '申請者(draft/changes)·host(host欄位+審核)', '申請者+可審核者', 'draft可刪·終態保留'],
+  ['ContentSubmission', '投稿者', '投稿者(own)·host(發布設定)', '投稿者+可審核者', 'draft可刪·approved走解除發布'],
+  ['Asset', 'Asset 擁有者', '擁有者', '依 visibility / 連結內容', '擁有者（host 不可永久刪）'],
+  ['AssetLink', '建立者 / 企劃', 'assetLink 權限者', '依目標可見性', 'link 可刪（不刪 Asset）'],
+  ['Story / Chapter / Event', '企劃（內容）', 'story/chapter 權限者', '依 visibility', '權限者封存·作者署名保留'],
+  ['Inspiration', '帳號擁有者', '擁有者', '預設私人·可分享企劃', '擁有者'],
+  ['PublicPage', '頁面擁有者 / 企劃', '擁有者(own override)·host(模板)', '依 page visibility', '擁有者/host 封存'],
+  ['Membership', '企劃', 'owner/host(依政策)', '成員', 'owner移交·不可移除唯一owner'],
+];
+fill('ownership', OWN.map(function (o) {
+  return '<td class="f">' + o[0] + '</td><td>' + o[1] + '</td><td>' + o[2] + '</td><td>' + o[3] + '</td><td>' + o[4] + '</td>';
+}));
+
+// ---------- 05 Transitions ----------
+var TRANS = [
+  ['Membership', [['(invite accepted)', 'active'], ['active', 'suspended'], ['active', 'left (自行)'], ['active', 'removed (host)'], ['suspended', 'active']], '唯一 owner 不可 left/removed；移交後降 host'],
+  ['Invitation', [['(create)', 'pending'], ['pending', 'accepted → Membership'], ['pending', 'declined'], ['pending', 'expired'], ['pending', 'revoked']], '接受前不建立 active Membership；revoke 即失效'],
+  ['CharacterApplication', [['(create)', 'draft'], ['draft', 'submitted'], ['submitted', 'changes_requested'], ['changes_requested', 'submitted (resubmit)'], ['submitted', 'approved → Link'], ['submitted', 'rejected'], ['draft/submitted', 'withdrawn']], 'approved 原子建立 Link；終態保留歷史；只 draft 可刪'],
+  ['ContentSubmission', [['(create)', 'draft'], ['draft', 'submitted'], ['submitted', 'changes_requested'], ['changes_requested', 'submitted'], ['submitted', 'approved → dest'], ['submitted', 'rejected'], ['draft/submitted', 'withdrawn']], 'approved 原子建 AssetLink/Story；approved 不可直接 withdrawn（走解除發布）'],
+  ['ProjectCharacterLink', [['(approve)', 'approved'], ['approved', 'archived'], ['approved', 'removed'], ['archived', 'approved']], 'sourceApplicationId 防重複；removed 不刪本體'],
+  ['Asset processing', [['queued', 'uploading'], ['uploading', 'processing'], ['processing', 'ready'], ['processing', 'failed'], ['ready', 'archived'], ['archived', 'ready (restore)']], '非 ready 不可投稿/通過；archived → 公開立即停用'],
+  ['Story', [['(create)', 'draft'], ['draft', 'completed'], ['draft/completed', 'archived']], '可見性獨立於狀態'],
+  ['PublicPage', [['(create)', 'draft'], ['draft', 'published'], ['published', 'draft (edit)'], ['published', 'rollback → 舊版'], ['draft/published', 'archived']], 'published 為 immutable 版本；Builder≠Renderer'],
+];
+var trHtml = TRANS.map(function (t) {
+  return '<div style="margin-bottom:var(--s4)"><div style="font-weight:700;font-size:14px;margin-bottom:6px">' + t[0] + '</div>'
+    + '<table class="tttable"><tbody>' + t[1].map(function (x) { return '<tr><td>' + x[0] + '</td><td style="width:24px" class="arrow">→</td><td class="f">' + x[1] + '</td></tr>'; }).join('') + '</tbody></table>'
+    + '<div style="font-size:12px;color:var(--text-dim);margin-top:5px">' + t[2] + '</div></div>';
+}).join('');
+document.getElementById('transitions').innerHTML = trHtml;
+
+// ---------- 06 Permissions ----------
+var PERMS = [
+  ['內容 · worldEntry:create/update', 'O', 'O', 'O', 'O', 'GATE worldview'],
+  ['內容 · worldEntry:archive', 'O', 'O', '✕', '✕', ''],
+  ['內容 · relationship:create/update/delete', 'O', 'O', 'O', '✕', 'GATE relationships'],
+  ['內容 · story:create/update·chapter/event', 'O', 'O', 'O', 'OWN chapter/event', 'GATE story'],
+  ['圖片 · asset:upload/update', 'O', 'O', 'O', 'O', 'GATE gallery'],
+  ['圖片 · asset:delete', 'O', 'O', '✕', '✕', 'OWN · host 不可刪他人'],
+  ['圖片 · assetLink:create/update/delete', 'O', 'O', 'O', 'OWN', ''],
+  ['靈感 · inspiration:* / convert', 'O', 'O', 'O', 'OWN', '帳號擁有'],
+  ['模板 · template:* / field:*', 'O', 'O', '✕', '✕', 'manage'],
+  ['申請 · application:create/submit/withdraw/view_own', 'O', 'O', 'O', 'OWN', ''],
+  ['申請 · application:review/approve/reject', 'O', 'O', 'O', '✕', 'manage'],
+  ['投稿 · submission:create/submit/withdraw/view_own', 'O', 'O', 'O', 'OWN', ''],
+  ['投稿 · submission:review/approve/reject', 'O', 'O', 'O', '✕', 'manage'],
+  ['投稿目的地 · assetLink/story/chapter/event:create', 'O', 'O', 'O', '✕', '另查目的地權限'],
+  ['公開頁 · publicPage:update', 'O', 'O', 'O', 'OWN', 'GATE portalEnabled'],
+  ['公開頁 · publicPage:publish/rollback', 'O', 'O', '✕', 'OWN page', '發布≠編輯'],
+  ['公開頁 · pageTemplate:create/update', 'O', 'O', '✕', '✕', 'manage'],
+  ['公開頁 · pageSlug/pageVisibility:update', 'O', 'O', '✕', '✕', ''],
+  ['成員 · member:view', 'O', 'O', 'O', 'O', ''],
+  ['成員 · member:invite/remove/update_role', 'O', 'O', '依政策', '✕', 'manage'],
+  ['成員 · member:update_permissions', 'O', 'O', '✕', '✕', 'manage · grant ceiling'],
+  ['企劃 · project:update', 'O', 'O', '✕', '✕', 'manage'],
+  ['企劃 · project:transfer_ownership / archive', 'OWNER-ONLY', '✕', '✕', '✕', 'owner-only'],
+];
+function permCell(v) {
+  if (v === 'O') return '<span class="st ready">O</span>';
+  if (v === '✕') return '<span class="st no">✕</span>';
+  if (v === 'OWN' || v === 'OWN page' || v === 'OWN chapter/event') return '<span class="st draft">' + v + '</span>';
+  if (v === 'OWNER-ONLY') return '<span class="st skel">OWNER</span>';
+  return '<span class="st dim">' + v + '</span>';
+}
+fill('perms', PERMS.map(function (p) {
+  return '<td class="f">' + p[0] + '</td><td>' + permCell(p[1]) + '</td><td>' + permCell(p[2]) + '</td><td>' + permCell(p[3]) + '</td><td>' + permCell(p[4]) + '</td><td style="font-size:11px;color:var(--text-dim)">' + (p[5] || '') + '</td>';
+}));
+
+// ---------- 07 API Matrix ----------
+var API = [
+  ['ProjectRepository', 1, 1, 1, 1, 0, 0, 0],
+  ['MembershipRepository', 1, 1, 0, 0, 0, 0, 0],
+  ['CharacterRepository', 1, 1, 1, 1, 0, 0, 0],
+  ['ProjectCharacterLink', 1, 1, 1, 0, 0, 0, 0],
+  ['TemplateRepository (+Version)', 1, 1, 0, 0, 0, 0, 0],
+  ['CharacterApplication', 1, 1, 0, 0, 0, 0, 0],
+  ['ContentSubmission', 1, 0.5, 0, 0, 0, 0, 0],
+  ['WorldEntry · EntityLink', 1, 1, 1, 0, 0, 0, 0],
+  ['Relationship · Layout', 1, 1, 0, 0, 0, 0, 0],
+  ['Story · Chapter · Event', 1, 1, 1, 0, 0, 0, 0],
+  ['Asset · AssetLink (R2)', 1, 0.5, 1, 0, 0, 0, 0],
+  ['Inspiration', 1, 1, 0, 0, 0, 0, 0],
+  ['PublicPage · Template · Version', 1, 1, 0, 0, 0, 0, 0],
+  ['Public Renderer (sanitized)', 0.5, 1, 0, 0, 0, 0, 0],
+  ['Auth / Session', 0, 0.5, 0, 0, 0, 0, 0],
+];
+function mat(v) { return v === 1 ? '<span class="st ready">✓</span>' : v === 0.5 ? '<span class="st partial">部分</span>' : '<span class="st no">—</span>'; }
+fill('apimatrix', API.map(function (a) {
+  return '<td class="f">' + a[0] + '</td>' + a.slice(1).map(function (v) { return '<td>' + mat(v) + '</td>'; }).join('');
+}));
+
+// ---------- 08 Data Gaps ----------
+var GAPS = [
+  ['viewer.projectRoles[] / currentProjectMembership.role', 'Membership', '每企劃角色（非全域）', '是', 'decided'],
+  ['Permission Override (allow/deny)', 'Membership', '個別權限疊加', '是', 'schema'],
+  ['ProjectInvitation (token/expiry)', 'Invitation', '邀請流程', '是', 'api'],
+  ['ProjectCharacterLink.fieldValues + templateVersionId', 'Link', '企劃欄位值（穩定 fieldKey）', '是', 'decided'],
+  ['ProjectCharacterLink.projectVisibility', 'Link', 'public/members/private', '是', 'decided'],
+  ['ProjectCharacterLink.sourceApplicationId', 'Link', 'provenance/idempotency', '是', 'schema'],
+  ['CharacterApplicationReviewEvent', 'Application', '完整審核歷史', '是', 'schema'],
+  ['Application.revision + updatedAt', 'Application', '併發守衛', '是', 'schema'],
+  ['ContentSubmissionDestination[] / approvalResults', 'Submission', '多目的地結果', '是', 'schema'],
+  ['ContentSubmissionRevision (snapshot)', 'Submission', '固定版本審核', '是', 'schema'],
+  ['Submission Publish Plan / Review Decision', 'Submission', '發布設定≠原稿', '是', 'schema'],
+  ['sourceSubmissionId (on result)', 'AssetLink/Story', 'provenance/署名', '是', 'schema'],
+  ['Asset.processingStatus / license / creatorName', 'Asset', '就緒/授權/作者', '是', 'decided'],
+  ['Character.detail (art/text 設定)', 'Character', '圖文設定分區', '是', 'decided'],
+  ['Character.privateNotes', 'Character', '私人筆記（永不分享）', '是', 'decided'],
+  ['ShareLink (type/visibility/fields)', 'Character', '分享視圖裁切', '是', 'api'],
+  ['hostOnlyFields', 'Template/Link', '主持人限定欄位', '是', 'schema'],
+  ['EntityLink (polymorphic)', 'Worldview', '跨實體關聯來源', '是', 'decided'],
+  ['RelationshipLayout (nodes/paths)', 'Relationship', '畫布配置（非 UI state）', '是', 'decided'],
+  ['ProjectAuditEvent', 'Project', '管理操作稽核', '是', 'todo'],
+  ['completion %', '衍生', '分區完成度', '否', 'ui'],
+  ['UI state (hover/selected/zoom)', '衍生', '互動暫態', '否', 'ui'],
+];
+var GAP_ST = { decided: ['已決定', 'ready'], local: ['待本地決策', 'draft'], schema: ['需 schema', 'skel'], api: ['需 API', 'no'], ui: ['純 UI 衍生', 'partial'], todo: ['暫不實作', 'dim'] };
+fill('gaps', GAPS.map(function (g) {
+  var s = GAP_ST[g[4]] || ['—', 'dim'];
+  return '<td class="f">' + g[0] + '</td><td>' + g[1] + '</td><td>' + g[2] + '</td><td>' + g[3] + '</td><td><span class="st ' + s[1] + '">' + s[0] + '</span></td>';
+}));
+
+// ---------- 09 Per-page Handoff ----------
+var PAGES = [
+  ['企劃角色 roster.html', '/app/p/:pid/roster', [
+    ['Repository', 'ProjectCharacterLinkRepo.list(pid, {status})·get(linkId)·update(linkId, linkFields)·remove(linkId)·FactionRepo.list(pid)'],
+    ['Response', 'roster row = { link:{id,faction,projectRole,projectVisibility,status,fieldValues,templateVersionId}, character:{id,name,sp,blurb,ownerSummary} }'],
+    ['Mutation', 'update link 欄位（不碰本體）·approve(pending)·archive/remove(soft)'],
+    ['Cache', 'list 依 pid 快取；mutation 後 invalidate 該 pid roster + overview stats'],
+    ['Error', 'NOT_FOUND→Empty·FORBIDDEN→Forbidden·CONFLICT(stale)→reload'],
+    ['Perm', 'view 全成員·update own/manage·archive/remove manage'],
+    ['Demo→正式', 'OCData.roster() → GET roster；toast → 實際 PATCH，回傳更新 row'],
+  ]],
+  ['角色申請 submissions.html', '/app/p/:pid/applications', [
+    ['Repository', 'ApplicationRepo.mine(pid)·queue(pid)·get(id)·create·update·submit·withdraw·review(approve/changes/reject)'],
+    ['Response', 'application = { id,characterId,applicantUserId,templateVersionId,fieldValues,status,reviewMessage,revision }'],
+    ['Mutation', 'approve = 原子 { app→approved, create Link, copy fieldValues by fieldKey, set sourceApplicationId }'],
+    ['Cache', 'mine + queue 分快取；approve 後 invalidate queue + roster + overview'],
+    ['Error', '422(template cycle/required)·CONFLICT(revision)·FORBIDDEN→Forbidden'],
+    ['Perm', 'create/submit own·review/approve manage'],
+    ['Demo→正式', 'OCData.applications → GET；?failapprove demo → 真實交易回滾'],
+  ]],
+  ['作品投稿 content-submissions.html', '/app/p/:pid/submissions', [
+    ['Repository', 'SubmissionRepo.mine(pid,{type})·queue(pid)·get·create·submit·withdraw·review；AssetRepo·StoryRepo(目的地)'],
+    ['Response', 'submission = { id,submissionType,status,payload(asset|text),destinationType?,destinationId?,revision }'],
+    ['Mutation', 'approve(asset)=建 AssetLink[]+寫 dest；approve(text)=建/更新 Story 內容+寫 dest；皆原子+sourceSubmissionId'],
+    ['Cache', 'mine+queue 分快取；approve 後 invalidate gallery/story + queue'],
+    ['Error', 'asset 非 ready→擋·dest missing→擋·目的地無權限→部分擋·CONFLICT→reload'],
+    ['Perm', 'submission:* + 目的地 assetLink/story/chapter/event:create'],
+    ['Demo→正式', 'OCData.contentSubmissions → GET；發布設定存 Publish Plan，不改原稿'],
+  ]],
+  ['角色編輯器 editor.html', '/app/p/:pid/.../edit', [
+    ['Repository', 'CharacterRepo.get(id)·updateBody(id, bodyFields)；LinkRepo.update(linkId, linkFields)'],
+    ['Response', 'character body + (selected) projectLink；版本切換只換 link 區資料'],
+    ['Mutation', 'body 與 link 分開 PATCH；未存守衛在切版本/離頁時攔截'],
+    ['Cache', 'character 快取；存後 invalidate character + 受影響 roster'],
+    ['Error', 'FORBIDDEN(非擁有者改本體)→鎖·VALIDATION→錯誤摘要+focus'],
+    ['Perm', 'body owner-only·link own/manage·hostOnly 欄位僅 host'],
+    ['Demo→正式', 'SaveStatus 狀態機接真實 PATCH；save 成功/失敗映射 toast'],
+  ]],
+  ['參與者 participants.html', '/app/p/:pid/members', [
+    ['Repository', 'MembershipRepo.list(pid)·get·updateRole·updatePermissions·remove；InvitationRepo.create/resend/revoke；transferOwnership'],
+    ['Response', 'membership = { id,userId,rolePreset,status,overrides{allow[],deny[]} }；resolved caps 由前端組'],
+    ['Mutation', 'updatePermissions 受 grant ceiling 限；transfer 原子+二次驗證；remove 帶影響處理選項'],
+    ['Cache', 'members 快取；變更後 invalidate members + 受影響頁權限'],
+    ['Error', 'FORBIDDEN·CONFLICT(已是成員/已邀請)·唯一 owner 不可離開'],
+    ['Perm', 'view 全成員·invite/remove/role manage·permissions manage(ceiling)·transfer owner-only'],
+    ['Demo→正式', '全域 role 切換 → 真實 ProjectMembership.role；邀請 token 由後端發'],
+  ]],
+  ['公開頁 Builder public-pages.html', '/app/p/:pid/pages', [
+    ['Repository', 'PublicPageRepo.get/saveDraft/publish/rollback·PageTemplateRepo·resolveBinding(render-only)'],
+    ['Response', 'page = { blocks tree, dataRef, status, version }；blocks BIND 既有 data（不複製）'],
+    ['Mutation', 'saveDraft(autosave)·publish→immutable version·rollback；slug/visibility 獨立權限'],
+    ['Cache', 'draft 本地+server；publish 後 invalidate renderer payload'],
+    ['Error', 'binding 失效→區塊提示·VALIDATION(slug 重複)·未存守衛'],
+    ['Perm', 'update own/host·publish/rollback 專屬·pageTemplate manage'],
+    ['Demo→正式', 'Renderer 走 GET /p/:slug sanitized；Builder 永不外洩 draft'],
+  ]],
+];
+var pp = PAGES.map(function (p) {
+  return '<details class="ph-block"><summary>' + p[0] + ' <code>' + p[1] + '</code><span class="cv">▾</span></summary><div class="pb-body">'
+    + p[2].map(function (r) { return '<div class="row"><span class="k">' + r[0] + '</span><span class="v">' + r[1] + '</span></div>'; }).join('') + '</div></details>';
+}).join('');
+document.getElementById('perpage').innerHTML = pp;
+
+// ---------- 10 Implementation Order ----------
+var ORDER = [
+  ['Membership / Permission', '一切權限的根；其他模組的 action gate 都依賴它。先做 ProjectMembership + Permission Override + Auth Session。'],
+  ['Template / Template Version', '角色卡欄位的形狀；CharacterApplication 與 Link.fieldValues 依賴 Published 版本。'],
+  ['CharacterApplication', '加入企劃的入口；通過原子建立 ProjectCharacterLink（roster 的來源）。'],
+  ['ContentSubmission', '作品投稿；依賴 Asset 與 Story 目的地，核准寫入 AssetLink/Story。'],
+  ['Story / Chapter / Event', '文章投稿的目的地；需先有 Story 寫入 API。'],
+  ['Asset / R2', '圖片投稿與圖庫；R2 upload + processingStatus + AssetLink。'],
+  ['PublicPage publish pipeline', '公開呈現；依賴上述內容與可見性鏈，Builder→Version→Renderer。'],
+  ['Inspiration', '相對獨立，可最後接；轉換目標依賴角色/世界觀/故事已就緒。'],
+];
+document.getElementById('order').innerHTML = ORDER.map(function (o) {
+  return '<li><div><b>' + o[0] + '</b><div class="why">' + o[1] + '</div></div></li>';
+}).join('');
+
+// ---------- helpers + nav ----------
+function fill(id, rows) {
+  var tb = document.querySelector('#' + id + ' tbody');
+  tb.innerHTML = rows.map(function (r) { return '<tr>' + r + '</tr>'; }).join('');
+}
+var NAV = [['s1','01','Route Map'],['s2','02','Page Responsibility'],['s3','03','Components'],['s4','04','Domain Ownership'],['s5','05','Status Transitions'],['s6','06','Action Permissions'],['s7','07','Contract / API'],['s8','08','Data Gaps'],['s9','09','Per-page Handoff'],['s10','10','Implementation Order']];
+document.getElementById('nav').innerHTML = NAV.map(function (n) { return '<a href="#' + n[0] + '"><span class="n">' + n[1] + '</span>' + n[2] + '</a>'; }).join('');
+// scroll-spy
+var links = [].slice.call(document.querySelectorAll('#nav a'));
+var secs = NAV.map(function (n) { return document.getElementById(n[0]); });
+function spy() {
+  var y = window.scrollY + 120, cur = 0;
+  secs.forEach(function (s, i) { if (s && s.offsetTop <= y) cur = i; });
+  links.forEach(function (a, i) { a.classList.toggle('on', i === cur); });
+}
+window.addEventListener('scroll', spy); spy();
+</script>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#1C1B19"/>
+    <path d="M26 30h48M26 44h48M26 58h32M26 72h40" stroke="#A67F0E" stroke-width="5" stroke-linecap="round"/>
+  </svg>
+</template>
+</body>
+</html>

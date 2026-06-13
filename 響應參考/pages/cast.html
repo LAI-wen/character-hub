@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>角色名冊 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/ds.css">
+<link rel="stylesheet" href="../assets/shell.css">
+<link rel="stylesheet" href="../assets/components.css">
+<style>
+  .cast-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--s4); }
+  .grouph { font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint); margin: var(--s5) 0 var(--s2); display: flex; align-items: center; gap: 8px; }
+  .grouph .d { width: 8px; height: 8px; border-radius: 50%; }
+  .grouph:first-of-type { margin-top: 0; }
+  .note-row { display: flex; gap: 10px; align-items: flex-start; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-card); padding: var(--s3) var(--s4); margin-bottom: var(--s5); font-size: 12.5px; color: var(--text-dim); line-height: 1.6; }
+  .note-row b { color: var(--text); }
+</style>
+</head>
+<body>
+<div class="page" id="root"></div>
+
+<script src="../assets/data.js"></script>
+<script src="../assets/components.js"></script>
+<script>
+  (function () {
+    var root = document.getElementById('root');
+    var pid = new URLSearchParams(location.search).get('project') || localStorage.getItem('ch:proj') || 'tokoyo';
+    if (!OCData.project(pid)) pid = OCData.projects[0].id;
+    var p = OCData.project(pid);
+    var factions = OCData.factionsOf(pid);
+
+    var html = OCUI.contextHeader({ scope: 'project', crumbs: [p.name, '角色名冊'] });
+    html += '<div class="pageh"><div class="ht"><h1>角色名冊 <span class="en">Cast</span></h1>'
+      + '<p class="sub">「' + p.name + '」<b>已通過審核</b>的角色——成員與公開頁瀏覽用。這是<b>瀏覽頁</b>，沒有管理操作；要管理陣營／審核請到<a href="roster.html?project=' + pid + '" style="color:var(--accent-ink);font-weight:600">企劃角色</a>。</p></div></div>';
+    html += '<div class="note-row"><span style="flex:none">' + OCIcon('book') + '</span><div>名冊只顯示 <b>approved</b> 的角色，且不含「僅主持人」可見的企劃設定。同一批角色卡，在「企劃角色」可看到 pending／archived 與管理操作。</div></div>';
+    html += '<div id="body"></div>';
+    root.innerHTML = html;
+
+    var body = document.getElementById('body');
+    body.appendChild(OCUI.skeletonCards(6));
+
+    setTimeout(function () {
+      var rows = OCData.roster(pid, { approvedOnly: true })
+        .filter(function (r) { return r.projectVisibility !== 'private'; }); // hide host-only links
+      if (!rows.length) { body.innerHTML = ''; body.appendChild(OCUI.emptyState({ title: '名冊還沒有公開角色。', body: '通過審核的角色會出現在這裡。' })); return; }
+      var groups = {};
+      rows.forEach(function (r) { (groups[r.faction] = groups[r.faction] || []).push(r); });
+      var order = factions.map(function (f) { return f.id; }).concat(Object.keys(groups).filter(function (k) { return factions.every(function (f) { return f.id !== k; }); }));
+      var h = '';
+      order.forEach(function (fid) {
+        var g = groups[fid]; if (!g || !g.length) return;
+        var f = factions.filter(function (x) { return x.id === fid; })[0] || { name: '未分組', c: '#8A857C' };
+        h += '<div class="grouph"><span class="d" style="background:' + f.c + '"></span>' + f.name + ' · ' + g.length + '</div><div class="cast-grid">'
+          + g.map(function (r) {
+            return '<button class="ecard" data-c="' + r.character + '" data-link="' + r.linkId + '"><div class="top"><span class="av" style="background:' + r.c + '" data-hc-id="' + r.character + '">' + r.name[0] + '</span>'
+              + '<div><div class="nm">' + r.name + '</div>' + (r.rom ? '<div class="rom">' + r.rom + '</div>' : '') + '<div class="sp">' + (r.projectRole || r.sp || '') + '</div></div></div>'
+              + '<p class="blurb">' + (r.blurb || '') + '</p><div class="foot"><span class="badge"><span class="d" style="background:' + f.c + '"></span>' + r.factionName + '</span></div></button>';
+          }).join('') + '</div>';
+      });
+      body.innerHTML = h;
+      body.querySelectorAll('.ecard').forEach(function (b) { b.onclick = function () { location.href = 'character.html?project=' + pid + '&link=' + b.dataset.link + '&c=' + b.dataset.c; }; });
+    }, 320);
+  })();
+</script>
+<script src="../assets/shell.js"></script>
+</body>
+</html>

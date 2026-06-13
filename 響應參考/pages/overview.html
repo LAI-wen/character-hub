@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>企劃總覽 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/ds.css">
+<link rel="stylesheet" href="../assets/shell.css">
+<link rel="stylesheet" href="../assets/components.css">
+<style>
+  .ov-hero { border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--sh-1); overflow: hidden; margin-bottom: var(--s6); }
+  .ov-hero .cv { height: 84px; }
+  .ov-hero .bd { padding: var(--s5) var(--s6) var(--s6); display: flex; gap: var(--s5); align-items: flex-start; flex-wrap: wrap; }
+  .ov-hero .mk { width: 56px; height: 56px; border-radius: 15px; margin-top: -42px; display: grid; place-items: center; font-family: var(--font-serif); font-size: 27px; font-weight: 800; color: #fff; border: 3px solid var(--surface); flex: none; position: relative; }
+  .ov-hero .info { flex: 1; min-width: 240px; }
+  .ov-hero h1 { font-family: var(--font-serif); font-size: 28px; font-weight: 800; margin: 0; display: flex; align-items: baseline; gap: 10px; }
+  .ov-hero h1 .en { font-family: var(--font-mono); font-size: 11px; letter-spacing: .14em; color: var(--text-faint); text-transform: uppercase; }
+  .ov-hero .bl { font-size: 14px; color: var(--text-dim); margin: 8px 0 12px; max-width: 64ch; line-height: 1.6; text-wrap: pretty; }
+  .ov-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+  .qc-row { display: flex; flex-wrap: wrap; gap: var(--s2); margin-bottom: var(--s7); }
+  .qc { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; padding: 10px 15px; border-radius: var(--r-btn); border: 1px dashed var(--border-strong); background: var(--surface); color: var(--text-dim); cursor: pointer; transition: border-color .14s, color .14s, background .14s; }
+  .qc:hover { border-color: var(--accent); color: var(--accent-ink); background: var(--accent-soft); }
+  .qc svg { width: 16px; height: 16px; }
+  .ov-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: var(--s4); }
+  .ovc { border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--sh-1); overflow: hidden; display: flex; flex-direction: column; text-align: left; padding: 0; font: inherit; cursor: pointer; transition: box-shadow .15s, transform .15s, border-color .15s; }
+  .ovc:hover { box-shadow: var(--sh-2); transform: translateY(-2px); border-color: var(--border-strong); }
+  .ovc .h { display: flex; align-items: baseline; justify-content: space-between; padding: var(--s4) var(--s4) var(--s2); gap: var(--s2); }
+  .ovc .t { font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; }
+  .ovc .t .ic { width: 17px; height: 17px; color: var(--text-faint); }
+  .ovc .n { font-family: var(--font-serif); font-size: 23px; font-weight: 800; line-height: 1; }
+  .ovc .n .u { font-family: var(--font-sans); font-size: 12px; font-weight: 500; color: var(--text-faint); margin-left: 3px; }
+  .ovc .list { padding: 0 var(--s4) var(--s3); display: flex; flex-direction: column; gap: 6px; flex: 1; }
+  .ovc .li { font-size: 12.5px; color: var(--text-dim); display: flex; align-items: center; gap: 7px; }
+  .ovc .li .dot { width: 7px; height: 7px; border-radius: 2px; flex: none; }
+  .ovc .li .av { width: 19px; height: 19px; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-serif); font-size: 9px; font-weight: 700; color: #fff; flex: none; }
+  .ovc .foot { margin-top: auto; padding: var(--s3) var(--s4); border-top: 1px solid var(--border); font-size: 12px; font-weight: 600; color: var(--accent-ink); }
+  .ov-manage { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--s4); }
+  .pm-stat { border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--sh-1); padding: var(--s5); cursor: pointer; transition: box-shadow .15s, transform .15s; }
+  .pm-stat:hover { box-shadow: var(--sh-2); transform: translateY(-2px); }
+  .pm-stat .n { font-family: var(--font-serif); font-size: 28px; font-weight: 800; line-height: 1; }
+  .pm-stat.alert .n { color: var(--accent-ink); }
+  .pm-stat .l { font-size: 12.5px; color: var(--text-dim); margin-top: 6px; }
+  .pm-stat .go { font-size: 11px; font-weight: 600; color: var(--accent-ink); margin-top: 7px; }
+  .ov-sec { margin-bottom: var(--s8); }
+</style>
+</head>
+<body>
+<div class="page" id="root"></div>
+
+<script src="../assets/data.js"></script>
+<script src="../assets/components.js"></script>
+<script>
+  (function () {
+    var root = document.getElementById('root');
+    var pid = new URLSearchParams(location.search).get('project') || localStorage.getItem('ch:proj') || 'tokoyo';
+    if (!OCData.project(pid)) pid = OCData.projects[0].id;
+    var p = OCData.project(pid);
+    var ROLE = OCData.getRole();
+    var ROLE_LABEL = { owner: '主持人', member: '參與者', visitor: '訪客' };
+    var Q = '?project=' + pid;
+    var canManage = OCData.can('viewManage');
+    var isVisitor = ROLE === 'visitor';
+
+    var IC = {
+      mask: '<path d="M4 5c0 8 4 13 8 13s8-5 8-13c-3 1-5 1-8 1s-5 0-8-1Z"/>',
+      globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3c-2.5 2.5-2.5 15 0 18"/>',
+      nodes: '<circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="7" r="2.4"/><circle cx="12" cy="18" r="2.4"/><path d="M8 7l8 .5M7 8l4 8M17 9l-4 7"/>',
+      plus: '<path d="M12 5v14M5 12h14"/>',
+    };
+    function svg(k) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' + (IC[k] || '') + '</svg>'; }
+
+    var roster = OCData.roster(pid);
+    var world = OCData.worldview(pid);
+    var pending = OCData.pendingCount(pid);
+    var collab = p.collaborationMode !== 'solo';
+
+    var html = OCUI.contextHeader({ scope: 'project', crumbs: [p.name, '總覽'] });
+
+    // hero
+    var vis = p.visibility === 'public' ? '<span class="badge public"><span class="d" style="background:var(--must)"></span>公開展示</span>' : '<span class="badge private"><span class="d" style="background:var(--text-faint)"></span>私人企劃</span>';
+    var collabBadge = collab ? '<span class="badge pending" style="border-style:solid">' + (p.collaborationMode === 'open' ? '公開招募共創' : '私人共創') + '</span>' : '';
+    html += '<div class="ov-hero"><div class="cv" style="background:' + p.c + '"></div><div class="bd">'
+      + '<span class="mk" style="background:' + p.c + '">' + p.name[0] + '</span><div class="info">'
+      + '<h1>' + p.name + ' <span class="en">' + p.en + '</span></h1><p class="bl">' + p.blurb + '</p>'
+      + '<div class="ov-badges">' + vis + collabBadge + '<span class="badge role-' + ROLE + '">你是' + ROLE_LABEL[ROLE] + '</span></div></div>'
+      + (canManage ? '<button class="btn" id="editP">⚙ 企劃設定</button>' : '') + '</div></div>';
+
+    // quick create (capability-gated)
+    var qcs = [];
+    if (OCData.can('addCharacter')) qcs.push(['mask', '加入角色', 'roster.html' + Q]);
+    if (OCData.can('editWorld')) qcs.push(['globe', '新增世界觀', 'worldview.html' + Q]);
+    if (!isVisitor) qcs.push(['nodes', '新增關係', 'relationships.html' + Q]);
+    if (qcs.length) {
+      html += '<div class="qc-row">' + qcs.map(function (a) { return '<button class="qc" data-href="' + a[2] + '">' + svg('plus') + a[1] + '</button>'; }).join('') + '</div>';
+    }
+
+    // content digest
+    html += '<div class="ov-sec"><div class="sec-head"><h2>內容</h2><span class="en">Content</span><span class="sec-rule"></span></div><div class="ov-cards">';
+    html += contentCard('mask', '角色', roster.length, '位', roster.slice(0, 4).map(function (r) {
+      return '<div class="li"><span class="av" style="background:' + r.c + '">' + r.name[0] + '</span>' + r.name + (r.projectRole ? ' · ' + r.projectRole : '') + '</div>';
+    }), '查看企劃角色 →', 'roster.html' + Q);
+    html += contentCard('globe', '世界觀', world.length, '條', world.slice(0, 4).map(function (e) {
+      return '<div class="li"><span class="dot" style="background:' + (e.c || 'var(--accent)') + '"></span>' + e.name + '</div>';
+    }), '開啟世界觀 →', 'worldview.html' + Q);
+    html += contentCard('nodes', '關係圖', p.stats.rels, '組', [
+      '<div class="li"><span class="dot" style="background:#6B5B95"></span>宵霧 × 望 · 羈絆</div>',
+      '<div class="li"><span class="dot" style="background:#6B5B95"></span>宵霧 × 燈守 · 守燈之約</div>',
+    ], '開啟關係圖 →', 'relationships.html' + Q);
+    html += '</div></div>';
+
+    // management digest — capability gated (collaboration + manage). Submission
+    // review only when submissionsEnabled (never inferred from collaborationMode).
+    if (collab && canManage) {
+      var partCount = new Set(roster.map(function (r) { return r.ownerUserId; })).size;
+      html += '<div class="ov-sec"><div class="sec-head"><h2>共創管理</h2><span class="en">Collaboration</span><span class="sec-rule"></span></div><div class="ov-manage">'
+        + (p.submissionsEnabled ? mStat(pending, '待審核角色', pending ? '前往投稿審核 →' : '目前沒有待審', pending > 0, 'submissions.html' + Q) : '')
+        + mStat(partCount, '參與者', '管理參與者 →', false, 'participants.html' + Q)
+        + mStat(roster.length, '名冊角色', '查看名冊 →', false, 'cast.html' + Q)
+        + '</div></div>';
+    }
+
+    root.innerHTML = html;
+    function contentCard(icon, title, n, unit, lis, foot, href) {
+      return '<button class="ovc" data-href="' + href + '"><div class="h"><div class="t"><span class="ic">' + svg(icon) + '</span>' + title + '</div><div class="n">' + n + '<span class="u">' + unit + '</span></div></div>'
+        + '<div class="list">' + (lis.length ? lis.join('') : '<div class="li" style="color:var(--text-faint)">尚無內容</div>') + '</div><div class="foot">' + foot + '</div></button>';
+    }
+    function mStat(n, label, go, alert, href) {
+      return '<div class="pm-stat' + (alert ? ' alert' : '') + '" data-href="' + href + '"><div class="n">' + n + '</div><div class="l">' + label + '</div><div class="go">' + go + '</div></div>';
+    }
+    root.querySelectorAll('[data-href]').forEach(function (b) { b.onclick = function () { location.href = b.dataset.href; }; });
+    var ep = document.getElementById('editP'); if (ep) ep.onclick = function () { OCUI.toast('企劃設定', { demo: true }); };
+    root.querySelectorAll('.qc[data-href]').forEach(function (b) { b.onclick = function () { location.href = b.dataset.href; }; });
+  })();
+</script>
+<script src="../assets/shell.js"></script>
+</body>
+</html>

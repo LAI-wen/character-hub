@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>委託收件匣 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/ds.css">
+<link rel="stylesheet" href="../assets/shell.css">
+<style>
+  .topbar { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 30; }
+  .topbar .inner { max-width: 1280px; margin: 0 auto; padding: 11px var(--s8); display: flex; align-items: center; gap: var(--s6); }
+  .brand { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 15px; letter-spacing: -.02em; }
+  .brand .mk { width: 22px; height: 22px; border-radius: 7px; background: var(--text); color: #fff; display: grid; place-items: center; font-family: var(--font-serif); font-size: 14px; }
+  .nav { display: flex; gap: var(--s2); }
+  .nav a { font-size: 14px; font-weight: 500; color: var(--text-dim); padding: 7px 12px; border-radius: var(--r-btn); cursor: pointer; position: relative; }
+  .nav a.on { background: var(--bg-tint); color: var(--text); font-weight: 600; }
+  .nav a .nbar { position: absolute; top: 4px; right: 4px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--accent); color: #fff; font-size: 10px; font-weight: 700; display: grid; place-items: center; font-family: var(--font-mono); }
+  .topbar .spacer { flex: 1; }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg,#8FA3B0,#6B4A1E); border: 1px solid var(--border); }
+
+  .head { max-width: 1280px; margin: 0 auto; padding: var(--s12) var(--s8) var(--s5); }
+  .head .row { display: flex; align-items: flex-end; gap: var(--s4); flex-wrap: wrap; }
+  .head h1 { font-family: var(--font-serif); font-size: 38px; margin: 0; font-weight: 700; }
+  .head .spacer { flex: 1; }
+  .summary { display: flex; align-items: center; gap: var(--s5); font-size: 13px; color: var(--text-dim); padding-bottom: 7px; }
+  .summary .s { display: inline-flex; align-items: center; gap: 7px; }
+  .summary .s b { font-family: var(--font-serif); font-size: 19px; color: var(--text); font-weight: 700; }
+  .summary .s .dt { width: 8px; height: 8px; border-radius: 50%; }
+  .summary .sep { width: 1px; height: 22px; background: var(--border); }
+
+  .toolbar { max-width: 1280px; margin: 0 auto; padding: 0 var(--s8) var(--s6); display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; }
+  .chfilters { display: flex; gap: 7px; flex-wrap: wrap; }
+  .chpill { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; padding: 5px 12px 5px 6px; border-radius: var(--r-pill); border: 1px solid var(--border); background: var(--surface); color: var(--text-dim); cursor: pointer; transition: all .14s; }
+  .chpill:hover { border-color: var(--border-strong); }
+  .chpill.on { background: var(--text); color: #fff; border-color: var(--text); }
+  .chpill .cav { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-serif); font-size: 10px; font-weight: 700; color: #fff; flex: none; }
+  .chpill.all { padding-left: 13px; }
+  .toolbar .spacer { flex: 1; }
+  .dragdrop-hint { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-faint); }
+  .dragdrop-hint .gx { font-size: 13px; letter-spacing: -1px; }
+  .seg { font-size: 13px; font-weight: 600; color: var(--text-dim); cursor: pointer; background: none; border: none; font-family: inherit; }
+  .seg.dim { color: var(--text-faint); }
+
+  /* board */
+  .board { max-width: 1280px; margin: 0 auto; padding: 0 var(--s8) var(--s16); display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s5); align-items: start; }
+  .col { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-card); padding: var(--s4); min-height: 200px; transition: background .15s, border-color .15s; }
+  .col.drop-target { background: var(--accent-soft); border-color: var(--accent); }
+  .col.drop-target .col-body { outline: 2px dashed color-mix(in srgb, var(--accent) 45%, transparent); outline-offset: 5px; border-radius: var(--r-btn); min-height: 60px; }
+  .col-h { display: flex; align-items: center; gap: 9px; padding: 4px 6px var(--s4); }
+  .col-h .dt { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+  .col-h .nm { font-weight: 700; font-size: 15px; }
+  .col-h .en { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint); }
+  .col-h .ct { margin-left: auto; font-family: var(--font-mono); font-size: 12px; color: var(--text-faint); background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-pill); padding: 1px 9px; }
+  .col-body { display: flex; flex-direction: column; gap: var(--s3); }
+
+  .cmcard { display: block; position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-btn); padding: 13px 14px; box-shadow: var(--sh-1); cursor: grab; transition: box-shadow .16s, transform .16s, border-color .16s, opacity .16s; }
+  .cmcard:hover { box-shadow: var(--sh-2); transform: translateY(-2px); border-color: var(--border-strong); }
+  .cmcard:active { cursor: grabbing; }
+  .cmcard.dragging { opacity: .4; box-shadow: none; transform: none; cursor: grabbing; }
+  .cmcard .topline { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
+  .cmcard .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--text-dim); }
+  .cmcard .chip .cav { width: 19px; height: 19px; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-serif); font-size: 10px; font-weight: 700; color: #fff; flex: none; }
+  .cmcard .unread { margin-left: auto; display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: var(--accent-ink); background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); border-radius: var(--r-pill); padding: 2px 8px; white-space: nowrap; flex: none; }
+  .cmcard .unread .d { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  .cmcard .title { font-family: var(--font-serif); font-size: 16px; font-weight: 700; line-height: 1.3; margin-bottom: 9px; text-wrap: pretty; }
+  .cmcard .meta { display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; color: var(--text-dim); }
+  .cmcard .meta .m { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .cmcard .meta .m .k { font-family: var(--font-mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-faint); width: 38px; flex: none; }
+  .cmcard .meta .m .v { font-weight: 600; color: var(--text); white-space: nowrap; }
+  .cmcard .meta .m.due.soon .v { color: var(--avoid); }
+  .cmcard .soontag { font-size: 10.5px; font-weight: 700; color: var(--avoid); background: var(--avoid-soft); border-radius: var(--r-pill); padding: 1px 8px; white-space: nowrap; }
+  .cmcard .foot { display: flex; align-items: center; gap: 8px; margin-top: 11px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .cmcard .utag { font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: var(--r-pill); white-space: nowrap; flex: none; }
+  .cmcard .utag.personal { background: var(--bg-tint); color: var(--text-dim); }
+  .cmcard .utag.commercial { background: #F3E7CE; color: #7A5A12; }
+  .cmcard .updated { font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .cmcard .go { font-size: 12.5px; font-weight: 600; color: var(--accent); white-space: nowrap; flex: none; }
+  .cmcard:hover .go { text-decoration: underline; }
+  .cmcard .movebtn { margin-left: auto; font-family: inherit; font-size: 12px; font-weight: 600; color: var(--text-dim); background: var(--bg-tint); border: 1px solid var(--border); border-radius: var(--r-pill); padding: 3px 10px; cursor: pointer; white-space: nowrap; flex: none; transition: border-color .14s, color .14s, background .14s; }
+  .cmcard .movebtn:hover { border-color: var(--border-strong); color: var(--text); }
+  .cmcard .savebtn { margin-left: auto; font-family: inherit; font-size: 12px; font-weight: 600; color: var(--accent-ink); background: var(--accent-soft); border: 1px solid var(--accent); border-radius: var(--r-pill); padding: 3px 11px; cursor: pointer; white-space: nowrap; flex: none; transition: filter .14s; }
+  .cmcard .savebtn:hover { filter: brightness(.96); }
+  .cmcard .archived { margin-left: auto; font-size: 11.5px; font-weight: 600; color: #1F7A4D; background: #E6F2EA; border-radius: var(--r-pill); padding: 3px 11px; white-space: nowrap; flex: none; }
+  .cmcard:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .movemenu { position: absolute; right: 12px; bottom: 46px; z-index: 20; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--r-btn); box-shadow: var(--sh-pop); padding: 5px; display: flex; flex-direction: column; gap: 2px; min-width: 156px; }
+  .movemenu .mh { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint); padding: 5px 9px 4px; }
+  .movemenu .mi { display: flex; align-items: center; gap: 9px; font-family: inherit; font-size: 13px; font-weight: 600; color: var(--text); background: none; border: none; border-radius: 7px; padding: 8px 9px; cursor: pointer; text-align: left; white-space: nowrap; }
+  .movemenu .mi:hover, .movemenu .mi:focus-visible { background: var(--bg-tint); outline: none; }
+  .movemenu .mi .dt { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+
+  .col-empty { text-align: center; padding: var(--s8) var(--s4); color: var(--text-faint); font-size: 13px; }
+  .addcm { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 11px; margin-top: var(--s2); border: 1.5px dashed var(--border-strong); border-radius: var(--r-btn); color: var(--text-dim); font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; background: none; width: 100%; font-family: inherit; }
+  .addcm:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+
+  @media (max-width: 980px) { .board { grid-template-columns: 1fr; } .col { min-height: 0; } }
+  @media (max-width: 760px) {
+    .topbar .inner, .head, .toolbar, .board { padding-left: var(--s4); padding-right: var(--s4); }
+    .nav { order: 9; width: 100%; overflow-x: auto; gap: 4px; margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--border); }
+    .nav a { white-space: nowrap; flex: none; }
+    .topbar .inner { flex-wrap: wrap; }
+    .head h1 { font-size: 30px; }
+    .summary { flex-wrap: wrap; gap: var(--s3); }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="inner">
+    <a class="brand" href="dashboard.html"><span class="mk">霧</span>CharacterHub</a>
+    <nav class="nav">
+      <a href="dashboard.html">我的角色</a>
+      <a class="on">委託<span class="nbar" id="navUnread">3</span></a>
+      <a href="relationships.html">關係圖</a>
+      <a href="height-compare.html">身高比較</a>
+      <a href="worldview.html">世界觀</a>
+      <a href="settings.html">設定</a>
+    </nav>
+    <div class="spacer"></div>
+    <button class="btn btn-ghost btn-sm js-soon" style="white-space:nowrap">＠yoi-studio</button>
+    <div class="avatar"></div>
+  </div>
+</div>
+
+<div class="head">
+  <div class="row">
+    <h1>委託收件匣</h1>
+    <div class="spacer"></div>
+    <div class="summary" id="summary"></div>
+  </div>
+</div>
+
+<div class="toolbar">
+  <div class="chfilters" id="chfilters"></div>
+  <div class="spacer"></div>
+  <span class="dragdrop-hint"><span class="gx">⠿</span>拖曳，或點卡片「移至」換階段</span>
+  <button class="seg dim" id="sortBtn" style="margin-left:14px">排序：截止日 ▾</button>
+</div>
+
+<div class="board" id="board"></div>
+
+<script src="../assets/app.js"></script>
+<script>
+  window.__autoInit = false;
+  document.querySelectorAll('.js-soon').forEach(el => el.addEventListener('click', e => { e.preventDefault(); toast('功能開發中 · Coming soon'); }));
+
+  const CHARS = {
+    yoi:   {name:'宵霧', sp:'妖狐',  c:'#8FA3B0'},
+    tomori:{name:'燈守', sp:'付喪神', c:'#C8463C'},
+    hiru:  {name:'晝',   sp:'半神',  c:'#E0A23B'},
+    nozomi:{name:'望',   sp:'人類',  c:'#2E6F6A'},
+  };
+  const STATUS = {
+    talk:     {t:'洽談中', en:'In talks',     c:'#A98B4E'},
+    progress: {t:'進行中', en:'In progress',  c:'#3B6FB0'},
+    done:     {t:'已完成', en:'Delivered',    c:'#3E8E5A'},
+  };
+  // account-level: every commission across every character (cm1/cm2 map to 宵霧's real briefs)
+  const COMMS = [
+    {id:'cm2', char:'yoi',    title:'Q版表情貼圖 ×4',  artist:'',           status:'talk',     due:'2026.08.01', budget:'NT$3,200', usage:'commercial', unread:2, updated:'5 小時前', ago:5},
+    {id:'cm3', char:'tomori', title:'立繪翻新・全身',   artist:'@kuro_e',    status:'talk',     due:'未定',        budget:'洽談中',    usage:'personal',   unread:1, updated:'昨天', ago:26},
+    {id:'cm1', char:'yoi',    title:'生日紀念・提燈半身',artist:'@hoshi_ame', status:'progress', due:'2026.07.15', budget:'NT$8,000', usage:'personal',   unread:0, updated:'2 天前', ago:48},
+    {id:'cm4', char:'hiru',   title:'主視覺・坐姿全身',  artist:'@rin_draws', status:'progress', due:'2026.06.30', budget:'NT$12,000',usage:'commercial', unread:0, updated:'3 天前', ago:72},
+    {id:'cm5', char:'hiru',   title:'SD 配對掛畫',      artist:'@rin_draws', status:'progress', due:'2026.07.20', budget:'NT$5,000', usage:'personal',   unread:0, updated:'1 週前', ago:168},
+    {id:'cm6', char:'yoi',    title:'立繪・初版巫裝',    artist:'@momoko',    status:'done',     due:'2026.04.10', budget:'NT$9,500', usage:'personal',   unread:0, updated:'1 個月前', ago:720},
+    {id:'cm7', char:'nozomi', title:'頭像 icon',        artist:'@momoko',    status:'done',     due:'2026.03.02', budget:'NT$2,000', usage:'personal',   unread:0, updated:'2 個月前', ago:1440},
+  ];
+  const USAGE = { personal:'個人', commercial:'商用' };
+  const TODAY = new Date('2026-06-04');
+  const esc = s => (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  let charFilter = '*', sortBy = 'due';
+  const board = document.getElementById('board');
+
+  function dueSoon(due){
+    const m = /^(\d{4})\.(\d{2})\.(\d{2})$/.exec(due); if(!m) return false;
+    const d = new Date(+m[1], +m[2]-1, +m[3]);
+    const days = (d - TODAY) / 86400000;
+    return days >= 0 && days <= 30;
+  }
+  function dueVal(due){ const m=/^(\d{4})\.(\d{2})\.(\d{2})$/.exec(due); return m ? +new Date(+m[1],+m[2]-1,+m[3]) : Infinity; }
+
+  // char filter pills
+  function renderChips(){
+    const counts = { '*': COMMS.length };
+    Object.keys(CHARS).forEach(id => counts[id] = COMMS.filter(c=>c.char===id).length);
+    const el = document.getElementById('chfilters');
+    el.innerHTML = `<button class="chpill all ${charFilter==='*'?'on':''}" data-c="*">全部委託 ${counts['*']}</button>` +
+      Object.entries(CHARS).filter(([id])=>counts[id]).map(([id,c])=>`<button class="chpill ${charFilter===id?'on':''}" data-c="${id}"><span class="cav" style="background:${c.c}">${c.name[0]}</span>${c.name} ${counts[id]}</button>`).join('');
+    el.querySelectorAll('.chpill').forEach(b=>b.onclick=()=>{ charFilter=b.dataset.c; renderChips(); renderBoard(); });
+  }
+
+  function cardHTML(c){
+    const ch = CHARS[c.char];
+    const soon = dueSoon(c.due);
+    return `<div class="cmcard" draggable="true" role="link" tabindex="0" data-id="${c.id}" data-href="character.html?mode=commission&commission=${c.id}" aria-label="${esc(c.title)}，開啟委託">
+      <div class="topline">
+        <span class="chip"><span class="cav" style="background:${ch.c}">${ch.name[0]}</span>${ch.name}</span>
+        ${c.unread?`<span class="unread"><span class="d"></span>${c.unread} 則新訊息</span>`:''}
+      </div>
+      <div class="title">${esc(c.title)}</div>
+      <div class="meta">
+        ${c.artist?`<div class="m"><span class="k">繪師</span><span class="v">${esc(c.artist)}</span></div>`:`<div class="m"><span class="k">繪師</span><span class="v" style="color:var(--text-faint);font-weight:500">尚未指定</span></div>`}
+        <div class="m due ${soon?'soon':''}"><span class="k">截止</span><span class="v">${esc(c.due)}</span>${soon?'<span class="soontag">即將到期</span>':''}</div>
+        <div class="m"><span class="k">預算</span><span class="v">${esc(c.budget)}</span></div>
+      </div>
+      <div class="foot">
+        <span class="utag ${c.usage}">${USAGE[c.usage]}</span>
+        <span class="updated">${esc(c.updated)}</span>
+        ${c.status==='done'
+          ? (c.archived
+              ? '<span class="archived">✓ 已回存相簿</span>'
+              : `<button class="savebtn" type="button" data-save="${c.id}">↓ 回存作品</button>`)
+          : `<button class="movebtn" type="button" data-id="${c.id}" aria-haspopup="true" aria-label="移動到其他階段">移至 ▾</button>`}
+        <span class="go">查看 →</span>
+      </div>
+    </div>`;
+  }
+
+  function renderBoard(){
+    closeMenu();
+    const pool = COMMS.filter(c => charFilter==='*' || c.char===charFilter);
+    board.innerHTML = Object.entries(STATUS).map(([key,st])=>{
+      let list = pool.filter(c=>c.status===key);
+      list = list.slice().sort((a,b)=> sortBy==='due' ? dueVal(a.due)-dueVal(b.due) : a.ago-b.ago);
+      const body = list.length
+        ? list.map(cardHTML).join('')
+        : `<div class="col-empty">這個階段沒有委託</div>`;
+      const addLabel = key==='talk' ? '＋ 新委託洽談' : '';
+      return `<div class="col" data-st="${key}">
+        <div class="col-h"><span class="dt" style="background:${st.c}"></span><span class="nm">${st.t}</span><span class="en">${st.en}</span><span class="ct">${list.length}</span></div>
+        <div class="col-body">${body}</div>
+        ${key==='talk'?`<button class="addcm" id="addCm">${addLabel}</button>`:''}
+      </div>`;
+    }).join('');
+    const add = document.getElementById('addCm');
+    if(add) add.onclick = ()=> toast('開新委託洽談…（示意）');
+  }
+
+  // ---------- drag & drop: move a card to another status column ----------
+  let dragId = null, dragHappened = false;
+  function clearDropTargets(){ board.querySelectorAll('.col.drop-target').forEach(c=>c.classList.remove('drop-target')); }
+  board.addEventListener('dragstart', e=>{
+    const card = e.target.closest('.cmcard'); if(!card) return;
+    dragId = card.dataset.id; dragHappened = false;
+    card.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    try{ e.dataTransfer.setData('text/plain', dragId); }catch(_){}
+  });
+  board.addEventListener('dragend', e=>{
+    const card = e.target.closest('.cmcard'); if(card) card.classList.remove('dragging');
+    clearDropTargets(); dragId = null;
+  });
+  board.addEventListener('dragover', e=>{
+    if(!dragId) return;
+    const col = e.target.closest('.col'); if(!col) return;
+    e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+    if(!col.classList.contains('drop-target')){ clearDropTargets(); col.classList.add('drop-target'); }
+  });
+  function archiveWork(id){
+    const c = COMMS.find(x=>x.id===id); if(!c || c.archived) return;
+    c.archived = true;
+    const ch = CHARS[c.char];
+    try{
+      const proj = (new URLSearchParams(location.search).get('project')) || localStorage.getItem('ch:proj') || 'tokoyo';
+      const key = 'ch:archive:' + proj;
+      const arr = JSON.parse(localStorage.getItem(key) || '[]');
+      arr.unshift({ id:'a'+Date.now(), title:c.title, char:ch?ch.name:'', artist:c.artist||'', usage:c.usage, at:Date.now() });
+      localStorage.setItem(key, JSON.stringify(arr));
+    }catch(e){}
+    renderBoard();
+    toast(`✓ 已回存到${ch?ch.name:'角色'}的相簿`);
+  }
+
+  function moveCard(id, newSt){
+    const c = COMMS.find(x=>x.id===id);
+    if(!c || c.status===newSt) return;
+    c.status = newSt; c.ago = 0; c.updated = '剛剛';
+    if(newSt==='done') c.unread = 0;
+    renderBoard(); renderSummary(); renderChips();
+    toast(`「${c.title}」→ ${STATUS[newSt].t}`);
+  }
+
+  board.addEventListener('drop', e=>{
+    if(!dragId) return;
+    const col = e.target.closest('.col'); if(!col) return;
+    e.preventDefault();
+    const newSt = col.dataset.st;
+    const c = COMMS.find(x=>x.id===dragId);
+    if(c && c.status !== newSt){ dragHappened = true; moveCard(dragId, newSt); }
+    clearDropTargets(); dragId = null;
+  });
+
+  // ---------- tap / keyboard alternative to drag (works on touch) ----------
+  let openMenu = null;
+  function closeMenu(){ if(openMenu){ openMenu.remove(); openMenu = null; } }
+  function openMoveMenu(btn){
+    const id = btn.dataset.id; const c = COMMS.find(x=>x.id===id); if(!c) return;
+    const sameCard = openMenu && openMenu.dataset.for===id;
+    closeMenu();
+    if(sameCard) return; // second tap on same card closes
+    const card = btn.closest('.cmcard'); if(!card) return;
+    const menu = document.createElement('div'); menu.className = 'movemenu'; menu.dataset.for = id;
+    const others = Object.entries(STATUS).filter(([k])=>k!==c.status);
+    menu.innerHTML = `<div class="mh">移至階段</div>` + others.map(([k,st])=>`<button class="mi" type="button" data-id="${id}" data-st="${k}"><span class="dt" style="background:${st.c}"></span>${st.t}</button>`).join('');
+    card.appendChild(menu);
+    openMenu = menu;
+    const first = menu.querySelector('.mi'); if(first) first.focus();
+  }
+
+  // unified board click: move button → menu; menu item → move; otherwise open the card
+  board.addEventListener('click', e=>{
+    const sv = e.target.closest('.savebtn');
+    if(sv){ e.stopPropagation(); archiveWork(sv.dataset.save); return; }
+    const mb = e.target.closest('.movebtn');
+    if(mb){ e.stopPropagation(); openMoveMenu(mb); return; }
+    const mi = e.target.closest('.movemenu .mi');
+    if(mi){ e.stopPropagation(); const id=mi.dataset.id, st=mi.dataset.st; closeMenu(); moveCard(id, st); return; }
+    if(e.target.closest('.movemenu')) return;
+    const card = e.target.closest('.cmcard');
+    if(card && card.dataset.href) location.href = card.dataset.href;
+  });
+  // suppress navigation right after a drag moved the card
+  board.addEventListener('click', e=>{ if(dragHappened){ e.preventDefault(); e.stopPropagation(); dragHappened = false; } }, true);
+  // keyboard: Enter on a focused card opens it
+  board.addEventListener('keydown', e=>{
+    if(e.key==='Enter'){ const card = e.target.closest('.cmcard'); if(card && e.target===card && card.dataset.href){ location.href = card.dataset.href; } }
+  });
+  // dismiss the menu on outside click / Esc
+  document.addEventListener('click', e=>{ if(openMenu && !e.target.closest('.movemenu') && !e.target.closest('.movebtn')) closeMenu(); });
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeMenu(); });
+
+  function renderSummary(){
+    const active = COMMS.filter(c=>c.status!=='done').length;
+    const unreadCount = COMMS.filter(c=>c.unread>0).length;
+    const soonCount = COMMS.filter(c=>c.status!=='done' && dueSoon(c.due)).length;
+    document.getElementById('summary').innerHTML = `
+      <span class="s"><span class="dt" style="background:#3B6FB0"></span><b>${active}</b> 件進行中</span>
+      <span class="sep"></span>
+      <span class="s"><span class="dt" style="background:var(--accent)"></span><b>${unreadCount}</b> 件待回覆</span>
+      <span class="sep"></span>
+      <span class="s"><span class="dt" style="background:#C8463C"></span><b>${soonCount}</b> 件即將到期</span>`;
+    document.getElementById('navUnread').textContent = unreadCount;
+  }
+
+  document.getElementById('sortBtn').onclick = function(){
+    sortBy = sortBy==='due' ? 'updated' : 'due';
+    this.textContent = sortBy==='due' ? '排序：截止日 ▾' : '排序：最近更新 ▾';
+    renderBoard();
+  };
+
+  renderSummary();
+  renderChips();
+  renderBoard();
+</script>
+
+<script src="../assets/data.js"></script>
+<script src="../assets/shell.js"></script>
+</body>
+</html>

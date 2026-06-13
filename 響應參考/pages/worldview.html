@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>世界觀 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/ds.css">
+<link rel="stylesheet" href="../assets/shell.css">
+<link rel="stylesheet" href="../assets/components.css">
+<link rel="stylesheet" href="../assets/worldrel.css">
+</head>
+<body>
+<div class="page" id="root"></div>
+
+<script src="../assets/data.js"></script>
+<script src="../assets/components.js"></script>
+<script>
+  (function () {
+    var root = document.getElementById('root');
+    var pid = new URLSearchParams(location.search).get('project') || localStorage.getItem('ch:proj') || 'tokoyo';
+    if (!OCData.project(pid)) pid = OCData.projects[0].id;
+    var p = OCData.project(pid);
+    var ROLE = OCData.getRole(pid);
+    var isPreview = ROLE === 'visitor';
+    // action-level permissions (product concept), not the fixture role name
+    var canCreate = OCData.canAction('worldEntry:create', pid) && !isPreview;
+    var canUpdate = OCData.canAction('worldEntry:update', pid) && !isPreview;
+    var canArchive = OCData.canAction('worldEntry:archive', pid) && !isPreview;
+    var canEdit = canCreate || canUpdate; // any edit affordance
+    var publicOnly = isPreview;
+
+    var TYPE_C = { nation: '#3B5E6B', place: '#5E7E55', org: '#B5654A', event: '#9E332B', race: '#8A6FA0', item: '#C9A24B' };
+    var typeColor = function (e) { return TYPE_C[e.type] || e.c || '#8A857C'; };
+    var typeLabel = function (t) { return OCData.typeLabel[t] || t; };
+
+    var all = [];          // worldEntries for project (respecting publicOnly)
+    var expanded = {};     // tree expand state (UI-only)
+    var selId = null;
+    var q = '', typeF = '*';
+    var loadError = false;
+
+    // 4 distinct states (never conflate 未啟用 with 沒有內容):
+    //  'feature'   module not enabled
+    //  'forbidden' no view permission
+    //  null        ok (may still be empty → handled by emptyWorld)
+    function gate() {
+      if (!OCData.hasFeature(pid, 'worldview')) return 'feature';
+      if (isPreview && p.visibility !== 'public') return 'forbidden';
+      return null;
+    }
+
+    function header() {
+      var html = OCUI.contextHeader({ scope: 'project', crumbs: [p.name, '世界觀'] });
+      html += '<div class="pageh"><div class="ht"><h1>世界觀 <span class="en">Worldview</span></h1>'
+        + '<p class="sub">' + p.name + ' 的設定集：國家、組織、地點、事件，可建立階層與關聯角色。' + (isPreview ? '<b>（公開預覽：只顯示公開條目）</b>' : '') + '</p></div>'
+        + (canCreate ? '<div class="acts"><button class="btn btn-accent" id="addRoot">＋ 新增條目</button></div>' : '') + '</div>';
+      root.innerHTML = html;
+      var ar = document.getElementById('addRoot'); if (ar) ar.onclick = function () { addEntry(null); };
+    }
+
+    function render() {
+      header();
+      var g = gate();
+      if (g === 'feature') { root.appendChild(OCUI.emptyState({ title: '世界觀模組未啟用。', body: '這個企劃尚未開啟世界觀模組，可在企劃設定中啟用。', icon: 'plug' })); return; }
+      if (g === 'forbidden') { root.appendChild(OCUI.forbiddenState({ title: '沒有檢視權限。', body: '這個企劃的世界觀未公開，只有企劃成員能檢視。' })); return; }
+      if (loadError) { root.appendChild(OCUI.errorState({ title: '世界觀載入失敗。', code: 'LOAD_ERROR', onRetry: function () { loadError = false; boot(); } })); return; }
+
+      var cols = document.createElement('div'); cols.className = 'wv-cols';
+      cols.innerHTML = '<div class="wv-list-pane"><div class="wv-list-head" id="lhead"></div><div class="wv-tree" id="tree"></div></div><div id="detailWrap"></div>';
+      root.appendChild(cols);
+      buildListHead();
+      buildTree();
+      buildDetail();
+    }
+
+    function buildListHead() {
+      var head = document.getElementById('lhead');
+      var types = ['*'].concat(Object.keys(TYPE_C).filter(function (t) { return all.some(function (e) { return e.type === t; }); }));
+      head.innerHTML = '<div class="searchf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="q" type="search" placeholder="搜尋條目…" value="' + q + '" style="min-width:0;width:100%"></div>'
+        + '<div class="filterbar">' + types.map(function (t) { return '<button class="fbtn' + (t === typeF ? ' on' : '') + '" data-t="' + t + '">' + (t === '*' ? '全部' : typeLabel(t)) + '</button>'; }).join('') + '</div>';
+      head.querySelector('#q').oninput = function (e) { q = e.target.value.trim(); buildTree(); };
+      head.querySelectorAll('[data-t]').forEach(function (b) { b.onclick = function () { typeF = b.dataset.t; buildListHead(); buildTree(); }; });
+    }
+
+    function matches(e) {
+      if (typeF !== '*' && e.type !== typeF) return false;
+      if (q && (e.name + ' ' + (e.summary || '')).toLowerCase().indexOf(q.toLowerCase()) < 0) return false;
+      return true;
+    }
+
+    function buildTree() {
+      var tree = document.getElementById('tree'); if (!tree) return;
+      // when searching/filtering, show a flat filtered list; else hierarchy
+      var filtering = q || typeF !== '*';
+      if (filtering) {
+        var hits = all.filter(matches);
+        if (!hits.length) { tree.innerHTML = ''; tree.appendChild(OCUI.emptyState({ title: '找不到條目。', body: '換個關鍵字或類型。' })); return; }
+        tree.innerHTML = hits.map(function (e) { return rowHTML(e, true); }).join('');
+      } else {
+        var roots = OCData.worldChildren(pid, null, { publicOnly: publicOnly });
+        if (!roots.length) { tree.innerHTML = ''; tree.appendChild(emptyWorld()); return; }
+        tree.innerHTML = roots.map(function (e) { return nodeHTML(e); }).join('');
+      }
+      tree.querySelectorAll('[data-sel]').forEach(function (r) { r.onclick = function (ev) { if (ev.target.closest('.tw')) return; selId = r.dataset.sel; buildTree(); buildDetail(); }; });
+      tree.querySelectorAll('.tw:not(.leaf)').forEach(function (tw) { tw.onclick = function (ev) { ev.stopPropagation(); var id = tw.dataset.tw; expanded[id] = !expanded[id]; buildTree(); }; });
+    }
+
+    function nodeHTML(e) {
+      var kids = OCData.worldChildren(pid, e.id, { publicOnly: publicOnly });
+      var open = expanded[e.id] !== false; // default expanded
+      var childHtml = kids.length && open ? '<div class="wv-children">' + kids.map(nodeHTML).join('') + '</div>' : '';
+      return '<div class="wv-node">' + rowHTML(e, false, kids.length, open) + childHtml + '</div>';
+    }
+    function rowHTML(e, flat, kidCount, open) {
+      var tw = flat || !kidCount ? '<span class="tw leaf">·</span>' : '<span class="tw" data-tw="' + e.id + '">' + (open ? '▾' : '▸') + '</span>';
+      var lock = e.visibility !== 'public' ? '<span class="lock" title="' + (e.visibility === 'private' ? '私人' : e.visibility) + '">' + OCIcon('lock') + '</span>' : '';
+      return '<div class="wv-row' + (e.id === selId ? ' sel' : '') + '" data-sel="' + e.id + '">' + tw
+        + '<span class="ic" style="background:' + typeColor(e) + '"></span><span class="nm">' + e.name + '</span>' + lock
+        + '<span class="ty">' + typeLabel(e.type) + '</span></div>';
+    }
+
+    function emptyWorld() {
+      // module IS enabled but has no entries — distinct from 'feature' state
+      return OCUI.emptyState({ title: '世界觀已啟用，但還沒有條目。', body: canCreate ? '從一個國家、組織或地點開始建立你的世界。' : '擁有者還沒有建立公開條目。', ctaLabel: canCreate ? '＋ 新增第一個條目' : null, onCta: function () { addEntry(null); } });
+    }
+
+    function buildDetail() {
+      var wrap = document.getElementById('detailWrap'); if (!wrap) return;
+      var e = selId ? OCData.worldEntry(selId) : null;
+      if (!e || (publicOnly && e.visibility !== 'public')) { wrap.innerHTML = '<div class="wv-detail"><div class="wv-body" style="padding:var(--s12);text-align:center;color:var(--text-faint)">選擇左側的條目以檢視詳情。</div></div>'; return; }
+      var col = typeColor(e);
+      var anc = OCData.worldAncestors(e.id);
+      var crumb = anc.map(function (a) { return '<a data-go="' + a.id + '">' + a.name + '</a>'; }).join('<span class="sep">›</span>');
+      var elinks = OCData.linksOfEntity(pid, e.id, { publicOnly: publicOnly });
+      var chars = elinks.filter(function (l) { return l.isChar; });
+      var wents = elinks.filter(function (l) { return !l.isChar; });
+      var kids = OCData.worldChildren(pid, e.id, { publicOnly: publicOnly });
+
+      var h = '<div class="wv-detail"><div class="strip" style="background:' + col + '"></div><div class="wv-dh">'
+        + (crumb ? '<div class="wv-crumb">' + crumb + '<span class="sep">›</span><span>' + e.name + '</span></div>' : '')
+        + '<h1>' + e.name + ' <span class="typebadge" style="background:' + col + '">' + typeLabel(e.type) + '</span>' + (e.visibility !== 'public' ? OCUI && '' : '') + '</h1>'
+        + '<div style="margin-top:6px">' + (e.visibility === 'public' ? '<span class="badge public"><span class="d" style="background:var(--must)"></span>公開</span>' : '<span class="badge private"><span class="d" style="background:var(--text-faint)"></span>' + (e.visibility === 'private' ? '私人' : '僅成員') + '</span>') + '</div>';
+      if (canEdit) {
+        h += '<div class="acts">' + (canUpdate ? '<button class="btn btn-sm" data-act="edit">✎ 編輯</button>' : '') + (canCreate ? '<button class="btn btn-sm" data-act="addchild">＋ 子條目</button>' : '') + (canArchive ? '<button class="btn btn-sm" data-act="archive">封存／刪除</button>' : '') + '</div>';
+      }
+      h += '</div><div class="wv-body">';
+      // summary + content
+      h += '<div class="wv-section"><div class="sh2">摘要</div><div class="wv-content">' + (e.summary || '—') + '</div></div>';
+      if (e.content) h += '<div class="wv-section"><div class="sh2">內容</div><div class="wv-content">' + e.content + '</div></div>';
+      else h += '<div class="wv-section"><div class="sh2">內容</div><div style="font-size:13px;color:var(--text-faint)">這個條目還沒有內容。' + (canEdit ? '點「編輯」補充。' : '') + '</div></div>';
+      // related characters (EntityLink)
+      h += '<div class="wv-section"><div class="sh2">關聯角色 <span class="ct">· ' + chars.length + '</span></div>'
+        + (chars.length ? '<div class="linkrow">' + chars.map(function (l) { return '<span class="linkchip" data-char="' + l.targetId + '"><span class="av" style="background:' + l.color + '">' + l.name[0] + '</span>' + l.name + '<span class="rel">' + l.label + '</span></span>'; }).join('') + '</div>' : '<div style="font-size:13px;color:var(--text-faint)">尚無關聯角色。</div>') + '</div>';
+      // related world entries (EntityLink)
+      if (wents.length) h += '<div class="wv-section"><div class="sh2">關聯條目 <span class="ct">· ' + wents.length + '</span></div><div class="linkrow">' + wents.map(function (l) { return '<span class="linkchip" data-go="' + l.targetId + '"><span class="sq" style="background:' + l.color + '">' + l.name[0] + '</span>' + l.name + '<span class="rel">' + l.label + '</span></span>'; }).join('') + '</div></div>';
+      // children
+      if (kids.length) h += '<div class="wv-section"><div class="sh2">下層條目 <span class="ct">· ' + kids.length + '</span></div><div class="childlist">' + kids.map(function (k) { return '<div class="ci" data-go="' + k.id + '"><span class="ic" style="background:' + typeColor(k) + '"></span><span class="nm">' + k.name + '</span><span class="sm">' + typeLabel(k.type) + '</span></div>'; }).join('') + '</div></div>';
+      // gallery summary (placeholder)
+      h += '<div class="wv-section"><div class="sh2">圖片／相簿</div><div class="gal" style="grid-template-columns:repeat(3,1fr)"><div class="ph" data-ph="' + e.name + ' 參考"></div></div></div>';
+      h += '</div></div>';
+      wrap.innerHTML = h;
+
+      wrap.querySelectorAll('[data-go]').forEach(function (a) { a.onclick = function () { selId = a.dataset.go; var anc2 = OCData.worldAncestors(selId); anc2.forEach(function (x) { expanded[x.id] = true; }); buildTree(); buildDetail(); }; });
+      wrap.querySelectorAll('[data-char]').forEach(function (a) { a.onclick = function () { location.href = 'character.html?c=' + a.dataset.char; }; });
+      var ed = wrap.querySelector('[data-act="edit"]'); if (ed) ed.onclick = function () { editEntry(e); };
+      var ac = wrap.querySelector('[data-act="addchild"]'); if (ac) ac.onclick = function () { addEntry(e.id); };
+      var av = wrap.querySelector('[data-act="archive"]'); if (av) av.onclick = function () { archiveEntry(e); };
+      wrap.querySelectorAll('.ph[data-ph]').forEach(function (ph) { ph.style.cssText += ';display:grid;place-items:center;background:linear-gradient(135deg,var(--bg-tint),var(--surface-2));border:1px solid var(--border);border-radius:var(--r-img);color:var(--text-faint);font-size:11px;aspect-ratio:4/3'; ph.textContent = ph.dataset.ph; });
+    }
+
+    // ---- mutations (Demo, cross-page via OCDemo) ----
+    function refresh(selectId) {
+      all = OCData.worldEntries(pid, { publicOnly: publicOnly });
+      if (selectId !== undefined) selId = selectId;
+      buildListHead(); buildTree(); buildDetail();
+    }
+    function entryForm(e, parentId) {
+      var wrap = document.createElement('div');
+      var pName = parentId ? (OCData.worldEntry(parentId) || {}).name : '';
+      wrap.innerHTML = '<div class="field" style="margin-bottom:var(--s3)"><label>名稱</label><input class="input" id="f-name" value="' + (e ? e.name : '') + '"></div>'
+        + '<div class="field" style="margin-bottom:var(--s3)"><label>類型</label><select class="select" id="f-type">' + Object.keys(TYPE_C).map(function (t) { return '<option value="' + t + '"' + (e && e.type === t ? ' selected' : '') + '>' + typeLabel(t) + '</option>'; }).join('') + '</select></div>'
+        + (pName ? '<div class="field" style="margin-bottom:var(--s3)"><label>上層</label><input class="input" value="' + pName + '" disabled></div>' : '')
+        + '<div class="field" style="margin-bottom:var(--s3)"><label>摘要</label><input class="input" id="f-sum" value="' + (e ? (e.summary || '') : '') + '"></div>'
+        + '<div class="field" style="margin-bottom:var(--s3)"><label>內容</label><textarea class="input" id="f-content" rows="4">' + (e ? (e.content || '') : '') + '</textarea></div>'
+        + '<div class="field"><label>可見性</label><select class="select" id="f-vis"><option value="public"' + (e && e.visibility === 'public' ? ' selected' : '') + '>公開</option><option value="members"' + (e && e.visibility === 'members' ? ' selected' : '') + '>僅成員</option><option value="private"' + (e && e.visibility === 'private' ? ' selected' : '') + '>私人</option></select></div>';
+      return wrap;
+    }
+    function addEntry(parentId) {
+      var form = entryForm(null, parentId);
+      OCUI.modal({ title: parentId ? '新增子條目' : '新增條目', body: form, actions: [ { label: '取消' }, { label: '建立', kind: 'accent', onClick: function () {
+        var name = form.querySelector('#f-name').value.trim();
+        if (!name) { OCUI.toast('請輸入名稱'); return true; }
+        var ne = OCDemo.createWorldEntry({
+          project: pid, parentId: parentId || null,
+          name: name,
+          type: form.querySelector('#f-type').value,
+          summary: form.querySelector('#f-sum').value.trim(),
+          content: form.querySelector('#f-content').value.trim(),
+          visibility: form.querySelector('#f-vis').value,
+        });
+        if (parentId) { expanded[parentId] = true; OCData.worldAncestors(ne.id).forEach(function (x) { expanded[x.id] = true; }); }
+        refresh(ne.id);
+        OCUI.toast('已建立條目「' + name + '」', { demo: true });
+      } } ] });
+    }
+    function editEntry(e) {
+      var form = entryForm(e, e.parentId);
+      // parent cycle demo: a select to move parent, with cycle guard
+      var moveWrap = document.createElement('div'); moveWrap.style.marginTop = 'var(--s3)';
+      var candidates = all.filter(function (x) { return x.id !== e.id; });
+      moveWrap.innerHTML = '<div class="field"><label>上層條目（移動）</label><select class="select" id="f-parent"><option value="">（根條目）</option>'
+        + candidates.map(function (x) { return '<option value="' + x.id + '"' + (e.parentId === x.id ? ' selected' : '') + '>' + x.name + '</option>'; }).join('') + '</select></div>';
+      form.appendChild(moveWrap);
+      OCUI.modal({ title: '編輯條目', body: form, actions: [ { label: '取消' }, { label: '儲存', kind: 'accent', onClick: function () {
+        var name = form.querySelector('#f-name').value.trim();
+        if (!name) { OCUI.toast('請輸入名稱'); return true; }
+        var np = form.querySelector('#f-parent').value || null;
+        if (np && OCData.wouldCycle(e.id, np)) { OCUI.toast('⚠ 不能把條目移到自己的子條目底下（會造成循環）'); return true; }
+        OCDemo.updateWorldEntry(e.id, {
+          name: name,
+          type: form.querySelector('#f-type').value,
+          summary: form.querySelector('#f-sum').value.trim(),
+          content: form.querySelector('#f-content').value.trim(),
+          visibility: form.querySelector('#f-vis').value,
+          parentId: np,
+        });
+        if (np) { expanded[np] = true; }
+        OCData.worldAncestors(e.id).forEach(function (x) { expanded[x.id] = true; });
+        refresh(e.id);
+        OCUI.toast('已儲存「' + name + '」', { demo: true });
+      } } ] });
+    }
+    function archiveEntry(e) {
+      var kids = OCData.descendantCount(e.id);
+      if (kids > 0) {
+        // explicit choices — never leave a child pointing at a removed parent
+        var body = document.createElement('div');
+        body.innerHTML = '<p style="margin:0 0 var(--s3)">「' + e.name + '」底下還有 <b>' + kids + '</b> 個子條目。請選擇處理方式：</p>'
+          + '<label style="display:flex;gap:9px;align-items:flex-start;padding:10px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:pointer"><input type="radio" name="arch" value="cascade" checked style="margin-top:3px"><span><b>封存此條目與所有子條目</b><br><span style="font-size:12px;color:var(--text-dim)">整棵一起封存。</span></span></label>'
+          + '<label style="display:flex;gap:9px;align-items:flex-start;padding:10px;border:1px solid var(--border);border-radius:10px;cursor:pointer"><input type="radio" name="arch" value="reparent" style="margin-top:3px"><span><b>將子條目移到上一層，再封存此條目</b><br><span style="font-size:12px;color:var(--text-dim)">子條目改接到「' + ((OCData.entity(e.parentId) || {}).name || '根層') + '」，不會變成孤兒資料。</span></span></label>';
+        OCUI.modal({ title: '封存有子條目的條目', body: body, actions: [ { label: '取消' }, { label: '確認封存', kind: 'danger', onClick: function () {
+          var mode = body.querySelector('input[name=arch]:checked').value;
+          OCDemo.archiveWorldEntry(e.id, mode);
+          var nextSel = (mode === 'reparent' ? (e.parentId || null) : (e.parentId || null));
+          refresh(nextSel);
+          OCUI.toast(mode === 'cascade' ? '已封存「' + e.name + '」及其 ' + kids + ' 個子條目' : '已將子條目移至上層，並封存「' + e.name + '」', { demo: true });
+        } } ] });
+      } else {
+        OCUI.confirm({ title: '封存／刪除條目？', message: '確定要封存「' + e.name + '」嗎？', confirmLabel: '封存', danger: true, onConfirm: function () {
+          OCDemo.archiveWorldEntry(e.id);
+          refresh(e.parentId || null);
+          OCUI.toast('已封存「' + e.name + '」', { demo: true });
+        } });
+      }
+    }
+
+    // initial load with skeleton
+    function boot() {
+      header();
+      var skwrap = document.createElement('div'); skwrap.className = 'wv-cols';
+      skwrap.innerHTML = '<div class="wv-list-pane" style="padding:var(--s4)"></div><div></div>';
+      root.appendChild(skwrap);
+      skwrap.firstChild.appendChild(OCUI.skeletonCards(1));
+      setTimeout(function () {
+        all = OCData.worldEntries(pid, { publicOnly: publicOnly });
+        var firstRoot = OCData.worldChildren(pid, null, { publicOnly: publicOnly })[0];
+        selId = firstRoot ? firstRoot.id : null;
+        render();
+      }, 340);
+    }
+    boot();
+  })();
+</script>
+<script src="../assets/shell.js"></script>
+</body>
+</html>

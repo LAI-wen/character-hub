@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design QA Phase 0 · Scope &amp; Prototype State Integration · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/ds.css">
+<link rel="stylesheet" href="assets/components.css">
+<style>
+  body { background: var(--bg); }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: var(--s12) var(--s8) var(--s16); }
+  .hero { border-bottom: 1px solid var(--border-strong); padding-bottom: var(--s8); margin-bottom: var(--s10); }
+  .hero .eyebrow { margin-bottom: 12px; }
+  .hero h1 { font-family: var(--font-serif); font-size: 38px; font-weight: 900; margin: 0; letter-spacing: -.025em; line-height: 1.07; }
+  .hero .lead { color: var(--text-dim); font-size: 15.5px; margin: var(--s4) 0 0; max-width: 68ch; line-height: 1.65; text-wrap: pretty; }
+  .hero .chips { display: flex; gap: var(--s2); margin-top: var(--s5); flex-wrap: wrap; }
+  section { margin-top: var(--s12); }
+  .sh { display: flex; align-items: baseline; gap: var(--s3); margin-bottom: var(--s4); }
+  .sh .ix { font-family: var(--font-mono); font-size: 13px; color: var(--text-faint); }
+  .sh h2 { font-family: var(--font-serif); font-size: 23px; font-weight: 800; margin: 0; }
+  .sh .en { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); }
+  .sh .rule { flex: 1; height: 1px; background: var(--border); align-self: center; }
+  p.note { font-size: 14px; color: var(--text-dim); line-height: 1.65; max-width: 76ch; margin: 0 0 var(--s4); text-wrap: pretty; }
+  p.note b { color: var(--text); }
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); overflow: hidden; margin-top: var(--s2); font-size: 13px; }
+  thead th { text-align: left; font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-faint); padding: 9px 11px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
+  tbody td { padding: 9px 11px; border-bottom: 1px solid var(--border); vertical-align: top; line-height: 1.5; }
+  tbody tr:last-child td { border-bottom: 0; }
+  td .f, code { font-family: var(--font-mono); font-size: 11.5px; } code { background: var(--bg-tint); padding: 1px 5px; border-radius: 5px; color: var(--accent-ink); }
+  .st { display: inline-block; font-family: var(--font-mono); font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: var(--r-pill); white-space: nowrap; }
+  .st.pass { background: var(--must-soft); color: #1F6B43; } .st.fix { background: var(--accent-soft); color: var(--accent-ink); } .st.no { background: var(--avoid-soft); color: #9E332B; }
+  .scen { display: flex; align-items: flex-start; gap: 10px; font-size: 13.5px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .scen:last-child { border-bottom: none; }
+  .scen .n { font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); width: 20px; flex: none; padding-top: 2px; }
+  .scen .ck { color: #1F6B43; flex: none; font-weight: 700; }
+  .pri { display: grid; grid-template-columns: repeat(2,1fr); gap: var(--s3); }
+  .pcard { border: 1px solid #CDE8D8; background: var(--must-soft); border-radius: var(--r-card); padding: var(--s4); }
+  .pcard .pt { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: #1F6B43; }
+  .pcard .pd { font-size: 12.5px; color: var(--text-dim); margin-top: 5px; line-height: 1.55; }
+  ul.lst { margin: 0; padding-left: 1.2em; font-size: 13.5px; color: var(--text-dim); line-height: 1.85; } ul.lst b { color: var(--text); }
+  .foot { margin-top: var(--s16); padding-top: var(--s6); border-top: 1px solid var(--border-strong); }
+  .foot .q { font-family: var(--font-serif); font-size: 19px; font-weight: 700; margin: 0 0 var(--s2); }
+  .foot p { font-size: 14px; color: var(--text-dim); line-height: 1.7; }
+  @media (max-width: 760px) { .hero h1 { font-size: 28px; } .pri { grid-template-columns: 1fr; } .wrap { padding: var(--s10) var(--s4); } table { font-size: 12px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">CharacterHub · Design QA Phase 0</div>
+    <h1>Scope &amp; Prototype<br>State Integration</h1>
+    <p class="lead">把原型從「獨立頁面 Showroom」變成「跨頁可操作的產品原型」。Scope 改由 <b>Route + Query</b> 決定（不再從 currentProject／projectLinks 推測），並加入由 OCData 初始化的 <b>Demo Session State</b>，讓新增／編輯／封存跨頁同步。維持單一 OCData、Demo only。</p>
+    <div class="chips">
+      <span class="badge approved"><span class="d" style="background:var(--must)"></span>P0 清零</span>
+      <span class="badge approved"><span class="d" style="background:var(--must)"></span>P1 清零</span>
+      <span class="badge">Scope Resolver</span>
+      <span class="badge">Demo Session（sessionStorage）</span>
+    </div>
+  </div>
+
+  <section>
+    <div class="sh"><span class="ix">01</span><h2>Scope Resolver 規則</h2><span class="en">Route + query, never inferred</span><span class="rule"></span></div>
+    <p class="note"><code>OCData.resolveScope(file, search)</code> 是唯一判定來源，<code>shell.js</code> 與頁面都用它。<b>缺少有效 project+link 時，絕不自動變 Project Scope。</b></p>
+    <table><thead><tr><th>進入方式</th><th>Scope</th><th>主要資料</th></tr></thead><tbody>
+      <tr><td>工作台／我的角色／我的企劃／全域工具／設定</td><td><span class="st pass">account</span></td><td>帳號層</td></tr>
+      <tr><td><code>character/editor.html?c=:id</code></td><td><span class="st pass">account</span></td><td>Character 本體（即使已加入企劃）</td></tr>
+      <tr><td><code>?project=:pid&link=:linkId</code>（有效）</td><td><span class="st pass">project</span></td><td>ProjectCharacterLink</td></tr>
+      <tr><td><code>?project=:pid</code>（character/editor）<b>缺 link</b></td><td><span class="st fix">invalid</span></td><td>Invalid Project Character Context（不靜默切 account）</td></tr>
+      <tr><td>企劃內容頁（overview/roster/world/public-pages…）<code>?project=:pid</code></td><td><span class="st pass">project</span></td><td>有效 Project Scope（project 為合法範圍，非僅篩選）</td></tr>
+      <tr><td>全域工具（commissions…）<code>?project=:pid</code></td><td><span class="st pass">account</span></td><td>project 只是頁內篩選，不改 scope</td></tr>
+      <tr><td><code>portal.html</code></td><td><span class="st pass">public</span></td><td>Renderer · 無工作台 Shell</td></tr>
+      <tr><td><code>public-pages.html</code>（無 project）</td><td><span class="st pass">account</span></td><td>我的公開頁 · 一般 App Shell</td></tr>
+      <tr><td><code>public-pages.html?project=:pid</code></td><td><span class="st pass">project</span></td><td>企劃公開頁 · 一般 App Shell</td></tr>
+      <tr><td><code>public-pages.html?mode=builder&page=:id</code></td><td><span class="st pass">builder</span></td><td>BuilderShell · 無工作台 Shell</td></tr>
+    </tbody></table>
+    <p class="note" style="margin-top:var(--s3)">輸出：<code>scope · currentProjectId? · currentCharacterId? · currentProjectCharacterLinkId? · viewerMode</code>。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">02</span><h2>各 Scope 導覽結果</h2><span class="en">Sidebar by scope</span><span class="rule"></span></div>
+    <table><thead><tr><th>Scope</th><th>Sidebar</th></tr></thead><tbody>
+      <tr><td><span class="st pass">account</span></td><td>我的空間（工作台／我的角色／我的企劃）＋ 全域工具（委託／身高比較）＋ 設定。<b>不顯示企劃內容選單。</b>Project Switcher 選企劃 → 導向該企劃總覽（不靜默變 scope）。</td></tr>
+      <tr><td><span class="st pass">project</span></td><td>目前企劃（總覽／企劃角色／世界觀／關係／故事／圖庫／靈感）＋ 依 capability 的管理區。Header 顯示目前企劃與成員身分。</td></tr>
+      <tr><td><span class="st pass">public</span></td><td>無工作台 Sidebar（Renderer）。</td></tr>
+      <tr><td><span class="st pass">builder</span></td><td>獨立 BuilderShell，無工作台 Sidebar。</td></tr>
+    </tbody></table>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">03</span><h2>Demo Session State</h2><span class="en">assets · OCDemo</span><span class="rule"></span></div>
+    <p class="note">由 OCData 初始化的可變動執行狀態，存 <code>sessionStorage('ch:demo:v1')</code>：同分頁跨頁保留、關閉分頁重設、側欄「重設 Demo 資料」一鍵還原。<b>所有頁面讀同一份 runtime arrays</b>（非各自複製 fixture）。不是正式 persistence、不是 Repository、不是第二套 Model。</p>
+    <ul class="lst">
+      <li><b>持久範圍</b>：projects · entities(characters) · links · applications · contentSubmissions</li>
+      <li><b>CRUD</b>：createCharacter／updateCharacter／archiveCharacter · createProject／updateProject／archiveProject · createLink／removeLink · createApplication／updateApplication</li>
+      <li><b>hydrateFromOCData()</b> 載入時把 session 快照覆回同一組 OCData arrays · <b>resetDemoData()</b> 清除並重載</li>
+      <li>封存＝改 status，不硬刪；archived 項目離開一般列表（<code>myCharacters()</code>／<code>activeProjects()</code>），但仍在全量資料中</li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">04</span><h2>12 個必測情境</h2><span class="en">Phase 0 acceptance</span><span class="rule"></span></div>
+    <div id="scens"></div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">05</span><h2>P0 / P1 嚴重度</h2><span class="en">Cleared</span><span class="rule"></span></div>
+    <div class="pri">
+      <div class="pcard"><div class="pt">P0 · Scope Bug ✓ 清零</div><div class="pd">未加入企劃的角色不再被當 Project Scope。scope 由 resolver 依 route+query 決定；<code>?project=</code> 無 link 時維持 account。</div></div>
+      <div class="pcard"><div class="pt">P1 · Integration Gap ✓ 清零</div><div class="pd">新增／編輯／封存經 OCDemo 寫入共用 runtime + sessionStorage，跨頁同步（工作台／我的角色／我的企劃／Switcher）。</div></div>
+      <div class="pcard"><div class="pt">P1 · Navigation Gap ✓ 清零</div><div class="pd">Account／Project 入口由 resolver 區分；character/editor 的編輯與返回連結帶正確 scope（<code>?c=</code> 或 <code>?project=&link=</code>），不用錯誤 project 推測。</div></div>
+      <div class="pcard"><div class="pt">P1 · Global Tool Scope ✓ 清零</div><div class="pd">委託／身高比較固定 account scope；帶 <code>?project=</code> 也不變 shell（可作頁內 filter，不改 scope）。</div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">06</span><h2>已串聯 / 尚未串聯</h2><span class="en">Wired / pending</span><span class="rule"></span></div>
+    <table><thead><tr><th>狀態</th><th>頁面</th></tr></thead><tbody>
+      <tr><td><span class="st pass">已串聯</span></td><td>工作台 · 我的角色 · 我的企劃 · 角色詳情 · 角色編輯器（scope 感知）· 企劃角色／名冊（project+link 連結）· Project Switcher · 重設 Demo</td></tr>
+      <tr><td><span class="st fix">部分</span></td><td>企劃總覽快速新增（導向正確頁，建立結果走 Demo CRUD 的部分已可同步；世界觀／故事／靈感的逐項 CRUD 沿用各頁 Demo）</td></tr>
+      <tr><td><span class="st no">尚未</span></td><td>世界觀／關係／故事／圖庫／靈感／投稿等頁的<b>內容級 CRUD</b>仍多為頁內 Demo（Toast），未全部接上 OCDemo；屬 Phase 1+ 範圍</td></tr>
+    </tbody></table>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">07</span><h2>本輪未做（依指示）</h2><span class="en">Out of scope</span><span class="rule"></span></div>
+    <p class="note">不新增 Story／Gallery／Builder 功能 · 不接正式 API · 不建 Repository／D1／R2 · 不做正式 Auth · 不重設 IA · 不把 sessionStorage 當正式持久化 · 不因串聯而合併 Character 與 ProjectCharacterLink。</p>
+  </section>
+
+  <div class="foot">
+    <p class="q">Phase 0 + 0.1 完成 · 可進 Design QA Phase 1</p>
+    <p><b>P0 cleared · P1 cleared · Known Demo Limitation: sessionStorage is tab-scoped</b>（不保證多分頁同步／關閉分頁保留／多使用者／正式衝突處理）。Phase 0.1 已收尾 Resolver 邊界：public-pages 列表 vs Builder 分流、無效企劃角色 context 顯示明確錯誤（不靜默 fallback）、Demo Session fixtureVersion 守衛、封存／移除／不存在資源的明確狀態。依指示先停，Phase 1 將實際開頁逐一視覺與流程驗收。</p>
+  </div>
+</div>
+
+<script>
+  var SCENS = [
+    '建立未加入任何企劃的角色 → 出現在我的角色，開啟維持 account scope',
+    '從「我的角色」開啟加入三企劃的角色 → 仍 account scope（?c=）',
+    '從「企劃角色」開啟同一角色 → project scope，顯示正確 ProjectCharacterLink（?project=&link=）',
+    'Character「加入的企劃」切換兩個企劃版本 → 各自正確 link',
+    '建立角色後，工作台與我的角色同步出現（同一 runtime）',
+    '編輯角色名稱後，詳情／列表／選擇器同步（讀同一 arrays）',
+    '建立企劃後，企劃列表與 Project Switcher 同步（activeProjects）',
+    '封存目前企劃後，退出 Project Scope → 我的企劃',
+    '委託頁帶 ?project= → Sidebar 維持 account scope',
+    '身高比較選企劃角色 → Sidebar 維持 account scope（頁內 filter）',
+    '移除 ProjectCharacterLink → Character 本體仍存在（removeLink 不刪 body）',
+    'Reset Demo Data → 清 sessionStorage，回到原始 OCData fixtures',
+    '公開頁列表（無 project）用一般 App Shell＝我的公開頁；?project= ＝企劃公開頁；只有 ?mode=builder 用 BuilderShell',
+    'character.html?project=tokoyo 缺 link → Invalid Project Character Context（不切 Account Scope）',
+    'project 與 link 不匹配（?project=hoshi&link=lk1）→ 安全錯誤 link_mismatch',
+    'removed Link → 顯示已移除狀態，Character 本體仍可從 Account Scope 查看',
+    'OCData fixtureVersion 更新 → 舊 Demo Session 自動重設並重新 hydrate',
+    '新瀏覽器分頁不宣稱共享 sessionStorage（Demo Limitation：tab-scoped）',
+  ];
+  document.getElementById('scens').innerHTML = SCENS.map(function (s, i) {
+    return '<div class="scen"><span class="n">' + (i + 1) + '</span><span class="ck">✓</span><span>' + s + '</span></div>';
+  }).join('');
+</script>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#2A6FDB"/>
+    <circle cx="36" cy="40" r="13" fill="none" stroke="#fff" stroke-width="5"/>
+    <path d="M46 50l20 20" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+    <path d="M62 30h12v12" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+</template>
+</body>
+</html>

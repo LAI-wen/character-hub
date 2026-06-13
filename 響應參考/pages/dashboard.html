@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>我的角色 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/ds.css">
+<link rel="stylesheet" href="../assets/shell.css">
+<link rel="stylesheet" href="../assets/components.css">
+<style>
+  .ac-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(236px, 1fr)); gap: var(--s4); }
+  .mship { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; color: var(--text-dim); padding: 3px 9px; border-radius: var(--r-pill); border: 1px solid var(--border); background: var(--surface-2); }
+  .mship .d { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .mship.pending { border-style: dashed; color: var(--accent-ink); background: var(--accent-soft); border-color: #ECDFA8; }
+  .none { font-size: 11.5px; font-weight: 600; color: var(--text-faint); display: inline-flex; align-items: center; gap: 6px; }
+  .none .d { width: 8px; height: 8px; border-radius: 50%; background: var(--text-faint); }
+  .explain { display: flex; gap: 10px; align-items: flex-start; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-card); padding: var(--s3) var(--s4); margin-bottom: var(--s5); font-size: 12.5px; color: var(--text-dim); line-height: 1.6; }
+  .explain b { color: var(--text); }
+  .explain .ic { flex: none; width: 18px; height: 18px; color: var(--accent); margin-top: 1px; }
+</style>
+</head>
+<body>
+<div class="page" id="root"></div>
+
+<script src="../assets/data.js"></script>
+<script src="../assets/components.js"></script>
+<script>
+  (function () {
+    var root = document.getElementById('root');
+    var ALL = [];
+    var q = '', scope = '*', view = 'grid';
+
+    // header + skeleton first (demonstrate Loading)
+    function shell() {
+      var html = OCUI.contextHeader({ scope: 'account', crumbs: ['我的角色'] });
+      html += '<div class="pageh"><div class="ht"><h1>我的角色 <span class="en">My Characters</span></h1>'
+        + '<p class="sub">你擁有的所有角色本體，包含尚未加入任何企劃的角色。<b>角色本體永遠屬於你</b>；陣營、職位這些是「在某個企劃裡的設定」，不在這頁。</p></div>'
+        + '<div class="acts"><button class="btn btn-accent" id="newChar">＋ 新角色</button></div></div>';
+      html += '<div class="explain"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>'
+        + '<div>每張卡下方的色點代表這個角色<b>加入的企劃</b>。同一個角色可以在多個企劃，各有不同陣營與設定——那些屬於「企劃角色」，到企劃裡才看得到。</div></div>';
+      html += '<div id="bar"></div><div id="body"></div>';
+      root.innerHTML = html;
+      document.getElementById('newChar').onclick = function () { var nc = OCDemo.createCharacter({}); location.href = 'editor.html?c=' + nc.id + '&new=1'; };
+      document.getElementById('body').appendChild(OCUI.skeletonCards(8));
+    }
+
+    function bar() {
+      var projs = OCData.projects;
+      var noneCt = ALL.filter(function (c) { return c.links.length === 0; }).length;
+      function chip(id, label, dot) {
+        var ct = id === '*' ? ALL.length : id === 'none' ? noneCt : ALL.filter(function (c) { return c.links.some(function (l) { return l.project === id; }); }).length;
+        return '<button class="fbtn' + (id === scope ? ' on' : '') + '" data-s="' + id + '">' + (dot ? '<span class="dot" style="background:' + dot + '"></span>' : '') + label + '<span class="ct">' + ct + '</span></button>';
+      }
+      var h = '<div class="toolbar"><div class="searchf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>'
+        + '<input id="q" type="search" placeholder="搜尋角色…" value="' + q + '"></div>'
+        + '<div class="filterbar">' + chip('*', '全部') + chip('none', '未加入企劃') + projs.map(function (p) { return chip(p.id, p.name, p.c); }).join('') + '</div></div>';
+      var bd = document.getElementById('bar'); bd.innerHTML = h;
+      bd.querySelector('#q').oninput = function (e) { q = e.target.value.trim(); paint(); };
+      bd.querySelectorAll('.fbtn').forEach(function (b) { b.onclick = function () { scope = b.dataset.s; bar(); paint(); }; });
+    }
+
+    function visible() {
+      var list = ALL.slice();
+      if (scope === 'none') list = list.filter(function (c) { return c.links.length === 0; });
+      else if (scope !== '*') list = list.filter(function (c) { return c.links.some(function (l) { return l.project === scope; }); });
+      if (q) { var h = q.toLowerCase(); list = list.filter(function (c) { return (c.name + ' ' + (c.rom || '') + ' ' + (c.sp || '') + ' ' + (c.blurb || '')).toLowerCase().indexOf(h) >= 0; }); }
+      return list;
+    }
+
+    function card(c) {
+      var foot = c.links.length
+        ? c.links.map(function (l) { return '<span class="mship' + (l.status === 'pending' ? ' pending' : '') + '"><span class="d" style="background:' + l.projectColor + '"></span>' + l.projectName + (l.status === 'pending' ? ' · 待審' : '') + '</span>'; }).join('')
+        : '<span class="none"><span class="d"></span>尚未加入任何企劃</span>';
+      return '<button class="ecard" data-c="' + c.id + '"><div class="top"><span class="av" style="background:' + c.c + '" data-hc-id="' + c.id + '">' + c.name[0] + '</span>'
+        + '<div><div class="nm">' + c.name + '</div>' + (c.rom ? '<div class="rom">' + c.rom + '</div>' : '') + '<div class="sp">' + (c.sp || '') + '</div></div></div>'
+        + '<p class="blurb">' + (c.blurb || '尚無簡介') + '</p><div class="foot">' + foot + '</div></button>';
+    }
+
+    function paint() {
+      var body = document.getElementById('body'); if (!body) return;
+      var list = visible();
+      if (!list.length) {
+        body.innerHTML = '';
+        body.appendChild(ALL.length
+          ? OCUI.emptyState({ title: '找不到符合的角色。', body: '試試其他關鍵字，或切換上方的企劃篩選。' })
+          : OCUI.emptyState({ title: '還沒有角色。', body: '先建立第一隻角色——不需要先建立企劃。', ctaLabel: '＋ 建立角色', onCta: function () { var nc = OCDemo.createCharacter({}); location.href = 'editor.html?c=' + nc.id + '&new=1'; } }));
+        return;
+      }
+      body.innerHTML = '<div class="ac-grid">' + list.map(card).join('') + '</div>';
+      body.querySelectorAll('.ecard').forEach(function (b) { b.onclick = function () { location.href = 'character.html?c=' + b.dataset.c; }; });
+    }
+
+    shell();
+    // simulate async load → then render (Loading → content)
+    setTimeout(function () { ALL = OCData.myCharacters(); bar(); paint(); }, 360);
+  })();
+</script>
+<script src="../assets/shell.js"></script>
+</body>
+</html>

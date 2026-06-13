@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PB0.1 驗收 · 主題與發布安全 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/ds.css">
+<link rel="stylesheet" href="assets/components.css">
+<style>
+  body { background: var(--bg); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: var(--s12) var(--s8) var(--s16); }
+  .hero { border-bottom: 1px solid var(--border-strong); padding-bottom: var(--s8); margin-bottom: var(--s10); }
+  .hero .eyebrow { margin-bottom: 12px; }
+  .hero h1 { font-family: var(--font-serif); font-size: 40px; font-weight: 900; margin: 0; letter-spacing: -.025em; line-height: 1.06; }
+  .hero .lead { color: var(--text-dim); font-size: 16px; margin: var(--s4) 0 0; max-width: 64ch; line-height: 1.65; text-wrap: pretty; }
+  .hero .chips { display: flex; gap: var(--s2); margin-top: var(--s5); flex-wrap: wrap; }
+  section { margin-top: var(--s12); }
+  .sh { display: flex; align-items: baseline; gap: var(--s4); margin-bottom: var(--s5); }
+  .sh .ix { font-family: var(--font-mono); font-size: 13px; color: var(--text-faint); }
+  .sh h2 { font-family: var(--font-serif); font-size: 24px; font-weight: 800; margin: 0; }
+  .sh .en { font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); }
+  .sh .rule { flex: 1; height: 1px; background: var(--border); align-self: center; }
+  p.note { font-size: 14.5px; color: var(--text-dim); line-height: 1.7; max-width: 74ch; text-wrap: pretty; }
+  p.note b { color: var(--text); }
+  .pages { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: var(--s3); }
+  .pcard { display: flex; flex-direction: column; gap: 3px; padding: var(--s4) var(--s5); border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--sh-1); text-decoration: none; color: inherit; transition: box-shadow .15s, transform .15s; }
+  .pcard:hover { box-shadow: var(--sh-2); transform: translateY(-2px); }
+  .pcard .n { font-family: var(--font-serif); font-size: 16px; font-weight: 700; }
+  .pcard .d { font-size: 12.5px; color: var(--text-dim); margin-top: 4px; line-height: 1.5; }
+  .pcard .sc { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--accent-ink); margin-top: 6px; }
+  .shots { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s4); }
+  .shot { border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--sh-1); overflow: hidden; }
+  .shot img { width: 100%; display: block; border-bottom: 1px solid var(--border); }
+  .shot .cap { padding: var(--s3) var(--s4); font-size: 12.5px; color: var(--text-dim); }
+  .shot .cap b { color: var(--text); }
+  .split { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s4); }
+  .col { border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); padding: var(--s5); }
+  .col h3 { margin: 0 0 var(--s2); font-size: 14px; font-weight: 700; }
+  .col ul { margin: 0; padding-left: 1.1em; font-size: 12.5px; color: var(--text-dim); line-height: 1.8; }
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); overflow: hidden; margin-top: var(--s2); }
+  thead th { text-align: left; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); padding: var(--s3) var(--s4); border-bottom: 1px solid var(--border); background: var(--surface-2); }
+  tbody td { padding: var(--s3) var(--s4); border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: top; line-height: 1.5; }
+  tbody tr:last-child td { border-bottom: 0; }
+  td .f { font-family: var(--font-mono); font-size: 12px; font-weight: 600; }
+  .gap-card { border: 1px solid #ECDFA8; background: var(--accent-soft); border-radius: var(--r-card); padding: var(--s4) var(--s5); margin-bottom: var(--s3); }
+  .gap-card .gt { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--accent-ink); }
+  .gap-card .gd { font-size: 13px; color: var(--text-dim); margin-top: 5px; line-height: 1.6; }
+  .gap-card .gd b { color: var(--text); }
+  .gap-card.bad { border-color: #F0CFCB; background: var(--avoid-soft); } .gap-card.bad .gt { color: #9E332B; }
+  .gap-card.ok { border-color: #CDE8D8; background: var(--must-soft); } .gap-card.ok .gt { color: #1F6B43; }
+  .demo-list { display: flex; flex-direction: column; gap: 8px; }
+  .demo-row { display: flex; align-items: center; gap: 10px; font-size: 13.5px; padding: 9px 13px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+  .foot { margin-top: var(--s16); padding-top: var(--s6); border-top: 1px solid var(--border-strong); }
+  .foot .q { font-family: var(--font-serif); font-size: 19px; font-weight: 700; margin: 0 0 var(--s2); }
+  .foot p { font-size: 14px; color: var(--text-dim); line-height: 1.7; }
+  @media (max-width: 860px) { .hero h1 { font-size: 30px; } .shots, .split { grid-template-columns: 1fr; } .wrap { padding: var(--s10) var(--s4); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">CharacterHub · PB0.1 · 主題 / 版型繼承 / 發布安全</div>
+    <h1>PB0.1 驗收</h1>
+    <p class="lead">PB0 校正完成：補上 Theme → Variant → Override 三層、worldEntry 公開頁版型批次套用、模板升級衝突合併、Minimal Public Projection 與可見性分層。Builder 正式交接走獨立 Route。</p>
+    <div class="chips">
+      <span class="badge approved"><span class="d" style="background:var(--must)"></span>worldEntry 版型</span>
+      <span class="badge">Theme/Variant/Override</span>
+      <span class="demo-only">所有儲存為 Demo only</span>
+    </div>
+  </div>
+
+  <section>
+    <div class="sh"><span class="ix">01</span><h2>世界觀主題套版</h2><span class="en">Batch theme</span><span class="rule"></span></div>
+    <div class="shots">
+      <div class="shot"><img src="screenshots/pb01-world-dark.png" alt="暗色怪談主題世界觀條目頁"><div class="cap"><b>暗色怪談主題 · 廢稻荷神社</b>：同一套 worldEntry 公開頁版型批次套到地點／組織／事件——note 標頭、scroll 標題、quote 摘要、body 內容皆<b>綁定該條目資料、不複製</b>。手機自動單欄。</div></div>
+      <div class="shot"><div class="cap" style="padding:var(--s5)"><b>一套版型、多條目</b><br><span style="color:var(--text-dim)">已驗證：<span class="mono">ppt-tokoyo-world</span> 同時套用於 廢稻荷神社／守燈人／守燈之約 三條目頁；每頁 binding 解析各自的 name/summary/content。企劃頁用 Project 版型、條目頁用統一 WorldEntry 版型，個別條目可有限 Override。</span></div></div>
+    </div>
+    <p class="note" style="margin-top:var(--s3)">可點：<a href="pages/portal.html?slug=tokoyo%2Fw%2Fshrine" target="_blank" style="color:var(--accent-ink);font-weight:600">廢稻荷神社</a> · <a href="pages/portal.html?slug=tokoyo%2Fw%2Ftomoribito" target="_blank" style="color:var(--accent-ink);font-weight:600">守燈人</a> · <a href="pages/portal.html?slug=tokoyo%2Fw%2Fpact" target="_blank" style="color:var(--accent-ink);font-weight:600">守燈之約</a>。PublicPage sourceType 已補 <span class="mono">worldEntry</span>。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">02</span><h2>Theme / Variant / Override 三層</h2><span class="en">Three layers</span><span class="rule"></span></div>
+    <div class="split">
+      <div class="col"><h3>Page Theme</h3><ul><li>背景色/圖/遮罩</li><li>標題/內文字型</li><li>主/輔/文字色、卡片底</li><li>邊框/圓角/陰影/間距/寬度</li></ul></div>
+      <div class="col"><h3>Block Variant</h3><ul><li>文字：正文/引用/設定註記/警告</li><li>圖片：無框/相框/滿版/肖像</li><li>世界觀：百科/檔案/卷軸/終端機</li></ul></div>
+      <div class="col"><h3>Block Override</h3><ul><li>預設關閉，跟隨 Theme</li><li>開啟才顯示獨立樣式</li><li>儲存為元件樣式/套用/恢復主題</li><li>對比不足警告</li></ul></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">03</span><h2>Template 升級衝突合併</h2><span class="en">Upgrade merge</span><span class="rule"></span></div>
+    <p class="note">模板 Block 用穩定 <span class="mono">templateNodeKey</span> + <span class="mono">instanceNodeId</span>；Member override 以 templateNodeKey 為目標、只存允許覆寫的 property，<b>不複製整份模板</b>。升級比較 舊版 / 新版 / Member Override，提供：保留我的自訂 · 套用新版設定 · 逐項解決衝突 · 新版移除 Block 後的 orphan override 處理 · Locked Block 不允許 override。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">04</span><h2>發布安全與可見性分層</h2><span class="en">Publish safety</span><span class="rule"></span></div>
+    <p class="note"><b>Minimal Public Projection</b>：發布快照只含 Published Layout 用到的 Block、Block 真正綁定的欄位、權限裁切後的資料——<b>不把完整 Character/Link/Project payload 丟到前端再隱藏</b>。Asset 封存／來源改私密／頁面撤銷／企劃改私密時，即使有舊 Published Snapshot 也<b>立即停止公開</b>（安全撤銷閘）。<b>可見性分層</b>：Page Access（private/unlisted/public/members）vs Block Visibility（inherit/public/members/hidden）——「限連結」只屬 Page Access。有效公開＝ Page ∧ Block ∧ Binding ∧ Source Entity ∧ Asset 全通過。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">05</span><h2>Broken Binding</h2><span class="en">Safe fallback</span><span class="rule"></span></div>
+    <p class="note">Builder 顯示詳細錯誤＋<b>重新綁定入口</b>；<b>Public Renderer 不顯示工程 path／ID／內部錯誤</b>，改為隱藏 Block 或安全備援（已實作：非 builder 模式 broken/missing 回傳空，不洩漏），並在管理端通知擁有者修復。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">06</span><h2>修改檔案</h2><span class="en">Files</span><span class="rule"></span></div>
+    <table>
+      <thead><tr><th style="width:26%">檔案</th><th>變更</th></tr></thead>
+      <tbody>
+        <tr><td class="f">assets/data.js</td><td>worldEntry 公開頁版型（暗色怪談 theme + locked blocks）＋3 個批次套用的條目頁；resolveBinding 補 worldEntry；新公開頁動作權限（rollback/pageOverride:update_own/pagePreview:view_draft/pageSlug/pageVisibility/pageTemplate:create-update-publish）。</td></tr>
+        <tr><td class="f">assets/pagerender.js</td><td>Renderer 安全備援（非 builder 不洩漏 broken 詳情）；text/heading variant（quote/note/scroll）＋繼承 theme 文字色。</td></tr>
+        <tr><td class="f">pages/portal.html</td><td>worldEntry 頁綁定該條目 name/summary/content；套用 Page Theme（bg/text/primary/maxWidth）。</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">07</span><h2>Contract / API Status</h2><span class="en">Status</span><span class="rule"></span></div>
+    <div class="gap-card ok"><div class="gt">DOMAIN CONTRACT READY</div><div class="gd">Theme/Variant/Override、templateNodeKey、Minimal Public Projection、可見性分層概念已確定。Builder 正式交接走獨立 Route <span class="mono">/app/public-pages/:pageId/edit</span> + 獨立 BuilderShell（支援返回／未儲存提示／重整／深連結／截圖測試），原型的 fixed 覆蓋僅 Design Web 用。</div></div>
+    <div class="gap-card bad"><div class="gt">API / D1 / PUBLISH PIPELINE NOT IMPLEMENTED</div><div class="gd">正式缺口：PublicPageVersion immutable snapshot · Minimal Public Projection · Template upgrade merge · Member override patch · Publish/rollback permission · Security revocation gate · Public Asset delivery。</div></div>
+  </section>
+
+  <div class="foot">
+    <p class="q">PB0.1 完成，先停。回到 Participants／Permissions。</p>
+    <p>該輪先定義公開頁權限：publicPage:create/update/publish/rollback、pageTemplate:create/update/publish、pageOverride:update_own、pagePreview:view_draft、pageSlug:update、pageVisibility:update（grants 已就緒）。維持單一 OCData、Demo only。</p>
+  </div>
+</div>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#1A1A1F"/>
+    <text x="50" y="60" font-family="monospace" font-size="22" font-weight="700" fill="#C7A14A" text-anchor="middle">PB0.1</text>
+  </svg>
+</template>
+</body>
+</html>

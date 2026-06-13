@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>靈感匣 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/ds.css">
+<link rel="stylesheet" href="../assets/shell.css">
+<link rel="stylesheet" href="../assets/components.css">
+<link rel="stylesheet" href="../assets/inspiration.css">
+</head>
+<body>
+<div class="page" id="root"></div>
+
+<script src="../assets/data.js"></script>
+<script src="../assets/components.js"></script>
+<script>
+  (function () {
+    var root = document.getElementById('root');
+    var pid = new URLSearchParams(location.search).get('project') || localStorage.getItem('ch:proj') || 'tokoyo';
+    if (!OCData.project(pid)) pid = OCData.projects[0].id;
+    var p = OCData.project(pid);
+    var ROLE = OCData.getRole(pid);
+    var isPreview = ROLE === 'visitor';
+    var A = function (act) { return OCData.canAction(act, pid) && !isPreview; };
+
+    // Inspiration is NEVER shown in public preview.
+    if (isPreview) {
+      root.innerHTML = OCUI.contextHeader({ scope: 'project', crumbs: [p.name, '靈感匣'] });
+      root.appendChild(OCUI.forbiddenState({ title: '靈感匣不對外公開。', body: '靈感是創作者的捕捉層，不會出現在公開頁。若要公開幕後靈感，需另經發布／精選流程。' }));
+      var s = document.createElement('script'); s.src = '../assets/shell.js'; document.body.appendChild(s); return;
+    }
+
+    var scope = 'project';   // 'account' | 'project'
+    var statusF = '*';       // '*' | inbox | organizing | converted | archived
+    var typeF = '*';
+    var layout = 'card';
+    var captureType = 'text', captureProject = pid, capturePreview = null;
+    var items = [];
+
+    function ctx() { root.innerHTML = OCUI.contextHeader({ scope: scope === 'account' ? 'account' : 'project', crumbs: scope === 'account' ? ['我的靈感'] : [p.name, '靈感匣'] }); }
+
+    function reload() { items = OCData.inspirationsFor({ scope: scope, projectId: pid }); }
+
+    function render() {
+      ctx();
+      // header
+      var head = document.createElement('div'); head.className = 'pageh';
+      head.innerHTML = '<div class="ht"><h1>靈感匣 <span class="en">Inspiration</span></h1><p class="sub">低門檻捕捉你的點子、對白、場景與參考——之後再整理、連到企劃或轉成正式內容。<b>靈感不是正式角色／世界觀／故事的替代品。</b></p></div>'
+        + '<div class="acts"><div class="st-toggle"><button id="scAcc" class="' + (scope === 'account' ? 'on' : '') + '">我的靈感</button><button id="scPrj" class="' + (scope === 'project' ? 'on' : '') + '">' + p.name + '</button></div></div>';
+      root.appendChild(head);
+      head.querySelector('#scAcc').onclick = function () { scope = 'account'; reload(); render(); };
+      head.querySelector('#scPrj').onclick = function () { scope = 'project'; reload(); render(); };
+
+      // quick capture (always visible)
+      if (A('inspiration:create')) root.appendChild(quickCapture());
+
+      var cols = document.createElement('div'); cols.className = 'in-cols';
+      cols.innerHTML = '<div class="in-filter" id="filter"></div><div id="main"></div>';
+      root.appendChild(cols);
+      buildFilter();
+      buildMain();
+
+      // mobile FAB
+      var fab = document.createElement('button'); fab.className = 'in-fab'; fab.setAttribute('aria-label', '快速新增靈感'); fab.textContent = '＋';
+      fab.onclick = function () { var ta = document.getElementById('qcInput'); if (ta) { ta.scrollIntoView(); ta.focus(); } };
+      root.appendChild(fab);
+    }
+
+    function quickCapture() {
+      var box = document.createElement('div'); box.className = 'qc-box';
+      var types = ['text', 'link', 'image', 'color_palette', 'quote', 'scene', 'dialogue', 'character_idea'];
+      box.innerHTML = '<label for="qcInput" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">記下一個靈感</label>'
+        + '<textarea id="qcInput" placeholder="記下一個角色點子、對白、場景或參考連結……（Enter 建立，Shift+Enter 換行）" aria-label="記下一個靈感"></textarea>'
+        + '<div id="qcPrev"></div>'
+        + '<div class="qc-row">'
+        + '<select class="select" id="qcType" style="width:auto;padding:6px 26px 6px 10px;font-size:12.5px" aria-label="類型">' + types.map(function (t) { return '<option value="' + t + '">' + OCData.inspTypeGlyph(t) + ' ' + OCData.inspTypeLabel(t) + '</option>'; }).join('') + '</select>'
+        + '<button class="qc-chip" id="qcProj"><span class="pc" style="background:' + p.c + '"></span><span id="qcProjL">' + p.name + '</span></button>'
+        + '<span class="hint" id="qcHint">Enter 建立 · 之後可再整理</span>'
+        + '<span class="spacer"></span><button class="btn btn-accent btn-sm" id="qcSave">捕捉</button></div>'
+        + '<div aria-live="polite" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)" id="qcLive"></div>';
+      var ta = box.querySelector('#qcInput'); var prev = box.querySelector('#qcPrev');
+      ta.oninput = function () {
+        var v = ta.value.trim(); prev.innerHTML = '';
+        if (/^https?:\/\//i.test(v)) { box.querySelector('#qcType').value = 'link'; prev.innerHTML = '<div class="qc-preview"><span class="pv-thumb" style="background:#4B7BB5">' + OCIcon('link') + '</span><div class="pv-info"><div class="pv-t">Link Preview（Demo）</div><div class="pv-u">' + v + '</div></div></div>'; }
+        else if (/#([0-9a-f]{6})/i.test(v)) { box.querySelector('#qcType').value = 'color_palette'; }
+      };
+      // paste image demo
+      ta.addEventListener('paste', function (e) {
+        if (e.clipboardData && e.clipboardData.items) { for (var i = 0; i < e.clipboardData.items.length; i++) { if (e.clipboardData.items[i].type.indexOf('image') === 0) { box.querySelector('#qcType').value = 'image'; prev.innerHTML = '<div class="qc-preview"><span class="pv-thumb" style="background:#B5654A">' + OCIcon('image') + '</span><div class="pv-info"><div class="pv-t">圖片預覽（Demo · 建立 Asset）</div><div class="pv-u">處理中…</div></div></div>'; break; } } }
+      });
+      ta.onkeydown = function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); doCapture(ta, box); } };
+      box.querySelector('#qcSave').onclick = function () { doCapture(ta, box); };
+      box.querySelector('#qcProj').onclick = function () {
+        // toggle project assignment (Demo): cycle 未選企劃 / current project
+        var lbl = box.querySelector('#qcProjL'); var pcEl = box.querySelector('#qcProj .pc');
+        if (captureProject) { captureProject = null; lbl.textContent = '未選企劃'; pcEl.style.background = 'var(--text-faint)'; }
+        else { captureProject = pid; lbl.textContent = p.name; pcEl.style.background = p.c; }
+      };
+      return box;
+    }
+
+    function doCapture(ta, box) {
+      var v = ta.value.trim();
+      if (!v) { ta.focus(); return; }
+      // simulate occasional save failure via a leading '!!'
+      var willFail = v.indexOf('!!') === 0;
+      box.querySelector('#qcLive').textContent = '儲存中…';
+      if (willFail) {
+        OCUI.toast('儲存失敗，內容已保留，請再試一次 · Demo', { demo: true });
+        box.querySelector('#qcLive').textContent = '儲存失敗，輸入內容保留';
+        return; // input NOT cleared
+      }
+      var typeLabel = OCData.inspTypeLabel(box.querySelector('#qcType').value);
+      var ni = OCDemo.createInspiration({ projectId: captureProject, type: box.querySelector('#qcType').value, content: v });
+      ta.value = ''; box.querySelector('#qcPrev').innerHTML = '';
+      box.querySelector('#qcLive').textContent = '已捕捉一則靈感';
+      reload(); buildFilter(); buildMain();
+      OCUI.toast('已捕捉（' + typeLabel + '）· <a href="#" id="undoCap" style="color:#fff;text-decoration:underline">復原</a>', { demo: true, ms: 3200 });
+      setTimeout(function () { var u = document.getElementById('undoCap'); if (u) u.onclick = function (e) { e.preventDefault(); OCDemo.deleteInspiration(ni.id); reload(); buildFilter(); buildMain(); OCUI.toast('已復原', { demo: true }); }; }, 30);
+      ta.focus();
+    }
+
+    function buildFilter() {
+      var f = document.getElementById('filter');
+      var statuses = [['*', '全部'], ['inbox', '待整理'], ['organizing', '整理中'], ['converted', '已轉換'], ['archived', '已封存']];
+      function ct(s) { return s === '*' ? items.length : items.filter(function (i) { return i.status === s; }).length; }
+      var html = '<div class="scope-t">' + (scope === 'account' ? '我的靈感（私人）' : p.name + ' 靈感') + '</div>';
+      html += statuses.map(function (s) { return '<div class="opt' + (statusF === s[0] ? ' on' : '') + '" data-st="' + s[0] + '"><span class="ic">' + (s[0] === 'inbox' ? OCIcon('clock') : s[0] === 'converted' ? OCIcon('check') : s[0] === 'archived' ? OCIcon('archive') : OCIcon('dot')) + '</span>' + s[1] + '<span class="ct">' + ct(s[0]) + '</span></div>'; }).join('');
+      f.innerHTML = html;
+      f.querySelectorAll('[data-st]').forEach(function (o) { o.onclick = function () { statusF = o.dataset.st; render(); }; });
+    }
+
+    function visible() {
+      var list = items.slice();
+      if (statusF !== '*') list = list.filter(function (i) { return i.status === statusF; });
+      else list = list.filter(function (i) { return i.status !== 'archived'; });
+      if (typeF !== '*') list = list.filter(function (i) { return i.type === typeF; });
+      return list;
+    }
+
+    function buildMain() {
+      var main = document.getElementById('main');
+      var toolbar = '<div class="in-toolbar"><div class="ac-view"><button id="vCard" class="' + (layout === 'card' ? 'on' : '') + '" title="卡片">' + OCIcon('gridsm') + '</button><button id="vList" class="' + (layout === 'list' ? 'on' : '') + '" title="列表">' + OCIcon('text') + '</button></div><div class="spacer"></div><span class="in-count" id="count"></span></div>';
+      main.innerHTML = toolbar + '<div id="body"></div>';
+      main.querySelector('#vCard').onclick = function () { layout = 'card'; render(); };
+      main.querySelector('#vList').onclick = function () { layout = 'list'; render(); };
+      paintBody();
+    }
+
+    function paintBody() {
+      var body = document.getElementById('body'); if (!body) return;
+      var list = visible();
+      document.getElementById('count').textContent = list.length + ' 則';
+      if (!list.length) {
+        body.appendChild(OCUI.emptyState(
+          statusF === 'inbox' || statusF === '*'
+            ? { title: scope === 'account' ? '我的靈感是空的。' : '這個企劃的靈感匣是空的。', body: '用上方的快速捕捉記下第一個念頭——不用先選企劃或填欄位。' }
+            : { title: '沒有「' + ({ organizing: '整理中', converted: '已轉換', archived: '已封存' }[statusF] || statusF) + '」的靈感。', body: '換個篩選看看。' }
+        ));
+        return;
+      }
+      body.innerHTML = '<div class="in-grid ' + (layout === 'list' ? 'list' : '') + '">' + list.map(card).join('') + '</div>';
+      body.querySelectorAll('[data-i]').forEach(function (c) {
+        c.onclick = function () { openDetail(c.dataset.i); };
+        c.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); c.click(); } };
+      });
+    }
+
+    function card(it) {
+      var mine = it.ownerUserId === OCData.viewer.id;
+      var extra = '';
+      if (it.type === 'color_palette') extra = '<div class="palette">' + it.content.split(',').map(function (c) { return '<span class="sw" style="background:' + c.trim() + '"></span>'; }).join('') + '</div>';
+      else if (it.type === 'image') { var a = it.assetId ? OCData.asset(it.assetId) : null; extra = '<div class="imgprev" style="background:linear-gradient(135deg,' + ((a && a.c) || '#8A857C') + ',#5E7E55)">' + (it.content || '圖片') + '</div>'; }
+      else if (it.type === 'link') extra = '<div class="linkprev">' + OCIcon('link') + ' ' + (it.sourceUrl || it.content) + '</div>';
+      var proj = it.projectId ? '<span class="proj"><span class="pc" style="background:' + (OCData.project(it.projectId) || {}).c + '"></span>' + (OCData.project(it.projectId) || {}).name + '</span>' : '<span class="proj" style="color:var(--text-faint)">未選企劃</span>';
+      var tags = (it.tags || []).slice(0, 2).map(function (t) { return '<span class="tag">#' + t + '</span>'; }).join('');
+      var bodyHtml = it.type === 'color_palette' ? '' : '<div class="body">' + (it.content || '') + '</div>';
+      return '<button class="icard" data-i="' + it.id + '" tabindex="0" aria-label="' + OCData.inspTypeLabel(it.type) + '：' + (it.content || it.title || '').slice(0, 40) + '">'
+        + '<div class="ih"><span class="ty"><span class="g">' + OCData.inspTypeGlyph(it.type) + '</span>' + OCData.inspTypeLabel(it.type) + '</span><span class="st ' + it.status + '">' + OCData.inspStatusLabel(it.status) + '</span></div>'
+        + bodyHtml + extra
+        + '<div class="foot">' + proj + tags + (!mine ? '<span class="owner">' + it.ownerUserId + '</span>' : '') + '<span class="when">' + it.capturedAt + '</span></div></button>';
+    }
+
+    // ---- detail drawer ----
+    function openDetail(id) {
+      var it = OCData.inspiration(id);
+      var mine = it.ownerUserId === OCData.viewer.id;
+      var convs = OCData.conversionsOf(id);
+      var scrim = el('div', 'in-scrim'); var dr = el('aside', 'in-drawer');
+      dr.setAttribute('role', 'dialog'); dr.setAttribute('aria-modal', 'true'); dr.setAttribute('aria-label', '靈感詳情');
+      function close() { dr.classList.remove('in'); scrim.classList.remove('in'); document.removeEventListener('keydown', onKey); setTimeout(function () { scrim.remove(); dr.remove(); }, 220); if (lastFocus && lastFocus.focus) lastFocus.focus(); }
+      var canEdit = mine && A('inspiration:update');
+      var canConvert = mine && A('inspiration:convert');
+      var palette = it.type === 'color_palette' ? '<div class="palette" style="margin:0 0 var(--s3)">' + it.content.split(',').map(function (c) { return '<span class="sw" style="width:36px;height:36px;border-radius:8px;display:inline-block;border:1px solid rgba(0,0,0,.1);background:' + c.trim() + '"></span>'; }).join('') + '</div>' : '';
+      var body = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:var(--s3)"><span class="ty" style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--text-dim);padding:3px 9px;border-radius:var(--r-pill);background:var(--surface-2);border:1px solid var(--border)">' + OCData.inspTypeGlyph(it.type) + ' ' + OCData.inspTypeLabel(it.type) + '</span><span class="st ' + it.status + '" style="font-size:11px;font-weight:600;padding:2px 9px;border-radius:var(--r-pill)">' + OCData.inspStatusLabel(it.status) + '</span></div>'
+        + palette
+        + '<div class="in-field"><div class="k">原始內容</div><div class="v">' + (it.content || '') + '</div></div>'
+        + (it.sourceUrl ? '<div class="in-field"><div class="k">來源</div><div class="v"><a href="' + it.sourceUrl + '" target="_blank" rel="noopener" style="color:var(--accent-ink)">' + it.sourceUrl + '</a></div></div>' : '')
+        + (it.type === 'image' && it.assetId ? '<div class="in-field"><div class="k">圖片（Asset）</div><div class="v"><a href="gallery.html?project=' + pid + '" style="color:var(--accent-ink)">在圖庫查看 →</a>（不在靈感內複製圖片 metadata）</div></div>' : '')
+        + '<div class="in-field"><div class="k">捕捉時間</div><div class="v">' + it.capturedAt + '</div></div>'
+        + '<div class="in-field"><div class="k">所屬企劃</div><div class="v">' + (it.projectId ? (OCData.project(it.projectId) || {}).name : '未指定（我的靈感）') + '</div></div>'
+        + '<div class="in-field"><div class="k">標籤</div><div class="v">' + ((it.tags || []).map(function (t) { return '#' + t; }).join('　') || '—') + '</div></div>'
+        + '<div class="in-field"><div class="k">可見性</div><div class="v">' + (it.visibility === 'private' ? '私人' : it.visibility === 'members' ? '企劃成員' : it.visibility) + '</div></div>'
+        + '<div class="in-field"><div class="k">已轉換為 · ' + convs.length + '</div><div>' + (convs.length ? convs.map(function (cv) { return '<div class="conv-target"><span class="sq" style="background:' + cv.color + '">' + (cv.name[0] || '?') + '</span><div class="info"><div class="nm">' + cv.name + '</div><div class="sub">' + cv.targetTypeLabel + ' · ' + (cv.relationType === 'converted_to' ? '轉換成' : '啟發') + '</div></div></div>'; }).join('') : '<div style="font-size:12.5px;color:var(--text-faint)">尚未轉換。原始靈感會在轉換後保留。</div>') + '</div></div>';
+      var foot = '';
+      if (mine) {
+        foot = (canConvert ? '<button class="btn btn-sm btn-accent" id="convBtn">轉換為…</button>' : '')
+          + (canEdit ? '<button class="btn btn-sm" id="assignBtn">指定企劃</button><button class="btn btn-sm" id="tagBtn">標籤</button>' : '')
+          + '<span class="spacer" style="flex:1"></span>'
+          + (A('inspiration:archive') && it.status !== 'archived' ? '<button class="btn btn-sm" id="archBtn">封存</button>' : '');
+      } else {
+        foot = '<span style="font-size:12px;color:var(--text-faint)">這是 ' + it.ownerUserId + ' 共享到企劃的靈感，你可檢視但不能編輯。</span>';
+      }
+      dr.innerHTML = '<div class="dh"><div class="t">靈感詳情</div><button class="x" aria-label="關閉">✕</button></div><div class="db">' + body + '</div>' + (foot ? '<div class="df">' + foot + '</div>' : '');
+      dr.querySelector('.x').onclick = close; scrim.onclick = close;
+      var lastFocus = document.activeElement;
+      document.body.appendChild(scrim); document.body.appendChild(dr);
+      requestAnimationFrame(function () { scrim.classList.add('in'); dr.classList.add('in'); dr.querySelector('.x').focus(); });
+      var onKey = function (e) {
+        if (e.key === 'Escape') { close(); return; }
+        if (e.key !== 'Tab') return;
+        var foc = Array.prototype.filter.call(dr.querySelectorAll('button,[tabindex],a[href]'), function (n) { return n.offsetParent !== null; });
+        if (!foc.length) return; var first = foc[0], last = foc[foc.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      };
+      document.addEventListener('keydown', onKey);
+      var cb = dr.querySelector('#convBtn'); if (cb) cb.onclick = function () { openConvert(it); };
+      var ab = dr.querySelector('#assignBtn'); if (ab) ab.onclick = function () { OCUI.toast('指定／更換企劃', { demo: true }); };
+      var tb = dr.querySelector('#tagBtn'); if (tb) tb.onclick = function () { OCUI.toast('加標籤', { demo: true }); };
+      var arb = dr.querySelector('#archBtn'); if (arb) arb.onclick = function () { OCUI.confirm({ title: '封存靈感？', message: '封存後會從待整理移除，可在「已封存」找回。', confirmLabel: '封存', onConfirm: function () { OCDemo.archiveInspiration(it.id); reload(); close(); render(); OCUI.toast('已封存', { demo: true }); } }); };
+    }
+
+    // ---- conversion modal ----
+    function openConvert(it) {
+      var targets = OCData.inspConvertTargets();
+      var f = el('div');
+      f.innerHTML = '<p style="margin:0 0 var(--s3);font-size:13px;color:var(--text-dim)">把「' + (it.content || '').slice(0, 24) + '…」轉換為正式內容。<b>原始靈感會保留</b>，並記錄「已轉換成什麼」；可轉成多個目標。</p>'
+        + '<div class="in-field"><div class="k">轉換目標</div><select class="select" id="cvTarget">' + targets.map(function (t) { return '<option value="' + t[0] + '">' + t[1] + '</option>'; }).join('') + '</select></div>'
+        + '<div class="in-field"><div class="k">方式</div><div class="filterbar"><button class="fbtn on" data-mode="new">建立新內容</button><button class="fbtn" data-mode="existing">加入既有內容</button></div></div>'
+        + '<div id="cvExtra" class="in-field"></div>';
+      var mode = 'new';
+      function extra() {
+        var t = f.querySelector('#cvTarget').value;
+        var ex = f.querySelector('#cvExtra'); var h = '';
+        if (mode === 'existing') { h = '<div class="k">選擇既有內容</div><select class="select"><option>（示意清單）</option></select>'; }
+        else if (t === 'character') h = '<div class="k">說明</div><div class="v" style="font-size:12.5px;color:var(--text-dim)">建立<b>角色本體</b>（不直接建立 ProjectCharacterLink）。' + (it.projectId ? '稍後會詢問是否將角色加入「' + (OCData.project(it.projectId) || {}).name + '」。' : '') + '</div>';
+        else if (t === 'storyEvent') h = '<div class="k">選擇 Story／Chapter</div><select class="select"><option>守燈人記 › 月蝕之夜</option></select>';
+        ex.innerHTML = h;
+      }
+      extra();
+      f.querySelector('#cvTarget').onchange = extra;
+      f.querySelectorAll('[data-mode]').forEach(function (b) { b.onclick = function () { mode = b.dataset.mode; f.querySelectorAll('[data-mode]').forEach(function (x) { x.classList.toggle('on', x === b); }); extra(); }; });
+      OCUI.modal({ title: '轉換靈感', body: f, actions: [ { label: '取消' }, { label: '轉換', kind: 'accent', onClick: function () {
+        var t = targets.filter(function (x) { return x[0] === f.querySelector('#cvTarget').value; })[0];
+        OCDemo.convertInspiration(it.id, t[0]);
+        reload(); render();
+        OCUI.toast('已轉換為「' + t[1] + '」（原始靈感保留，狀態改為已轉換）', { demo: true });
+      } } ] });
+    }
+
+    function el(t, c) { var n = document.createElement(t); if (c) n.className = c; return n; }
+
+    function boot() {
+      ctx();
+      var sk = document.createElement('div'); sk.appendChild(OCUI.skeletonCards(6)); root.appendChild(sk);
+      setTimeout(function () { reload(); render(); }, 300);
+    }
+    boot();
+  })();
+</script>
+<script src="../assets/shell.js"></script>
+</body>
+</html>

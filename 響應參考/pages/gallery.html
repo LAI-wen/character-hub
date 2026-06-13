@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>圖庫 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/ds.css">
+<link rel="stylesheet" href="../assets/shell.css">
+<link rel="stylesheet" href="../assets/components.css">
+<link rel="stylesheet" href="../assets/gallery.css">
+</head>
+<body>
+<div class="page" id="root"></div>
+
+<script src="../assets/data.js"></script>
+<script src="../assets/components.js"></script>
+<script>
+  (function () {
+    var root = document.getElementById('root');
+    var pid = new URLSearchParams(location.search).get('project') || localStorage.getItem('ch:proj') || 'tokoyo';
+    if (!OCData.project(pid)) pid = OCData.projects[0].id;
+    var p = OCData.project(pid);
+    var ROLE = OCData.getRole(pid);
+    var isPreview = ROLE === 'visitor';
+    var publicOnly = isPreview;
+    var A = function (act) { return OCData.canAction(act, pid) && !isPreview; };
+
+    var loadError = false;
+    var assets = [], layout = 'grid', q = '', filterTarget = '*', selected = {}, multi = false, selAsset = null;
+
+    function placeholder(a, h) {
+      var ratio = a.width && a.height ? (a.height / a.width) : 1.2;
+      return 'background:linear-gradient(135deg,' + (a.c || '#8A857C') + ',' + shade(a.c || '#8A857C') + ');' + (h ? 'min-height:' + h + 'px;' : 'aspect-ratio:' + a.width + '/' + a.height + ';');
+    }
+    function shade(hex) { return hex; }
+
+    function gate() {
+      if (!OCData.hasFeature(pid, 'gallery')) return 'feature';
+      if (isPreview && p.visibility !== 'public') return 'forbidden';
+      return null;
+    }
+
+    function ctx() { root.innerHTML = OCUI.contextHeader({ scope: 'project', crumbs: [p.name, '圖庫'] }); }
+
+    function render() {
+      ctx();
+      var g = gate();
+      if (g === 'feature') { root.appendChild(OCUI.emptyState({ title: '圖庫模組未啟用。', body: '這個企劃尚未開啟圖庫模組，可在企劃設定中啟用。', icon: 'plug' })); return; }
+      if (g === 'forbidden') { root.appendChild(OCUI.forbiddenState({ title: '沒有檢視權限。', body: '這個企劃的圖庫未公開，只有企劃成員能檢視。' })); return; }
+      if (loadError) { root.appendChild(OCUI.errorState({ title: '圖庫載入失敗。', code: 'LOAD_ERROR', onRetry: function () { loadError = false; boot(); } })); return; }
+
+      header();
+      if (!assets.length) { root.appendChild(OCUI.emptyState({ title: '圖庫已啟用，但還沒有圖片。', body: A('asset:upload') ? '上傳第一張圖片，之後可關聯角色、世界觀或故事。' : '擁有者還沒有公開圖片。', ctaLabel: A('asset:upload') ? '＋ 上傳圖片' : null, onCta: openUploader })); return; }
+
+      var cols = document.createElement('div'); cols.className = 'gl-cols';
+      cols.innerHTML = '<div class="gl-filter" id="filter"></div><div class="gl-main" id="main"></div>';
+      root.appendChild(cols);
+      buildFilter();
+      buildMain();
+    }
+
+    function header() {
+      var head = document.createElement('div'); head.className = 'pageh';
+      head.innerHTML = '<div class="ht"><h1>圖庫 <span class="en">Gallery</span></h1><p class="sub">' + p.name + ' 的圖片資產與關聯。' + (isPreview ? '<b>（公開預覽：只顯示公開圖片）</b>' : '') + '</p></div>'
+        + '<div class="acts">' + (A('asset:upload') ? '<button class="btn btn-accent" id="upBtn">＋ 上傳圖片</button>' : '') + '</div>';
+      root.appendChild(head);
+      var ub = head.querySelector('#upBtn'); if (ub) ub.onclick = openUploader;
+    }
+
+    function buildFilter() {
+      var f = document.getElementById('filter');
+      // targets present
+      var targets = {};
+      assets.forEach(function (a) { OCData.linksForAsset(a.id, { publicOnly: publicOnly }).forEach(function (l) { targets[l.targetType] = (targets[l.targetType] || 0) + 1; }); });
+      var typeOpts = Object.keys(targets).map(function (t) { return '<div class="opt' + (filterTarget === t ? ' on' : '') + '" data-ft="' + t + '">' + OCData.resolveTarget(t, '').targetTypeLabel + '<span class="ct">' + targets[t] + '</span></div>'; }).join('');
+      f.innerHTML = '<div class="fg"><div class="ft">關聯內容</div>'
+        + '<div class="opt' + (filterTarget === '*' ? ' on' : '') + '" data-ft="*">全部<span class="ct">' + assets.length + '</span></div>'
+        + '<div class="opt' + (filterTarget === 'none' ? ' on' : '') + '" data-ft="none">未分類<span class="ct">' + OCData.unclassifiedAssets(pid).length + '</span></div>'
+        + typeOpts + '</div>'
+        + '<div class="fg"><div class="ft">處理狀態</div><div style="font-size:12px;color:var(--text-dim);line-height:1.7">完成 ' + assets.filter(function(a){return a.processingStatus==='ready';}).length + ' · 失敗 ' + assets.filter(function(a){return a.processingStatus==='failed';}).length + '</div></div>';
+      f.querySelectorAll('[data-ft]').forEach(function (o) { o.onclick = function () { filterTarget = o.dataset.ft; render(); }; });
+    }
+
+    function visible() {
+      var list = assets.slice();
+      if (filterTarget === 'none') { var unIds = OCData.unclassifiedAssets(pid).map(function (a) { return a.id; }); list = list.filter(function (a) { return unIds.indexOf(a.id) >= 0; }); }
+      else if (filterTarget !== '*') list = list.filter(function (a) { return OCData.linksForAsset(a.id, { publicOnly: publicOnly }).some(function (l) { return l.targetType === filterTarget; }); });
+      if (q) list = list.filter(function (a) { return ((a.title || a.fileName) + ' ' + (a.creatorName || '')).toLowerCase().indexOf(q.toLowerCase()) >= 0; });
+      return list;
+    }
+
+    function buildMain() {
+      var main = document.getElementById('main');
+      var unclassified = OCData.unclassifiedAssets(pid);
+      var toolbar = '<div class="gl-toolbar"><div class="searchf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="q" type="search" placeholder="搜尋圖片…" value="' + q + '"></div>'
+        + '<div class="ac-view"><button id="vGrid" class="' + (layout === 'grid' ? 'on' : '') + '" title="網格">' + OCIcon('gridsm') + '</button><button id="vMason" class="' + (layout === 'masonry' ? 'on' : '') + '" title="瀑布流">' + OCIcon('columns') + '</button></div>'
+        + '<div class="spacer"></div>'
+        + (A('assetLink:create') ? '<button class="btn btn-sm" id="multiBtn">' + (multi ? OCIcon('x') + ' 結束多選' : OCIcon('checkbox') + ' 多選') + '</button>' : '')
+        + '<span class="gl-count" id="count"></span></div>';
+      var inbox = '';
+      if (!isPreview && unclassified.length && filterTarget !== 'none') {
+        inbox = '<div class="gl-inbox"><div class="ih">未分類 Inbox <span class="ct">' + unclassified.length + '</span></div>'
+          + '<div class="row">' + unclassified.map(function (a) { return '<div class="ibthumb" style="' + placeholder(a) + '" data-open="' + a.id + '" title="' + a.fileName + '"></div>'; }).join('')
+          + '<div class="actions">' + (A('assetLink:create') ? '<button class="btn btn-sm" id="ibLink">批次關聯</button>' : '') + (A('asset:update') ? '<button class="btn btn-sm" id="ibAttr">補作者／來源</button>' : '') + '</div></div>'
+          + '<div style="font-size:11.5px;color:var(--accent-ink);margin-top:8px">剛上傳、尚未關聯的圖片會在這裡。上傳前不必先分類。</div></div>';
+      }
+      main.innerHTML = toolbar + inbox + '<div class="gl-grid ' + (layout === 'masonry' ? 'masonry' : '') + '" id="grid"></div><div id="bulk"></div>';
+      var qi = main.querySelector('#q'); qi.oninput = function (e) { q = e.target.value.trim(); paintGrid(); };
+      main.querySelector('#vGrid').onclick = function () { layout = 'grid'; render(); };
+      main.querySelector('#vMason').onclick = function () { layout = 'masonry'; render(); };
+      var mb = main.querySelector('#multiBtn'); if (mb) mb.onclick = function () { multi = !multi; selected = {}; render(); };
+      var ibl = main.querySelector('#ibLink'); if (ibl) ibl.onclick = function () { OCUI.toast('批次關聯未分類圖片', { demo: true }); };
+      var iba = main.querySelector('#ibAttr'); if (iba) iba.onclick = function () { OCUI.toast('批次補作者／來源', { demo: true }); };
+      main.querySelectorAll('[data-open]').forEach(function (t) { t.onclick = function () { openDetail(t.dataset.open); }; });
+      paintGrid();
+    }
+
+    function paintGrid() {
+      var grid = document.getElementById('grid'); if (!grid) return;
+      var list = visible();
+      document.getElementById('count').textContent = list.length + ' 張';
+      if (!list.length) { grid.className = 'gl-grid'; grid.innerHTML = ''; grid.appendChild(OCUI.emptyState({ title: '沒有符合的圖片。', body: '換個篩選或關鍵字。' })); document.getElementById('bulk').innerHTML = ''; return; }
+      grid.innerHTML = list.map(card).join('');
+      grid.querySelectorAll('[data-a]').forEach(function (c) {
+        c.onclick = function () { if (multi) { toggleSel(c.dataset.a); } else { openDetail(c.dataset.a); } };
+        c.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); c.click(); } };
+      });
+      buildBulk();
+    }
+
+    function card(a) {
+      var links = OCData.linksForAsset(a.id, { publicOnly: publicOnly });
+      var roles = links.map(function (l) { return l.role; }).filter(function (v, i, arr) { return arr.indexOf(v) === i; });
+      var roleChips = roles.slice(0, 3).map(function (r) { return '<span class="as-badge">' + OCData.assetRoleLabel(r) + '</span>'; }).join('');
+      var status = a.processingStatus;
+      var statusBadge = status !== 'ready' ? '<span class="as-badge ' + status + '"><span class="g">' + (status === 'failed' ? OCIcon('x') : OCIcon('clock')) + '</span>' + OCData.assetStatusLabel(status) + '</span>' : '';
+      var privBadge = a.visibility !== 'public' ? '<span class="as-badge private">' + OCIcon('lock') + (a.visibility === 'private' ? '私人' : '僅成員') + '</span>' : '';
+      var attrWarn = (!a.creatorName && a.processingStatus === 'ready') ? '<span class="attr-warn" title="缺少作者／來源">' + OCIcon('warn') + ' 缺作者</span>' : '';
+      var checkMark = multi ? '<span class="sel-check">' + (selected[a.id] ? OCIcon('check') : '') + '</span>' : '';
+      return '<button class="acard' + (selected[a.id] ? ' sel' : '') + '" data-a="' + a.id + '" tabindex="0" aria-label="' + (a.title || a.fileName) + (a.altText ? '，' + a.altText : '') + '">'
+        + checkMark
+        + '<div class="thumb" style="' + placeholder(a) + '"><span class="ph-label">' + a.width + '×' + a.height + '</span></div>'
+        + '<div class="pad"><div class="t">' + (a.title || a.fileName) + '</div>'
+        + '<div class="meta">' + (statusBadge || privBadge || '<span>' + (a.creatorName || '無署名') + '</span>') + attrWarn + '</div>'
+        + (roleChips ? '<div class="roles">' + roleChips + '</div>' : '') + '</div></button>';
+    }
+
+    function toggleSel(id) { if (selected[id]) delete selected[id]; else selected[id] = 1; paintGrid(); }
+    function buildBulk() {
+      var bulk = document.getElementById('bulk'); if (!bulk) return;
+      var n = Object.keys(selected).length;
+      if (!multi || !n) { bulk.innerHTML = ''; return; }
+      bulk.innerHTML = '<div class="bulk-bar"><span class="n">已選 ' + n + ' 張</span><span class="spacer"></span>'
+        + '<button data-b="link">關聯內容</button><button data-b="vis">設定可見性</button><button data-b="attr">補作者</button><button data-b="arch">封存</button>'
+        + '<button class="exit" data-b="exit">✕</button></div>';
+      bulk.querySelectorAll('[data-b]').forEach(function (b) { b.onclick = function () {
+        if (b.dataset.b === 'exit') { multi = false; selected = {}; render(); return; }
+        OCUI.toast('批次操作：' + b.textContent + '（' + n + ' 張）', { demo: true });
+      }; });
+    }
+
+    // ---- detail drawer ----
+    function openDetail(id) {
+      selAsset = id;
+      var a = OCData.asset(id);
+      var links = OCData.linksForAsset(id, { publicOnly: publicOnly });
+      var scrim = el('div', 'ad-scrim'); var dr = el('aside', 'ad-drawer');
+      dr.setAttribute('role', 'dialog'); dr.setAttribute('aria-modal', 'true'); dr.setAttribute('aria-label', a.title || a.fileName);
+      function close() { dr.classList.remove('in'); scrim.classList.remove('in'); document.removeEventListener('keydown', onKey); setTimeout(function () { scrim.remove(); dr.remove(); }, 220); if (lastFocus && lastFocus.focus) lastFocus.focus(); }
+      var canEditThis = A('asset:update') && (a.ownerUserId === OCData.viewer.id || A('gallery:manage'));
+      var ownsAsset = a.ownerUserId === OCData.viewer.id;
+      var body = '<div class="ad-big" style="' + placeholder(a, 200) + '" role="img" aria-label="' + (a.altText || a.title || a.fileName) + '">' + a.width + '×' + a.height + ' · ' + a.mimeType + '</div>'
+        + (a.processingStatus !== 'ready' ? '<div style="margin-bottom:var(--s3)"><span class="as-badge ' + a.processingStatus + '"><span class="g">' + (a.processingStatus === 'failed' ? OCIcon('x') : OCIcon('clock')) + '</span>' + OCData.assetStatusLabel(a.processingStatus) + '</span>' + (a.processingStatus === 'failed' && canEditThis ? ' <button class="btn btn-sm" id="retryBtn">重試</button>' : '') + '</div>' : '')
+        + '<div class="ad-field"><div class="k">標題</div><div class="v">' + (a.title || a.fileName) + '</div></div>'
+        + (a.description ? '<div class="ad-field"><div class="k">說明</div><div class="v">' + a.description + '</div></div>' : '')
+        + '<div class="ad-field"><div class="k">Alt Text（無障礙）</div><div class="v">' + (a.altText || '<span style="color:var(--accent-ink)">⚠ 尚未填寫</span>') + '</div></div>'
+        // Creator / Uploader / Owner are DISTINCT
+        + '<div class="ad-attr">'
+        + '<div class="b"><div class="k">Creator 作者</div><div class="v">' + (a.creatorName || '<span style="color:var(--accent-ink)">未署名</span>') + '</div></div>'
+        + '<div class="b"><div class="k">Uploader 上傳者</div><div class="v">' + OCData.ownerSummary(a.uploaderUserId).label + '</div></div>'
+        + '<div class="b"><div class="k">Owner 擁有者</div><div class="v">' + OCData.ownerSummary(a.ownerUserId).label + '</div></div>'
+        + '</div>'
+        + (a.sourceUrl ? '<div class="ad-field" style="margin-top:var(--s3)"><div class="k">原始來源</div><div class="v"><a href="' + a.sourceUrl + '" target="_blank" rel="noopener" style="color:var(--accent-ink)">' + a.sourceUrl + '</a></div></div>' : '')
+        + '<div class="ad-field"><div class="k">授權／使用限制</div><div class="v">' + (a.license || '未標示') + '</div></div>'
+        + '<div class="ad-field"><div class="k">尺寸／格式／大小</div><div class="v">' + a.width + '×' + a.height + ' · ' + a.mimeType + ' · ' + Math.round(a.fileSize / 1024) + ' KB</div></div>'
+        + '<div class="ad-field"><div class="k">可見性</div><div class="v">' + (a.visibility === 'public' ? '公開' : a.visibility === 'private' ? '私人' : '僅成員') + '</div></div>'
+        + '<div class="ad-field"><div class="k">關聯（AssetLink） · ' + links.length + '</div><div class="ad-links">'
+        + (links.length ? links.map(function (l) { return '<div class="ad-link"><span class="sq" style="background:' + l.targetColor + '">' + (l.targetName[0] || '?') + '</span><div class="info"><div class="nm">' + l.targetName + '</div><div class="sub">' + l.targetTypeLabel + ' · ' + OCData.assetRoleLabel(l.role) + (l.caption ? ' · ' + l.caption : '') + '</div></div>' + (A('assetLink:delete') ? '<button class="rm" data-unlink="' + l.id + '">從此內容移除</button>' : '') + '</div>'; }).join('') : '<div style="font-size:12.5px;color:var(--text-faint)">未分類 — 尚未關聯任何內容。</div>')
+        + '</div></div>';
+      var foot = '';
+      if (canEditThis) {
+        foot = '<button class="btn btn-sm" id="setAvatar">設為代表圖</button><button class="btn btn-sm" id="setCover">設為故事封面</button><span class="spacer" style="flex:1"></span>'
+          + (ownsAsset && A('asset:delete') ? '<button class="btn btn-sm" id="delAsset" style="border-color:var(--avoid);color:var(--avoid)">刪除圖片</button>' : '');
+      }
+      dr.innerHTML = '<div class="dh"><div class="t">' + (a.title || a.fileName) + '</div><button class="x" aria-label="關閉">✕</button></div><div class="db">' + body + '</div>' + (foot ? '<div class="df">' + foot + '</div>' : '');
+      dr.querySelector('.x').onclick = close;
+      scrim.onclick = close;
+      var lastFocus = document.activeElement;
+      document.body.appendChild(scrim); document.body.appendChild(dr);
+      requestAnimationFrame(function () { scrim.classList.add('in'); dr.classList.add('in'); var bigImg = dr.querySelector('.ad-big'); bigImg.tabIndex = 0; bigImg.style.cursor = 'zoom-in'; bigImg.onclick = function () { openLightbox(id); }; dr.querySelector('.x').focus(); });
+      var onKey = function (e) {
+        if (e.key === 'Escape') { close(); return; }
+        if (e.key !== 'Tab') return;
+        var foc = Array.prototype.filter.call(dr.querySelectorAll('button,[tabindex],a[href]'), function (n) { return n.offsetParent !== null; });
+        if (!foc.length) return; var first = foc[0], last = foc[foc.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      };
+      document.addEventListener('keydown', onKey);
+      dr.querySelectorAll('[data-unlink]').forEach(function (b) { b.onclick = function () { var lid = b.dataset.unlink; OCUI.confirm({ title: '從此內容移除？', message: '這只會<b>刪除這筆 AssetLink</b>，原圖片仍保留在圖庫。', confirmLabel: '移除關聯', onConfirm: function () { OCDemo.removeAssetLink(lid); assets = OCData.assetsOf(pid, { publicOnly: publicOnly }); close(); render(); openDetail(id); OCUI.toast('已移除關聯（圖片保留）', { demo: true }); } }); }; });
+      var sa = dr.querySelector('#setAvatar'); if (sa) sa.onclick = function () { OCUI.confirm({ title: '設為代表圖？', message: '這會<b>取代</b>該角色目前的代表圖（avatar 只能有一張）。', confirmLabel: '設為代表圖', onConfirm: function () { OCUI.toast('已設為代表圖（取代舊圖）', { demo: true }); } }); };
+      var sc = dr.querySelector('#setCover'); if (sc) sc.onclick = function () { OCUI.toast('設為故事封面（取代舊封面）', { demo: true }); };
+      var rb = dr.querySelector('#retryBtn'); if (rb) rb.onclick = function () { OCUI.toast('重新處理中…（Demo）', { demo: true }); };
+      var da = dr.querySelector('#delAsset'); if (da) da.onclick = function () {
+        var refs = OCData.linksForAsset(id);
+        var msg = refs.length ? '這張圖片目前被 <b>' + refs.length + '</b> 處引用：' + refs.map(function (l) { return l.targetName; }).join('、') + '。<br>刪除圖片會影響<b>所有</b>引用位置（與「從內容移除」不同）。' : '確定要刪除這張圖片嗎？';
+        OCUI.confirm({ title: '刪除圖片？', message: msg, confirmLabel: '刪除圖片', danger: true, onConfirm: function () { OCDemo.deleteAsset(id); assets = OCData.assetsOf(pid, { publicOnly: publicOnly }); close(); render(); OCUI.toast('已刪除圖片（影響所有引用）', { demo: true }); } });
+      };
+    }
+
+    // ---- lightbox ----
+    function openLightbox(id) {
+      var list = visible();
+      var idx = list.map(function (a) { return a.id; }).indexOf(id);
+      if (idx < 0) { list = assets; idx = list.map(function (a) { return a.id; }).indexOf(id); }
+      var scrim = el('div', 'lb-scrim');
+      function draw() {
+        var a = list[idx];
+        scrim.innerHTML = '<button class="lb-close" aria-label="關閉">✕</button>'
+          + (list.length > 1 ? '<button class="lb-nav prev" aria-label="上一張">‹</button><button class="lb-nav next" aria-label="下一張">›</button>' : '')
+          + '<div class="lb-stage"><div class="lb-img" style="' + placeholder(a, 300) + '" role="img" aria-label="' + (a.altText || a.title || a.fileName) + '">' + a.width + '×' + a.height + '</div><div class="lb-cap">' + (a.title || a.fileName) + (a.creatorName ? ' · ' + a.creatorName : '') + ' · ' + (idx + 1) + '/' + list.length + '</div></div>';
+        scrim.querySelector('.lb-close').onclick = close;
+        var pv = scrim.querySelector('.prev'), nx = scrim.querySelector('.next');
+        if (pv) pv.onclick = function (e) { e.stopPropagation(); idx = (idx - 1 + list.length) % list.length; draw(); };
+        if (nx) nx.onclick = function (e) { e.stopPropagation(); idx = (idx + 1) % list.length; draw(); };
+      }
+      function close() { scrim.classList.remove('in'); document.removeEventListener('keydown', onKey); setTimeout(function () { scrim.remove(); }, 200); }
+      function onKey(e) { if (e.key === 'Escape') close(); else if (e.key === 'ArrowLeft') { idx = (idx - 1 + list.length) % list.length; draw(); } else if (e.key === 'ArrowRight') { idx = (idx + 1) % list.length; draw(); } }
+      scrim.onclick = function (e) { if (e.target === scrim) close(); };
+      document.body.appendChild(scrim); draw();
+      requestAnimationFrame(function () { scrim.classList.add('in'); scrim.querySelector('.lb-close').focus(); });
+      document.addEventListener('keydown', onKey);
+    }
+
+    // ---- uploader (Demo) ----
+    function openUploader() {
+      var f = el('div');
+      f.innerHTML = '<p style="margin:0 0 var(--s3);font-size:13px;color:var(--text-dim)">選擇檔案後會進入佇列（Demo，不真的上傳到 R2）。上傳前不必先分類。</p>'
+        + '<div class="uq" id="uq"></div>'
+        + '<div style="margin-top:var(--s3);font-size:11.5px;color:var(--text-faint)">支援 PNG／JPEG／WebP。單檔上限 10MB。</div>';
+      var m = OCUI.modal({ title: '上傳圖片', body: f, actions: [ { label: '關閉', onClick: function () { if (created.length) { assets = OCData.assetsOf(pid, { publicOnly: publicOnly }); render(); OCUI.toast('已加入 ' + created.length + ' 張圖片到未分類 Inbox', { demo: true }); } } } ] });
+      var created = [];
+      // simulate a queue: 3 files — 2 ok, 1 fails (over size / unsupported)
+      var queue = [
+        { nm: 'new-art.png', steps: ['queued', 'uploading', 'processing', 'ready'] },
+        { nm: 'ref-photo.jpg', steps: ['queued', 'uploading', 'processing', 'ready'] },
+        { nm: 'huge.tiff', steps: ['queued', 'uploading', 'failed'], err: '不支援格式／檔案過大' },
+      ];
+      var uq = f.querySelector('#uq');
+      uq.innerHTML = queue.map(function (it, i) { return '<div class="uq-item" id="uq' + i + '" aria-live="polite"><span class="nm">' + it.nm + '</span><span class="uq-bar"><i style="width:0%"></i></span><span class="as-badge" id="uqb' + i + '">排隊中</span></div>'; }).join('')
+        + '<div style="font-size:12px;color:var(--text-dim);margin-top:8px" id="uqsum"></div>';
+      queue.forEach(function (it, i) {
+        var step = 0;
+        var timer = setInterval(function () {
+          step++;
+          if (step >= it.steps.length) { clearInterval(timer); checkDone(); return; }
+          var s = it.steps[step];
+          var bar = f.querySelector('#uq' + i + ' .uq-bar i'); var badge = f.querySelector('#uqb' + i);
+          var pct = s === 'uploading' ? 45 : s === 'processing' ? 80 : 100;
+          if (bar) bar.style.width = pct + '%';
+          if (badge) { badge.className = 'as-badge ' + s; badge.innerHTML = '<span class="g">' + (s === 'failed' ? OCIcon('x') : s === 'ready' ? OCIcon('check') : OCIcon('clock')) + '</span>' + OCData.assetStatusLabel(s) + (s === 'failed' && it.err ? '：' + it.err : ''); }
+          if (s === 'ready') { created.push(OCDemo.createAsset({ projectId: pid, fileName: it.nm, mimeType: it.nm.match(/jpe?g$/i) ? 'image/jpeg' : 'image/png', visibility: 'private', processingStatus: 'ready' })); checkDone(); }
+          if (s === 'failed' && it.err) { var item = f.querySelector('#uq' + i); var rt = el('button', 'btn btn-sm'); rt.textContent = '重試'; rt.onclick = function () { OCUI.toast('重新上傳（Demo）', { demo: true }); }; item.appendChild(rt); }
+        }, 700);
+      });
+      function checkDone() {
+        var sum = f.querySelector('#uqsum'); if (!sum) return;
+        var ok = f.querySelectorAll('.as-badge.ready').length, fail = f.querySelectorAll('.as-badge.failed').length;
+        if (ok + fail >= queue.length) sum.innerHTML = '完成 ' + ok + ' 張，失敗 ' + fail + ' 張。成功的圖片已進入<b>未分類 Inbox</b>，可稍後補作者與關聯。';
+      }
+    }
+
+    function el(t, c) { var n = document.createElement(t); if (c) n.className = c; return n; }
+
+    function boot() {
+      ctx();
+      var sk = document.createElement('div'); sk.appendChild(OCUI.skeletonCards(8)); root.appendChild(sk);
+      setTimeout(function () { assets = OCData.assetsOf(pid, { publicOnly: publicOnly }); render(); }, 320);
+    }
+    boot();
+  })();
+</script>
+<script src="../assets/shell.js"></script>
+</body>
+</html>

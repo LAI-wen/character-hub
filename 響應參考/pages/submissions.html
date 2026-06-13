@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>角色審核 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/ds.css">
+<link rel="stylesheet" href="../assets/shell.css">
+<link rel="stylesheet" href="../assets/components.css">
+<link rel="stylesheet" href="../assets/application.css">
+</head>
+<body>
+<div class="page" id="root"></div>
+
+<script src="../assets/data.js"></script>
+<script src="../assets/components.js"></script>
+<script>
+  (function () {
+    var root = document.getElementById('root');
+    var pid = new URLSearchParams(location.search).get('project') || localStorage.getItem('ch:proj') || 'tokoyo';
+    if (!OCData.project(pid)) pid = OCData.projects[0].id;
+    var p = OCData.project(pid);
+    var ROLE = OCData.getRole(pid);
+    var isPreview = ROLE === 'visitor';
+    var A = function (act) { return OCData.canAction(act, pid) && !isPreview; };
+    var canReview = A('application:review');
+
+    var loadError = false;
+    var tab = canReview ? 'review' : 'apply';
+    var selApp = null, selReview = null;
+    var TPL = OCData.publishedTemplate(pid);
+    var ICON_S = { draft: OCIcon('edit'), submitted: OCIcon('clock'), changes_requested: OCIcon('edit'), approved: OCIcon('check'), rejected: OCIcon('x'), withdrawn: OCIcon('ban') };
+
+    function gate() {
+      if (isPreview) return 'forbidden';
+      if (p.collaborationMode === 'solo') return 'solo';
+      return null;
+    }
+    function ctx() { root.innerHTML = OCUI.contextHeader({ scope: 'project', crumbs: [p.name, '角色審核'] }); }
+    function stBadge(s) { return '<span class="ap-st ' + s + '"><span class="g">' + (ICON_S[s] || '') + '</span>' + OCData.appStatusLabel(s) + '</span>'; }
+
+    function render() {
+      ctx();
+      var g = gate();
+      if (g === 'forbidden') { root.appendChild(OCUI.forbiddenState({ title: '沒有檢視權限。', body: '加入申請與審核僅企劃成員可見。' })); return; }
+      if (g === 'solo') { root.appendChild(OCUI.emptyState({ title: '這是個人企劃，沒有加入申請。', body: '個人企劃不開放他人申請角色。', icon: 'plug' })); return; }
+      if (loadError) { root.appendChild(OCUI.errorState({ title: '載入失敗。', code: 'LOAD_ERROR', onRetry: function () { loadError = false; boot(); } })); return; }
+
+      var head = document.createElement('div'); head.className = 'pageh';
+      head.innerHTML = '<div class="ht"><h1>角色審核 <span class="en">Applications</span></h1><p class="sub">角色<b>申請加入</b>「' + p.name + '」並由主持人審核。通過後才建立企劃角色（ProjectCharacterLink），把申請資料轉為正式企劃角色資料。</p></div>';
+      root.appendChild(head);
+
+      // tabs
+      var tabs = document.createElement('div'); tabs.className = 'ap-tabs';
+      var pend = OCData.appPendingCount(pid);
+      tabs.innerHTML = '<button class="ap-tab' + (tab === 'apply' ? ' on' : '') + '" data-t="apply">我的申請</button>'
+        + (canReview ? '<button class="ap-tab' + (tab === 'review' ? ' on' : '') + '" data-t="review">主持人審核' + (pend ? '<span class="ct">' + pend + '</span>' : '') + '</button>' : '');
+      root.appendChild(tabs);
+      tabs.querySelectorAll('[data-t]').forEach(function (b) { b.onclick = function () { tab = b.dataset.t; selApp = null; selReview = null; render(); }; });
+
+      if (tab === 'apply') buildApply(); else buildReview();
+    }
+
+    // ============ APPLICANT ============
+    function buildApply() {
+      var mine = OCData.myApplications(pid);
+      var applicable = OCData.applicableCharacters(pid);
+      var cols = document.createElement('div'); cols.className = 'ap-cols';
+      cols.innerHTML = '<div id="left"></div><div id="center"></div><div class="ap-side" id="right"></div>';
+      root.appendChild(cols);
+
+      // left: my applications + apply new
+      var left = document.getElementById('left');
+      var listHtml = '<div class="ap-list"><div class="lh">我的申請 · ' + mine.length + '</div><div class="items" id="appItems">';
+      if (!mine.length) listHtml += '<div style="padding:var(--s4);font-size:12.5px;color:var(--text-faint)">還沒有申請。</div>';
+      mine.forEach(function (a) {
+        var c = OCData.entity(a.characterId) || {};
+        listHtml += '<div class="ap-item' + (selApp === a.id ? ' sel' : '') + '" data-a="' + a.id + '" tabindex="0"><span class="av" style="background:' + c.c + '">' + (c.name || '?')[0] + '</span><div class="b"><div class="nm">' + (c.name || a.characterId) + '</div><div class="meta">v' + (OCData.template(a.templateVersionId) || {}).version + ' · ' + (a.submittedAt || '草稿') + '</div></div>' + stBadge(a.status) + '</div>';
+      });
+      listHtml += '</div><div style="padding:var(--s3)"><button class="btn btn-accent btn-sm" id="applyNew" style="width:100%;justify-content:center">＋ 申請新角色</button></div></div>';
+      left.innerHTML = listHtml;
+      left.querySelectorAll('[data-a]').forEach(function (it) { it.onclick = function () { selApp = it.dataset.a; selReview = null; buildApplyDetail(); refreshSel(); }; it.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); it.click(); } }; });
+      document.getElementById('applyNew').onclick = function () { selApp = '__new'; buildApplyDetail(); };
+
+      if (!selApp) selApp = mine[0] ? mine[0].id : (applicable.length ? '__new' : null);
+      buildApplyDetail();
+    }
+    function refreshSel() { document.querySelectorAll('#appItems .ap-item').forEach(function (it) { it.classList.toggle('sel', it.dataset.a === selApp); }); }
+
+    function buildApplyDetail() {
+      var center = document.getElementById('center'); var right = document.getElementById('right');
+      if (!center) return;
+      if (selApp === '__new') return buildPicker(center, right);
+      var a = OCData.application(selApp);
+      if (!a) {
+        var applicable = OCData.applicableCharacters(pid);
+        center.innerHTML = '';
+        center.appendChild(OCUI.emptyState(applicable.length ? { title: '選擇一個申請，或申請新角色。', body: '' } : { title: '沒有可申請的角色。', body: '你擁有的角色已全部在企劃中或申請中。', ctaLabel: '先建立角色', onCta: function () { location.href = 'editor.html?project=' + pid; } }));
+        if (right) right.innerHTML = '';
+        return;
+      }
+      var c = OCData.entity(a.characterId) || {};
+      var tpl = OCData.template(a.templateVersionId) || {};
+      var fields = OCData.fieldsOf(a.templateVersionId).filter(function (f) { return f.visibility !== 'host' && f.editableBy !== 'host'; }); // applicant fills non-host fields
+      var readOnly = a.status === 'submitted' || a.status === 'approved' || a.status === 'rejected' || a.status === 'withdrawn';
+      var newer = OCData.publishedTemplate(pid);
+      var hasNewer = newer && tpl.version && newer.version > tpl.version;
+
+      var html = '<div class="ap-main"><div class="mh"><div class="top"><h2>' + (c.name || '') + '</h2>' + stBadge(a.status) + '</div><div class="sub">申請加入 ' + p.name + ' · 使用模板 v' + tpl.version + '</div></div><div class="ap-body" id="apBody">';
+      // review message
+      if (a.status === 'changes_requested') html += '<div class="ap-msg"><div class="lbl">主持人要求修改</div>' + a.reviewMessage + '</div>';
+      if (a.status === 'rejected') html += '<div class="ap-msg rej"><div class="lbl">已拒絕</div>' + a.reviewMessage + '</div>';
+      // version banner
+      if (hasNewer && (a.status === 'draft' || a.status === 'changes_requested')) {
+        html += '<div class="ap-vbanner">目前申請使用 <b>v' + tpl.version + '</b>，企劃已發布 <b>v' + newer.version + '</b>。<span class="spacer"></span><button class="btn btn-sm" id="keepVer">繼續用 v' + tpl.version + '</button><button class="btn btn-sm btn-accent" id="upVer">升級到 v' + newer.version + '</button></div>';
+      }
+      // error summary placeholder
+      html += '<div id="errSum"></div>';
+      // body summary (read-only)
+      html += '<div class="ap-sec"><div class="ap-sec-h">角色本體（唯讀）</div><div class="ap-bodyseg"><div style="font-size:13.5px">' + (c.blurb || '') + '</div><div class="lock" style="margin-top:6px">' + OCIcon('lock') + ' 申請不會複製或修改角色本體</div></div></div>';
+      // template fields
+      html += '<div class="ap-sec"><div class="ap-sec-h">企劃欄位（模板 v' + tpl.version + '）</div>';
+      fields.forEach(function (f) {
+        if (f.type === 'section') { html += '<div style="font-family:var(--font-serif);font-weight:700;font-size:15px;margin:var(--s3) 0 var(--s2)">' + f.label + '</div>'; return; }
+        var val = a.fieldValues[f.key] || '';
+        html += '<div class="ap-field" data-fk="' + f.key + '"><label>' + f.label + (f.required ? '<span class="reqd">必填</span>' : '') + '</label>' + control(f, val, readOnly) + (f.description ? '<div style="font-size:11.5px;color:var(--text-faint);margin-top:3px">' + f.description + '</div>' : '') + '<div class="errmsg" style="display:none"></div></div>';
+      });
+      html += '</div></div>';
+      // footer actions
+      var foot = '';
+      if (a.status === 'draft') foot = '<button class="btn" id="saveDraft">儲存草稿</button><span class="spacer"></span><button class="btn" id="withdraw">刪除草稿</button><button class="btn btn-accent" id="submit">提交申請</button>';
+      else if (a.status === 'changes_requested') foot = '<span class="spacer"></span><button class="btn" id="withdraw">撤回</button><button class="btn btn-accent" id="resubmit">修改後重新提交</button>';
+      else if (a.status === 'submitted') foot = '<span style="font-size:12.5px;color:var(--text-dim)">審核中，主持人會通知結果。</span><span class="spacer"></span><button class="btn" id="withdraw">撤回申請</button>';
+      else if (a.status === 'rejected') foot = '<span style="font-size:12.5px;color:var(--text-dim)">已拒絕。' + (p.joinPolicy === 'open' ? '可調整後重新申請。' : '') + '</span>' + (p.joinPolicy === 'open' ? '<span class="spacer"></span><button class="btn btn-accent" id="reapply">重新申請</button>' : '');
+      html += foot ? '<div class="ap-foot">' + foot + '</div>' : '';
+      html += '</div>';
+      center.innerHTML = html;
+
+      // wire
+      var doSubmit = function () { submitApp(a, fields); };
+      ['#submit', '#resubmit'].forEach(function (sel) { var b = center.querySelector(sel); if (b) b.onclick = doSubmit; });
+      var sd = center.querySelector('#saveDraft'); if (sd) sd.onclick = function () { OCUI.toast('已儲存草稿（Demo）', { demo: true }); };
+      var wd = center.querySelector('#withdraw'); if (wd) wd.onclick = function () { OCUI.confirm({ title: a.status === 'draft' ? '刪除草稿？' : '撤回申請？', message: a.status === 'draft' ? '草稿將被刪除。' : '撤回後申請會結束，可依企劃政策重新申請。', confirmLabel: a.status === 'draft' ? '刪除' : '撤回', danger: true, onConfirm: function () { OCUI.toast(a.status === 'draft' ? '已刪除草稿' : '已撤回申請', { demo: true }); } }); };
+      var ra = center.querySelector('#reapply'); if (ra) ra.onclick = function () { OCUI.toast('已建立新申請草稿（Demo）', { demo: true }); };
+      var up = center.querySelector('#upVer'); if (up) up.onclick = function () { showVersionUpgrade(tpl, newer); };
+      var kv = center.querySelector('#keepVer'); if (kv) kv.onclick = function () { OCUI.toast('繼續使用 v' + tpl.version, { demo: true }); };
+
+      // right: character summary + timeline
+      if (right) buildApplySide(right, a, c);
+    }
+
+    function buildApplySide(right, a, c) {
+      var tl = [ ['建立草稿', a.submittedAt ? true : (a.status !== 'draft'), '草稿'], ['提交', !!a.submittedAt, a.submittedAt || ''], ['審核', !!a.reviewedAt, a.reviewedAt || ''], ['結果', a.status === 'approved' || a.status === 'rejected', OCData.appStatusLabel(a.status)] ];
+      right.innerHTML = '<div class="ap-panel"><div class="ph">角色摘要</div><div class="ap-charsum"><span class="av" style="background:' + c.c + '">' + (c.name || '?')[0] + '</span><div><div class="nm">' + (c.name || '') + '</div><div class="rom">' + (c.rom || '') + '</div></div></div>'
+        + '<div class="ap-kv" style="margin-top:var(--s3)"><span class="k">物種</span><span>' + (c.sp || '—') + '</span></div><div class="ap-kv"><span class="k">擁有者</span><span>' + OCData.ownerSummary(c.ownerUserId).label + '</span></div></div>'
+        + '<div class="ap-panel"><div class="ph">申請進度</div><div class="ap-timeline">' + tl.map(function (t) { return '<div class="ap-tl' + (t[1] ? ' done' : '') + '"><span class="dot"></span><div><div>' + t[0] + '</div>' + (t[2] ? '<div class="when">' + t[2] + '</div>' : '') + '</div></div>'; }).join('') + '</div></div>';
+    }
+
+    function buildPicker(center, right) {
+      var applicable = OCData.applicableCharacters(pid);
+      if (!applicable.length) { center.innerHTML = ''; center.appendChild(OCUI.emptyState({ title: '沒有可申請的角色。', body: '你擁有的角色已全部在企劃中或申請中。先建立一個新角色。', ctaLabel: '建立角色', onCta: function () { location.href = 'editor.html?project=' + pid; } })); if (right) right.innerHTML = ''; return; }
+      center.innerHTML = '<div class="ap-main"><div class="mh"><div class="top"><h2>申請新角色</h2></div><div class="sub">選一個你擁有、尚未加入「' + p.name + '」的角色。將使用目前發布的模板 v' + (TPL || {}).version + '。</div></div><div class="ap-body"><div class="ap-pick">'
+        + applicable.map(function (c) { return '<button class="ap-pickcard" data-c="' + c.id + '"><span class="av" style="background:' + c.c + '">' + c.name[0] + '</span><div><div class="nm">' + c.name + '</div><div class="sp">' + (c.sp || '') + '</div></div></button>'; }).join('')
+        + '</div><div style="margin-top:var(--s4);font-size:12.5px;color:var(--text-faint)">沒有想要的角色？<a href="editor.html?project=' + pid + '" style="color:var(--accent-ink);font-weight:600">先建立角色 →</a></div></div></div>';
+      if (right) right.innerHTML = '';
+      center.querySelectorAll('[data-c]').forEach(function (b) { b.onclick = function () { OCUI.toast('已建立「' + (OCData.entity(b.dataset.c) || {}).name + '」的申請草稿（Demo）', { demo: true }); }; });
+    }
+
+    function control(f, val, ro) {
+      var d = ro ? ' disabled' : '';
+      switch (f.type) {
+        case 'textarea': return '<textarea class="input" data-f rows="2"' + d + '>' + val + '</textarea>';
+        case 'number': return '<input class="input" type="number" data-f value="' + val + '"' + d + '>';
+        case 'select': return '<select class="select" data-f' + d + '><option value="">—</option>' + (f.options || []).map(function (o) { return '<option' + (o === val ? ' selected' : '') + '>' + o + '</option>'; }).join('') + '</select>';
+        case 'multiselect': return '<div style="display:flex;gap:5px;flex-wrap:wrap">' + (f.options || []).map(function (o) { return '<span class="chip">' + o + '</span>'; }).join('') + '</div>';
+        case 'color': return '<input class="input" data-f value="' + (val || '#3B5E6B') + '"' + d + '>';
+        default: return '<input class="input" data-f value="' + val + '"' + (f.validation && f.validation.max ? ' maxlength="' + f.validation.max + '"' : '') + d + '>';
+      }
+    }
+
+    // submit with validation + error summary + focus first error
+    function submitApp(a, fields) {
+      var center = document.getElementById('center');
+      var errs = [];
+      fields.forEach(function (f) {
+        if (f.type === 'section') return;
+        var wrap = center.querySelector('[data-fk="' + f.key + '"]'); if (!wrap) return;
+        var inp = wrap.querySelector('[data-f]');
+        var v = inp ? (inp.value || '').trim() : (a.fieldValues[f.key] || '');
+        wrap.classList.remove('err'); var em = wrap.querySelector('.errmsg'); if (em) em.style.display = 'none';
+        // required validation honors editableBy/stage: host-only handled separately (excluded here)
+        if (f.required && !v) { errs.push({ key: f.key, label: f.label }); wrap.classList.add('err'); if (em) { em.textContent = '「' + f.label + '」為必填'; em.style.display = 'block'; } }
+      });
+      var sum = center.querySelector('#errSum');
+      if (errs.length) {
+        sum.innerHTML = '<div class="err-summary" role="alert" aria-live="assertive"><div class="t">有 ' + errs.length + ' 個欄位需要修正</div>' + errs.map(function (e) { return '<a data-jump="' + e.key + '">• ' + e.label + '</a>'; }).join('') + '</div>';
+        sum.querySelectorAll('[data-jump]').forEach(function (a2) { a2.onclick = function () { var w = center.querySelector('[data-fk="' + a2.dataset.jump + '"] [data-f]'); if (w) w.focus(); }; });
+        var first = center.querySelector('[data-fk="' + errs[0].key + '"] [data-f]'); if (first) first.focus();
+        return;
+      }
+      sum.innerHTML = '';
+      OCUI.toast('已提交申請，等待主持人審核（Demo）', { demo: true });
+    }
+
+    function showVersionUpgrade(oldT, newT) {
+      var d = OCData.templateDiff(pid);
+      var body = document.createElement('div');
+      body.innerHTML = '<p style="margin:0 0 var(--s3);font-size:13px;color:var(--text-dim)">升級到 v' + newT.version + ' 會改變表單欄位（不會默默套用）：</p>'
+        + (d ? '<div style="font-size:12.5px;color:#1F6B43">新增：' + (d.added.join('、') || '無') + '</div><div style="font-size:12.5px;color:#355C86;margin-top:4px">修改：' + (d.modified.join('、') || '無') + '</div><div style="font-size:12.5px;color:#9E332B;margin-top:4px">失效：' + (d.removed.join('、') || '無') + '</div>' : '');
+      OCUI.modal({ title: '升級模板版本', body: body, actions: [ { label: '取消' }, { label: '升級到 v' + newT.version, kind: 'accent', onClick: function () { OCUI.toast('已升級到 v' + newT.version + '（表單已更新）', { demo: true }); } } ] });
+    }
+
+    // ============ HOST REVIEW ============
+    function buildReview() {
+      var queue = OCData.reviewQueue(pid);
+      var cols = document.createElement('div'); cols.className = 'ap-cols';
+      cols.innerHTML = '<div id="left"></div><div id="center"></div><div class="ap-side" id="right"></div>';
+      root.appendChild(cols);
+      var left = document.getElementById('left');
+      var pendCount = queue.filter(function (a) { return a.status === 'submitted'; }).length;
+      var listHtml = '<div class="ap-list"><div class="lh">審核佇列 · 待審 ' + pendCount + '</div><div class="items" id="rvItems">';
+      if (!queue.length) listHtml += '<div style="padding:var(--s4);font-size:12.5px;color:var(--text-faint)">沒有待審申請。</div>';
+      queue.forEach(function (a) {
+        var c = OCData.entity(a.characterId) || {};
+        listHtml += '<div class="ap-item' + (selReview === a.id ? ' sel' : '') + '" data-r="' + a.id + '" tabindex="0"><span class="av" style="background:' + c.c + '">' + (c.name || '?')[0] + '</span><div class="b"><div class="nm">' + (c.name || '') + '</div><div class="meta">' + OCData.ownerSummary(a.applicantUserId).label + ' · ' + (a.submittedAt || '') + '</div></div>' + stBadge(a.status) + '</div>';
+      });
+      listHtml += '</div></div>';
+      left.innerHTML = listHtml;
+      left.querySelectorAll('[data-r]').forEach(function (it) { it.onclick = function () { selReview = it.dataset.r; buildReviewDetail(); left.querySelectorAll('.ap-item').forEach(function (x) { x.classList.toggle('sel', x.dataset.r === selReview); }); }; it.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); it.click(); } }; });
+      if (!selReview && queue.length) selReview = (queue.filter(function (a) { return a.status === 'submitted'; })[0] || queue[0]).id;
+      buildReviewDetail();
+    }
+
+    function buildReviewDetail() {
+      var center = document.getElementById('center'), right = document.getElementById('right');
+      if (!center) return;
+      var a = selReview ? OCData.application(selReview) : null;
+      if (!a) { center.innerHTML = ''; center.appendChild(OCUI.emptyState({ title: '選擇一個申請來審核。', body: '' })); if (right) right.innerHTML = ''; return; }
+      var c = OCData.entity(a.characterId) || {};
+      var allFields = OCData.fieldsOf(a.templateVersionId);
+      var ownerFields = allFields.filter(function (f) { return f.type !== 'section' && f.visibility !== 'host' && f.editableBy !== 'host'; });
+      var hostFields = allFields.filter(function (f) { return f.visibility === 'host' || f.editableBy === 'host'; });
+      var pending = a.status === 'submitted';
+
+      var html = '<div class="ap-main"><div class="mh"><div class="top"><h2>' + (c.name || '') + '</h2>' + stBadge(a.status) + '</div><div class="sub">申請者 ' + OCData.ownerSummary(a.applicantUserId).label + ' · 模板 v' + (OCData.template(a.templateVersionId) || {}).version + '</div></div><div class="ap-body">';
+      // body summary read-only
+      html += '<div class="ap-sec"><div class="ap-sec-h">角色本體摘要（唯讀）</div><div class="ap-bodyseg"><div style="font-size:13.5px">' + (c.blurb || '') + '</div><div class="lock" style="margin-top:6px">' + OCIcon('lock') + ' 主持人不可修改角色本體（名稱／外觀／圖文設定）</div></div></div>';
+      // applicant filled fields
+      html += '<div class="ap-sec"><div class="ap-sec-h">申請者填寫</div>' + ownerFields.map(function (f) {
+        return '<div class="ap-kv"><span class="k">' + f.label + '</span><span>' + (a.fieldValues[f.key] || '<span style="color:var(--text-faint)">（空）</span>') + '</span></div>';
+      }).join('') + '</div>';
+      // host-only fields (editable)
+      if (hostFields.length) {
+        html += '<div class="ap-sec"><div class="ap-sec-h">主持人限定欄位 ' + OCChar_visBadge('host') + '</div>' + hostFields.map(function (f) {
+          return '<div class="ap-field ap-hostfield"><label>' + f.label + (f.required ? '<span class="reqd">必填</span>' : '') + '</label>' + control(f, '', !pending) + '</div>';
+        }).join('') + '</div>';
+      }
+      html += '</div>';
+      // actions
+      if (pending || a.status === 'changes_requested') {
+        html += '<div class="ap-foot"><button class="btn btn-accent" id="approveBtn">通過</button><button class="btn" id="changesBtn">要求修改</button><span class="spacer"></span><button class="btn" id="rejectBtn" style="border-color:var(--avoid);color:var(--avoid)">拒絕</button></div>';
+      } else {
+        html += '<div class="ap-foot"><span style="font-size:12.5px;color:var(--text-dim)">' + (a.status === 'approved' ? '已通過並建立企劃角色。' : a.status === 'rejected' ? '已拒絕：' + a.reviewMessage : OCData.appStatusLabel(a.status)) + '</span></div>';
+      }
+      html += '</div>';
+      center.innerHTML = html;
+
+      var ab = center.querySelector('#approveBtn'); if (ab) ab.onclick = function () { approveFlow(a, c); };
+      var cb = center.querySelector('#changesBtn'); if (cb) cb.onclick = function () { reasonModal('要求修改', '請說明需要修改什麼', function () { OCUI.toast('已要求修改，申請者會收到通知', { demo: true }); }); };
+      var rb = center.querySelector('#rejectBtn'); if (rb) rb.onclick = function () { reasonModal('拒絕申請', '請說明拒絕原因', function () { OCUI.toast('已拒絕申請（不建立企劃角色）', { demo: true }); }, true); };
+
+      // right: link preview + record
+      if (right) {
+        var fac = OCData.factionsOf(pid)[0] || {};
+        right.innerHTML = '<div class="ap-panel ap-linkprev"><div class="ph">通過後將建立 · ProjectCharacterLink</div>'
+          + '<div class="ap-kv" style="border:none"><span class="k">角色</span><span>' + (c.name || '') + '</span></div>'
+          + '<div class="ap-kv"><span class="k">陣營</span><span>' + (fac.name || '—') + '</span></div>'
+          + '<div class="ap-kv"><span class="k">職位</span><span>' + (a.fieldValues.faction_role || '—') + '</span></div>'
+          + '<div class="ap-kv"><span class="k">模板版本</span><span>v' + (OCData.template(a.templateVersionId) || {}).version + '</span></div>'
+          + '<div class="ap-kv"><span class="k">fieldValues</span><span>由申請複製</span></div>'
+          + '<div style="font-size:11px;color:#1F6B43;margin-top:8px">原子流程：通過 → 建立 Link → 複製 fieldValues</div></div>'
+          + '<div class="ap-panel"><div class="ph">審核紀錄</div>' + (a.reviewMessage ? '<div style="font-size:12.5px;color:var(--text-dim);line-height:1.6">' + a.reviewMessage + '<div class="when" style="font-size:11px;color:var(--text-faint);margin-top:4px">' + (a.reviewedAt || '') + ' · ' + (a.reviewedBy || '') + '</div></div>' : '<div style="font-size:12.5px;color:var(--text-faint)">尚無紀錄</div>') + '</div>';
+      }
+    }
+    function OCChar_visBadge(k) { return '<span class="vis-b host" style="margin-left:auto"><span class="d"></span>僅主持人</span>'; }
+
+    function reasonModal(title, label, onOk, danger) {
+      var f = document.createElement('div');
+      f.innerHTML = '<div class="ap-field"><label>' + label + '<span class="reqd">必填</span></label><textarea class="input" id="rsn" rows="3"></textarea><div class="errmsg" style="display:none">請填寫原因</div></div>';
+      OCUI.modal({ title: title, body: f, actions: [ { label: '取消' }, { label: title, kind: danger ? 'danger' : 'primary', onClick: function () { var v = f.querySelector('#rsn').value.trim(); if (!v) { f.querySelector('.errmsg').style.display = 'block'; f.querySelector('#rsn').focus(); return true; } onOk(v); } } ] });
+    }
+
+    // atomic approval UX (success / failure)
+    function approveFlow(a, c) {
+      var fail = new URLSearchParams(location.search).get('failapprove') === '1';
+      var body = document.createElement('div');
+      body.innerHTML = '<p style="margin:0 0 var(--s2)">通過「' + (c.name || '') + '」的申請會<b>原子地</b>：</p>'
+        + '<div style="font-size:13px;color:var(--text-dim);line-height:1.9">① 申請 → approved<br>② 建立 ProjectCharacterLink<br>③ 複製／轉換 fieldValues 為正式企劃角色資料</div>'
+        + '<div style="font-size:11.5px;color:var(--text-faint);margin-top:8px">若任一步失敗，不會出現「已通過但沒有企劃角色」。</div>';
+      OCUI.modal({ title: '通過申請', body: body, actions: [ { label: '取消' }, { label: '通過並建立企劃角色', kind: 'accent', onClick: function () {
+        if (fail) { OCUI.toast('建立企劃角色失敗，申請維持審核中（未部分完成）· Demo', { demo: true }); }
+        else { OCUI.toast('已通過 並建立企劃角色（fieldValues 已轉為正式資料）', { demo: true }); }
+      } } ] });
+    }
+
+    function boot() {
+      ctx();
+      var sk = document.createElement('div'); sk.appendChild(OCUI.skeletonCards(4)); root.appendChild(sk);
+      setTimeout(function () { render(); }, 300);
+    }
+    boot();
+  })();
+</script>
+<script src="../assets/shell.js"></script>
+</body>
+</html>

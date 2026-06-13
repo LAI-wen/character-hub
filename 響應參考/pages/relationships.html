@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>關係圖 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/ds.css">
+<link rel="stylesheet" href="../assets/shell.css">
+<link rel="stylesheet" href="../assets/components.css">
+<link rel="stylesheet" href="../assets/worldrel.css">
+</head>
+<body>
+<div class="page" id="root"></div>
+
+<script src="../assets/data.js"></script>
+<script src="../assets/components.js"></script>
+<script>
+  (function () {
+    var root = document.getElementById('root');
+    var pid = new URLSearchParams(location.search).get('project') || localStorage.getItem('ch:proj') || 'tokoyo';
+    if (!OCData.project(pid)) pid = OCData.projects[0].id;
+    var p = OCData.project(pid);
+    var ROLE = OCData.getRole(pid);
+    var isPreview = ROLE === 'visitor';
+    // action-level permissions (product concept), not the fixture role name
+    var canCreate = OCData.canAction('relationship:create', pid) && !isPreview;
+    var canUpdate = OCData.canAction('relationship:update', pid) && !isPreview;
+    var canDelete = OCData.canAction('relationship:delete', pid) && !isPreview;
+    var canLayout = OCData.canAction('relationshipLayout:update', pid) && !isPreview;
+    var canEdit = canCreate || canUpdate || canDelete;
+    var publicOnly = isPreview;
+
+    // UI-only state (NEVER persisted to RelationshipLayout)
+    var selRel = null, focusNode = null, typeF = '*', groupF = '*', q = '';
+
+    var rels = [], layout = { nodePositions: {}, edgeRoutes: {} };
+    var loadError = false;
+    var viewMode = (function () { try { return localStorage.getItem('ch:relview') || 'canvas'; } catch (e) { return 'canvas'; } })();
+    var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function gate() {
+      if (!OCData.hasFeature(pid, 'relationships')) return 'feature';
+      if (isPreview && p.visibility !== 'public') return 'forbidden';
+      return null;
+    }
+
+    function header() {
+      var html = OCUI.contextHeader({ scope: 'project', crumbs: [p.name, '關係圖'] });
+      html += '<div class="pageh"><div class="ht"><h1>關係圖 <span class="en">Relationships</span></h1>'
+        + '<p class="sub">' + p.name + ' 的角色與世界觀之間的關係。' + (isPreview ? '<b>（公開預覽：只顯示公開關係）</b>' : '') + '</p></div>'
+        + (canCreate ? '<div class="acts"><button class="btn btn-accent" id="addRel">＋ 新增關係</button></div>' : '') + '</div>';
+      root.innerHTML = html;
+      var ar = document.getElementById('addRel'); if (ar) ar.onclick = addRel;
+    }
+
+    function nodeIds() {
+      // every entity that appears in a (filtered) relationship
+      var ids = {};
+      visibleRels().forEach(function (r) { ids[r.source.id] = 1; ids[r.target.id] = 1; });
+      return Object.keys(ids);
+    }
+    function visibleRels() {
+      return rels.filter(function (r) {
+        if (typeF !== '*' && r.type !== typeF) return false;
+        if (groupF !== '*' && (r.group || '') !== groupF) return false;
+        if (focusNode && r.source.id !== focusNode && r.target.id !== focusNode) return false;
+        if (q && (r.label + ' ' + r.source.name + ' ' + r.target.name).toLowerCase().indexOf(q.toLowerCase()) < 0) return false;
+        return true;
+      });
+    }
+
+    function render() {
+      header();
+      var g = gate();
+      if (g === 'feature') { root.appendChild(OCUI.emptyState({ title: '關係圖模組未啟用。', body: '這個企劃尚未開啟關係圖模組，可在企劃設定中啟用。', icon: 'plug' })); return; }
+      if (g === 'forbidden') { root.appendChild(OCUI.forbiddenState({ title: '沒有檢視權限。', body: '這個企劃的關係圖未公開，只有企劃成員能檢視。' })); return; }
+      if (loadError) { root.appendChild(OCUI.errorState({ title: '關係圖載入失敗。', code: 'LOAD_ERROR', onRetry: function () { loadError = false; boot(); } })); return; }
+      if (!rels.length) { root.appendChild(OCUI.emptyState({ title: '關係圖已啟用，但還沒有關係。', body: canCreate ? '新增第一段關係，把角色與角色、角色與世界觀連起來。' : '擁有者還沒有建立公開關係。', ctaLabel: canCreate ? '＋ 新增關係' : null, onCta: addRel })); return; }
+
+      // toolbar (shared)
+      var types = ['*'].concat(rels.map(function (r) { return r.type; }).filter(function (v, i, a) { return a.indexOf(v) === i; }));
+      var tb = '<div class="rl-toolbar"><div class="searchf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="q" type="search" placeholder="搜尋關係…" value="' + q + '"></div>'
+        + '<div class="filterbar">' + types.map(function (t) { return '<button class="fbtn' + (t === typeF ? ' on' : '') + '" data-t="' + t + '">' + (t === '*' ? '全部' : OCData.relTypeLabel(t)) + '</button>'; }).join('') + '</div>'
+        + '<div class="spacer"></div>'
+        + '<div class="ac-view" role="group" aria-label="檢視方式"><button id="vCanvas" class="' + (viewMode === 'canvas' ? 'on' : '') + '" aria-pressed="' + (viewMode === 'canvas') + '" title="畫布">' + OCIcon('nodes') + '</button><button id="vList" class="' + (viewMode === 'list' ? 'on' : '') + '" aria-pressed="' + (viewMode === 'list') + '" title="清單">' + OCIcon('text') + '</button></div>'
+        + (focusNode ? '<button class="btn btn-sm" id="clearFocus">' + OCIcon('x') + ' 取消聚焦 ' + (OCData.entity(focusNode) || {}).name + '</button>' : '')
+        + '<button class="btn btn-sm" id="resetView">重設視圖</button></div>';
+
+      // desktop: canvas OR list (alternative view); mobile: always list
+      var deskInner = viewMode === 'list'
+        ? '<div class="rl-altlist" id="altList"></div>'
+        : '<div class="rl-canvas" id="canvas" role="group" aria-label="關係圖畫布，可用方向鍵與 Enter 操作。另有清單替代檢視。"></div>';
+      var html = '<div class="rl-layout"><div class="rl-wrap">' + tb
+        + '<div class="rl-desktop">' + deskInner + '</div>'
+        + '<div class="rl-mobile" id="mobileList"></div></div>'
+        + '<div class="rl-side" id="side"></div></div>';
+      var box = document.createElement('div'); box.innerHTML = html; root.appendChild(box);
+
+      wireToolbar();
+      if (viewMode === 'list') buildAltList(); else buildCanvas();
+      buildMobile();
+      buildSide();
+    }
+
+    function wireToolbar() {
+      var qi = document.getElementById('q'); if (qi) qi.oninput = function (e) { q = e.target.value.trim(); if (viewMode === 'list') buildAltList(); else buildCanvas(); buildMobile(); };
+      document.querySelectorAll('[data-t]').forEach(function (b) { b.onclick = function () { typeF = b.dataset.t; render(); }; });
+      var cf = document.getElementById('clearFocus'); if (cf) cf.onclick = function () { focusNode = null; render(); };
+      var rv = document.getElementById('resetView'); if (rv) rv.onclick = function () { focusNode = null; typeF = '*'; groupF = '*'; q = ''; selRel = null; render(); };
+      var vc = document.getElementById('vCanvas'); if (vc) vc.onclick = function () { viewMode = 'canvas'; try { localStorage.setItem('ch:relview', 'canvas'); } catch (e) {} render(); };
+      var vl = document.getElementById('vList'); if (vl) vl.onclick = function () { viewMode = 'list'; try { localStorage.setItem('ch:relview', 'list'); } catch (e) {} render(); };
+    }
+
+    // desktop alternative view: full relationship list (a11y + non-canvas browsing)
+    function buildAltList() {
+      var host = document.getElementById('altList'); if (!host) return;
+      var vr = visibleRels();
+      host.innerHTML = '<div class="rl-list" style="padding:var(--s4)">' + vr.map(relLi).join('') + '</div>';
+      host.querySelectorAll('[data-rel]').forEach(function (li) {
+        li.setAttribute('tabindex', '0'); li.setAttribute('role', 'button');
+        li.onclick = function () { selRel = li.dataset.rel; buildAltList(); buildSide(); };
+        li.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); li.click(); } };
+      });
+    }
+
+    function buildCanvas() {
+      var c = document.getElementById('canvas'); if (!c) return;
+      var vr = visibleRels();
+      var ids = {}; vr.forEach(function (r) { ids[r.source.id] = 1; ids[r.target.id] = 1; });
+      var nodes = Object.keys(ids);
+      // edges (SVG) — only for visible rels; deleting a rel removes its path+label (rebuilt each time)
+      var W = c.clientWidth || 760, H = c.clientHeight || 560;
+      function pos(id) { var n = layout.nodePositions[id] || { x: 0.5, y: 0.5 }; return { x: n.x * W, y: n.y * H }; }
+      var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="關係圖：' + nodes.length + ' 個節點、' + vr.length + ' 段關係"><desc>以節點與連線呈現角色與世界觀的關係；連線顏色代表關係分組。可改用工具列右側「清單」檢視。</desc>';
+      // grouping is carried by EDGE COLOUR (not background blobs) — overlapping
+      // group membership made filled hulls muddy/unreadable. Each line takes its
+      // RelationshipGroup colour; a small legend decodes them.
+      var groupsAll = OCData.relationshipGroupsOf(pid);
+      function groupColor(gid) { var g = groupsAll.filter(function (x) { return x.id === gid; })[0]; return g ? g.c : null; }
+      var labels = '';
+      // glyph per relationship type so meaning isn't conveyed by colour alone
+      var TYPE_GLYPH = { pact: OCIcon('book'), longing: OCIcon('heart'), rivalry: OCIcon('swords'), feud: OCIcon('swords'), belong: OCIcon('radio'), unspoken: OCIcon('chat'), family: OCIcon('home'), friend: OCIcon('user'), custom: OCIcon('dot') };
+      vr.forEach(function (r) {
+        var a = pos(r.source.id), b = pos(r.target.id);
+        var hot = selRel === r.id;
+        var dim = selRel && !hot;
+        var dirWord = r.direction === 'both' ? '双向' : r.direction === 'forward' ? '單向' : '無方向';
+        var ec = groupColor(r.group) || 'var(--border-strong)';
+        var eo = hot ? 1 : dim ? 0.16 : 0.62;
+        var ew = hot ? 3.25 : 2;
+        // curved edge: bow perpendicular to the chord so crossing lines stay
+        // readable (archived treatment). control point at the midpoint, pushed
+        // along the normal by ~14% of the chord length.
+        var dx = b.x - a.x, dy = b.y - a.y, len = Math.sqrt(dx * dx + dy * dy) || 1;
+        var bow = Math.min(len * 0.14, 46);
+        var cxp = (a.x + b.x) / 2 + (-dy / len) * bow, cyp = (a.y + b.y) / 2 + (dx / len) * bow;
+        var oneSided = r.direction === 'forward';
+        svg += '<path class="rl-edge' + (hot ? ' hot' : dim ? ' dim' : '') + '" style="stroke:' + ec + ';stroke-opacity:' + eo + ';stroke-width:' + ew + '" d="M' + a.x + ',' + a.y + ' Q' + cxp + ',' + cyp + ' ' + b.x + ',' + b.y + '"' + (r.direction !== 'none' ? ' marker-end="url(#arr)"' : '') + ' fill="none"><title>' + r.source.name + ' ' + (r.direction === 'both' ? '↔' : r.direction === 'forward' ? '→' : '—') + ' ' + r.target.name + '：' + r.label + '（' + OCData.relTypeLabel(r.type) + ' · ' + dirWord + '）</title></path>';
+        // one-sided marker: for asymmetric (forward) relations, a small toned
+        // dot sits ~30% from the SOURCE (the one who feels it), like the archive.
+        if (oneSided) {
+          var ox = a.x + dx * 0.3 + (-dy / len) * bow * 0.6, oy = a.y + dy * 0.3 + (dx / len) * bow * 0.6;
+          svg += '<circle cx="' + ox + '" cy="' + oy + '" r="3.5" fill="var(--surface)" stroke="' + (r.source.color || 'var(--accent)') + '" stroke-width="1.6" opacity="' + (dim ? 0.2 : 1) + '"/>';
+        }
+        // label sits on the curve apex (quadratic bezier midpoint at t=0.5)
+        var mx = 0.25 * a.x + 0.5 * cxp + 0.25 * b.x, my = 0.25 * a.y + 0.5 * cyp + 0.25 * b.y;
+        // default: small glyph-only chip (doesn't block the view); full text
+        // label only for the selected/focused relationship. Hover also reveals.
+        var showText = hot || (focusNode && (r.source.id === focusNode || r.target.id === focusNode));
+        var gObj = r.group ? OCData.relationshipGroup(pid, r.group) : null;
+        var gc = gObj ? gObj.c : 'var(--border-strong)';
+        labels += '<div class="rl-elabel' + (showText ? ' show' : ' glyph') + (dim ? ' dim' : '') + '" style="left:' + mx + 'px;top:' + my + 'px;--gc:' + gc + '" data-rel="' + r.id + '" tabindex="0" role="button" aria-label="' + r.label + '，' + OCData.relTypeLabel(r.type) + (gObj ? '，' + gObj.name : '') + '"><span class="g" aria-hidden="true">' + (TYPE_GLYPH[r.type] || OCIcon('dot')) + '</span><span class="t">' + r.label + '</span></div>';
+      });
+      svg += '<defs><marker id="arr" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6" fill="none" stroke="context-stroke" stroke-opacity="0.9" stroke-width="1.3"/></marker></defs></svg>';
+      // legend doubles as a GROUP FILTER. Compute available groups from rels
+      // filtered by everything EXCEPT group, so every chip always yields results
+      // and you can switch freely. Active group highlighted; click again clears.
+      var preFilter = rels.filter(function (r) {
+        if (typeF !== '*' && r.type !== typeF) return false;
+        if (focusNode && r.source.id !== focusNode && r.target.id !== focusNode) return false;
+        if (q && (r.label + ' ' + r.source.name + ' ' + r.target.name).toLowerCase().indexOf(q.toLowerCase()) < 0) return false;
+        return true;
+      });
+      var present = {}; preFilter.forEach(function (r) { present[r.group || ''] = 1; });
+      function legChip(gid, name, color) {
+        var on = groupF === gid, off = groupF !== '*' && !on;
+        return '<button class="li' + (on ? ' on' : '') + (off ? ' off' : '') + '" data-group="' + gid + '" aria-pressed="' + on + '"><span class="sw" style="background:' + color + '"></span>' + name + '</button>';
+      }
+      var legItems = groupsAll.filter(function (g) { return present[g.id]; }).map(function (g) { return legChip(g.id, g.name, g.c); });
+      if (present['']) legItems.push(legChip('', '未分組', 'var(--border-strong)'));
+      var legend = legItems.length ? '<div class="rl-legend" role="group" aria-label="依分組篩選">' + legItems.join('') + '</div>' : '';
+      var nodeHtml = nodes.map(function (id) {
+        var e = OCData.entity(id) || {}; var pp = pos(id);
+        var isWorld = e.type && e.type !== 'character';
+        var dim = focusNode && id !== focusNode && !vr.some(function (r) { return (r.source.id === focusNode && r.target.id === id) || (r.target.id === focusNode && r.source.id === id); });
+        return '<div class="rl-node' + (isWorld ? ' world' : '') + (focusNode === id ? ' sel' : '') + (dim ? ' dim' : '') + '" style="position:absolute;left:' + pp.x + 'px;top:' + pp.y + 'px" data-node="' + id + '" tabindex="0" role="button" aria-label="' + (e.name || id) + '（' + (isWorld ? OCData.typeLabel[e.type] || '世界觀' : '角色') + '），按 Enter 聚焦"><span class="av" style="background:' + (e.c || '#8A857C') + '" aria-hidden="true">' + (e.name || '?')[0] + '</span><span class="nm">' + (e.name || id) + '</span></div>';
+      }).join('');
+      c.innerHTML = svg + legend + labels + nodeHtml;
+      c.querySelectorAll('[data-node]').forEach(function (n) {
+        n.onclick = function () { focusNode = focusNode === n.dataset.node ? null : n.dataset.node; selRel = null; render(); };
+        n.onkeydown = function (e2) { if (e2.key === 'Enter' || e2.key === ' ') { e2.preventDefault(); n.click(); } };
+      });
+      c.querySelectorAll('[data-rel]').forEach(function (l) {
+        l.style.pointerEvents = 'auto'; l.style.cursor = 'pointer';
+        l.onclick = function () { selRel = l.dataset.rel; buildCanvas(); buildSide(); };
+        l.onkeydown = function (e2) { if (e2.key === 'Enter' || e2.key === ' ') { e2.preventDefault(); l.click(); } };
+      });
+      c.querySelectorAll('.rl-legend [data-group]').forEach(function (b) {
+        b.onclick = function () { var g = b.dataset.group; groupF = (groupF === g ? '*' : g); selRel = null; buildCanvas(); buildMobile(); buildSide(); };
+      });
+    }
+
+    function buildMobile() {
+      var m = document.getElementById('mobileList'); if (!m) return;
+      var vr = visibleRels();
+      var note = '<div class="rl-mobile-note">' + OCIcon('phone') + ' 手機為唯讀清單檢視，完整編輯畫布建議用平板或桌機。</div>';
+      var mini = '<div class="rl-mini" id="mini"></div>';
+      var list = '<div class="rl-list" style="margin-top:var(--s3)">' + vr.map(relLi).join('') + '</div>';
+      m.innerHTML = note + mini + list;
+      m.querySelectorAll('[data-rel]').forEach(function (li) { li.onclick = function () { selRel = li.dataset.rel; buildMobile(); buildSide(); window.scrollTo({ top: 0, behavior: 'smooth' }); }; });
+      // mini preview graph
+      var mc = document.getElementById('mini');
+      var W = mc.clientWidth || 320, H = 180;
+      var ids = {}; vr.forEach(function (r) { ids[r.source.id] = 1; ids[r.target.id] = 1; });
+      function pos(id) { var n = layout.nodePositions[id] || { x: 0.5, y: 0.5 }; return { x: n.x * W, y: n.y * H }; }
+      var svg = '<svg style="position:absolute;inset:0;width:100%;height:100%">';
+      vr.forEach(function (r) { var a = pos(r.source.id), b = pos(r.target.id); svg += '<path class="rl-edge' + (selRel === r.id ? ' hot' : '') + '" d="M' + a.x + ',' + a.y + ' L' + b.x + ',' + b.y + '"/>'; });
+      svg += '</svg>';
+      var dots = Object.keys(ids).map(function (id) { var e = OCData.entity(id) || {}; var pp = pos(id); return '<div style="position:absolute;transform:translate(-50%,-50%);left:' + pp.x + 'px;top:' + pp.y + 'px;width:18px;height:18px;border-radius:' + (e.type && e.type !== 'character' ? '5px' : '50%') + ';background:' + (e.c || '#888') + ';border:1.5px solid #fff"></div>'; }).join('');
+      mc.innerHTML = svg + dots;
+    }
+    function relLi(r) {
+      var dirArrow = r.direction === 'both' ? '↔' : r.direction === 'forward' ? '→' : '—';
+      var TYPE_GLYPH = { pact: OCIcon('book'), longing: OCIcon('heart'), rivalry: OCIcon('swords'), feud: OCIcon('swords'), belong: OCIcon('radio'), unspoken: OCIcon('chat'), family: OCIcon('home'), friend: OCIcon('user'), custom: OCIcon('dot') };
+      return '<div class="rl-li' + (selRel === r.id ? ' sel' : '') + '" data-rel="' + r.id + '"><div class="pair"><span class="d" style="background:' + r.source.color + '">' + r.source.name[0] + '</span><span style="color:var(--text-faint)">' + dirArrow + '</span><span class="d" style="background:' + r.target.color + '">' + r.target.name[0] + '</span></div><div class="info"><div class="lb">' + r.label + '</div><div class="nm">' + r.source.name + ' ' + dirArrow + ' ' + r.target.name + '</div></div><span class="badge"><span aria-hidden="true" style="margin-right:3px">' + (TYPE_GLYPH[r.type] || '•') + '</span>' + OCData.relTypeLabel(r.type) + '</span></div>';
+    }
+
+    function viewCard(from, to, label, oneSided, text) {
+      return '<div class="rl-view"><div class="vh"><span class="av" style="background:' + from.color + '">' + from.name[0] + '</span><span class="ar">→</span><span class="av" style="background:' + to.color + '">' + to.name[0] + '</span><span class="who">' + from.name + ' 眼中的 ' + to.name + '</span></div>'
+        + '<div class="vl">' + label + (oneSided ? ' <span class="os">· 單向</span>' : '') + '</div>'
+        + '<p class="vt">' + text + '</p></div>';
+    }
+    function buildSide() {
+      var side = document.getElementById('side'); if (!side) return;
+      var r = selRel ? visibleRels().filter(function (x) { return x.id === selRel; })[0] : null;
+      var detail;
+      if (!r) {
+        detail = '<div class="rl-detail" style="text-align:center;color:var(--text-faint);font-size:13px">點節點聚焦，或點關係線／清單查看詳情。</div>';
+      } else {
+        var gObj = r.group ? OCData.relationshipGroup(pid, r.group) : null;
+        var dirArrow = r.direction === 'both' ? '↔' : r.direction === 'forward' ? '→' : '—';
+        var oneSided = r.direction === 'forward';
+        var sv = r.srcView || r.description || '—';
+        var tv = r.tgtView || (oneSided ? '（' + r.target.name + ' 的視角尚未填寫）' : r.description || '—');
+        // dual-perspective header + two view cards (archived treatment)
+        detail = '<div class="rl-detail rl-detail-rich">'
+          + '<div class="ends"><span class="av" style="background:' + r.source.color + '">' + r.source.name[0] + '</span><span class="arrow">' + dirArrow + '</span><span class="av" style="background:' + r.target.color + '">' + r.target.name[0] + '</span></div>'
+          + '<div class="lab">' + r.source.name + ' × ' + r.target.name + '</div>'
+          + '<div style="text-align:center;margin-top:4px"><span class="badge">' + OCData.relTypeLabel(r.type) + (oneSided ? ' · 不對稱' : '') + '</span>' + (gObj ? ' <span class="badge"><span class="d" style="background:' + gObj.c + '"></span>' + gObj.name + '</span>' : '') + (r.visibility !== 'public' ? ' <span class="badge private"><span class="d" style="background:var(--text-faint)"></span>' + (r.visibility === 'private' ? '私人' : '僅成員') + '</span>' : '') + '</div>'
+          // two-way perspective cards
+          + '<div class="rl-views">'
+          + viewCard(r.source, r.target, r.label, oneSided, sv)
+          + viewCard(r.target, r.source, oneSided ? (r.tgtLabel || '回應') : r.label, false, tv)
+          + '</div>'
+          // shared narrative
+          + (r.description ? '<div class="rl-sub">關係描述</div><p class="desc" style="text-align:left">' + r.description + '</p>' : '')
+          // timeline
+          + (r.timeline && r.timeline.length ? '<div class="rl-sub">關係時間線</div><div class="rl-tl">' + r.timeline.map(function (t) { return '<div class="rl-tlrow"><span class="dot"></span><div><div class="when">' + t[0] + '</div><div class="what">' + t[1] + '</div></div></div>'; }).join('') + '</div>' : '')
+          // shared album
+          + (r.album && r.album.length ? '<div class="rl-sub">共同相簿</div><div class="rl-album">' + r.album.map(function (l) { return '<div class="ph" data-label="' + l + '"></div>'; }).join('') + '</div>' : '')
+          + '<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:var(--s4)">'
+          + '<button class="btn btn-sm" data-open="' + r.source.id + '">' + r.source.name + '</button><button class="btn btn-sm" data-open="' + r.target.id + '">' + r.target.name + '</button></div>'
+          + (canEdit ? '<div style="display:flex;gap:6px;margin-top:var(--s3);justify-content:center">' + (canUpdate ? '<button class="btn btn-sm" id="editRel">編輯</button>' : '') + (canDelete ? '<button class="btn btn-sm" id="delRel">刪除</button>' : '') + '</div>' : '')
+          + '</div>';
+      }
+      // relationship list (desktop side) — grouped by RelationshipGroup
+      var listTitle = focusNode ? (OCData.entity(focusNode) || {}).name + ' 的關係' : '所有關係';
+      var vr = visibleRels();
+      var groups = OCData.relationshipGroupsOf(pid);
+      var byGroup = {}; vr.forEach(function (x) { (byGroup[x.group || ''] = byGroup[x.group || ''] || []).push(x); });
+      var order = groups.map(function (g) { return g.id; }).concat(['']);
+      var listInner = '';
+      order.forEach(function (gid) {
+        var rows = byGroup[gid]; if (!rows || !rows.length) return;
+        var g = groups.filter(function (x) { return x.id === gid; })[0] || { name: '未分組', c: 'var(--text-faint)' };
+        listInner += '<div class="rl-grouphd"><span class="gd" style="background:' + g.c + '"></span>' + g.name + ' · ' + rows.length + '</div>' + rows.map(relLi).join('');
+      });
+      var listHtml = '<div class="rl-detail" style="padding:var(--s4)"><div style="font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-faint);margin-bottom:var(--s3)">' + listTitle + ' · ' + vr.length + '</div><div class="rl-list">' + listInner + '</div></div>';
+
+      side.innerHTML = detail + listHtml;
+      side.querySelectorAll('[data-open]').forEach(function (b) { b.onclick = function () { var id = b.dataset.open; var e = OCData.entity(id); if (e && e.type === 'character') location.href = 'character.html?c=' + id; else location.href = 'worldview.html?project=' + pid; }; });
+      side.querySelectorAll('[data-rel]').forEach(function (li) { li.onclick = function () { selRel = li.dataset.rel; buildCanvas(); buildSide(); }; });
+      var er = side.querySelector('#editRel'); if (er) er.onclick = function () { editRel(r); };
+      var dr = side.querySelector('#delRel'); if (dr) dr.onclick = function () { delRel(r); };
+    }
+
+    // ---- mutations (Demo) ----
+    function relForm(r) {
+      var ents = OCData.entities.filter(function (e) { return e.project === pid && (e.type === 'character' || e.type !== 'character'); });
+      var chars = OCData.characters(pid), worlds = OCData.worldEntries(pid);
+      function opts(sel) { return chars.map(function (e) { return '<option value="' + e.id + '"' + (sel === e.id ? ' selected' : '') + '>角色：' + e.name + '</option>'; }).join('') + worlds.map(function (e) { return '<option value="' + e.id + '"' + (sel === e.id ? ' selected' : '') + '>世界觀：' + e.name + '</option>'; }).join(''); }
+      var w = document.createElement('div');
+      w.innerHTML = '<div class="field" style="margin-bottom:var(--s3)"><label>起點</label><select class="select" id="f-src">' + opts(r && r.source.id) + '</select></div>'
+        + '<div class="field" style="margin-bottom:var(--s3)"><label>終點</label><select class="select" id="f-tgt">' + opts(r && r.target.id) + '</select></div>'
+        + '<div class="field" style="margin-bottom:var(--s3)"><label>關係名稱</label><input class="input" id="f-label" value="' + (r ? r.label : '') + '"></div>'
+        + '<div class="field" style="margin-bottom:var(--s3)"><label>分組</label><select class="select" id="f-group"><option value="">未分組</option>' + OCData.relationshipGroupsOf(pid).map(function (g) { return '<option value="' + g.id + '"' + (r && r.group === g.id ? ' selected' : '') + '>' + g.name + '</option>'; }).join('') + '</select></div>'
+        + '<div class="field" style="margin-bottom:var(--s3)"><label>方向</label><select class="select" id="f-dir"><option value="both"' + (r && r.direction === 'both' ? ' selected' : '') + '>雙向 ↔</option><option value="forward"' + (r && r.direction === 'forward' ? ' selected' : '') + '>單向 →</option><option value="none"' + (r && r.direction === 'none' ? ' selected' : '') + '>無方向 —</option></select></div>'
+        + '<div class="field" style="margin-bottom:var(--s3)"><label>描述</label><textarea class="input" id="f-desc" rows="3">' + (r ? (r.description || '') : '') + '</textarea></div>'
+        + '<div class="field"><label>可見性</label><select class="select" id="f-vis"><option value="public"' + (r && r.visibility === 'public' ? ' selected' : '') + '>公開</option><option value="members"' + (r && r.visibility === 'members' ? ' selected' : '') + '>僅成員</option><option value="private"' + (r && r.visibility === 'private' ? ' selected' : '') + '>私人</option></select></div>';
+      return w;
+    }
+    function addRel() {
+      var f = relForm(null);
+      OCUI.modal({ title: '新增關係', body: f, actions: [ { label: '取消' }, { label: '建立', kind: 'accent', onClick: function () {
+        var s = f.querySelector('#f-src').value, t = f.querySelector('#f-tgt').value, lb = f.querySelector('#f-label').value.trim();
+        if (s === t) { OCUI.toast('起點與終點不能相同'); return true; }
+        if (!lb) { OCUI.toast('請輸入關係名稱'); return true; }
+        var nr = OCDemo.createRelationship({ projectId: pid, sourceId: s, targetId: t, label: lb,
+          group: f.querySelector('#f-group').value, direction: f.querySelector('#f-dir').value,
+          description: f.querySelector('#f-desc').value.trim(), visibility: f.querySelector('#f-vis').value });
+        rels = OCData.relationshipsOf(pid, { publicOnly: publicOnly });
+        selRel = nr.id; render();
+        OCUI.toast('已新增關係「' + lb + '」', { demo: true });
+      } } ] });
+    }
+    function editRel(r) {
+      var f = relForm(r);
+      OCUI.modal({ title: '編輯關係', body: f, actions: [ { label: '取消' }, { label: '儲存', kind: 'accent', onClick: function () {
+        var s = f.querySelector('#f-src').value, t = f.querySelector('#f-tgt').value, lb = f.querySelector('#f-label').value.trim();
+        if (s === t) { OCUI.toast('起點與終點不能相同'); return true; }
+        if (!lb) { OCUI.toast('請輸入關係名稱'); return true; }
+        OCDemo.updateRelationship(r.id, { sourceId: s, targetId: t, label: lb,
+          group: f.querySelector('#f-group').value, direction: f.querySelector('#f-dir').value,
+          description: f.querySelector('#f-desc').value.trim(), visibility: f.querySelector('#f-vis').value });
+        rels = OCData.relationshipsOf(pid, { publicOnly: publicOnly });
+        render();
+        OCUI.toast('已儲存關係「' + lb + '」', { demo: true });
+      } } ] });
+    }
+    function delRel(r) {
+      OCUI.confirm({ title: '刪除關係？', message: '確定要刪除「' + r.label + '」（' + r.source.name + ' – ' + r.target.name + '）嗎？關係線與標籤會一併移除，不會留下殘留線條。', confirmLabel: '刪除', danger: true, onConfirm: function () {
+        // remove from store + drop its edgeRoute (Layout keeps no orphan routes)
+        OCDemo.deleteRelationship(r.id);
+        rels = OCData.relationshipsOf(pid, { publicOnly: publicOnly });
+        if (layout.edgeRoutes) delete layout.edgeRoutes[r.id];
+        selRel = null;
+        render();
+        OCUI.toast('已刪除關係（連 edgeRoute 一併移除，無殘留線條）', { demo: true });
+      } });
+    }
+
+    // initial load + skeleton
+    header();
+    var sk = document.createElement('div'); sk.className = 'rl-wrap'; sk.style.padding = 'var(--s5)';
+    root.appendChild(sk); sk.appendChild(OCUI.skeletonCards(2));
+    setTimeout(function () {
+      rels = OCData.relationshipsOf(pid, { publicOnly: publicOnly });
+      layout = OCData.relationshipLayout(pid);
+      render();
+    }, 340);
+  })();
+</script>
+<script src="../assets/shell.js"></script>
+</body>
+</html>

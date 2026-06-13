@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Slice 2 驗收 · 角色體驗 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/ds.css">
+<link rel="stylesheet" href="assets/components.css">
+<style>
+  body { background: var(--bg); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: var(--s12) var(--s8) var(--s16); }
+  .hero { border-bottom: 1px solid var(--border-strong); padding-bottom: var(--s8); margin-bottom: var(--s10); }
+  .hero .eyebrow { margin-bottom: 12px; }
+  .hero h1 { font-family: var(--font-serif); font-size: 40px; font-weight: 900; margin: 0; letter-spacing: -.025em; line-height: 1.06; }
+  .hero .lead { color: var(--text-dim); font-size: 16px; margin: var(--s4) 0 0; max-width: 62ch; line-height: 1.65; text-wrap: pretty; }
+  .hero .chips { display: flex; gap: var(--s2); margin-top: var(--s5); flex-wrap: wrap; }
+  section { margin-top: var(--s12); }
+  .sh { display: flex; align-items: baseline; gap: var(--s4); margin-bottom: var(--s5); }
+  .sh .ix { font-family: var(--font-mono); font-size: 13px; color: var(--text-faint); }
+  .sh h2 { font-family: var(--font-serif); font-size: 24px; font-weight: 800; margin: 0; }
+  .sh .en { font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); }
+  .sh .rule { flex: 1; height: 1px; background: var(--border); align-self: center; }
+  p.note { font-size: 14.5px; color: var(--text-dim); line-height: 1.7; max-width: 74ch; text-wrap: pretty; }
+  p.note b { color: var(--text); }
+  .pages { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: var(--s3); }
+  .pcard { display: flex; flex-direction: column; gap: 3px; padding: var(--s4) var(--s5); border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--sh-1); text-decoration: none; color: inherit; transition: box-shadow .15s, transform .15s; }
+  .pcard:hover { box-shadow: var(--sh-2); transform: translateY(-2px); }
+  .pcard .n { font-family: var(--font-serif); font-size: 16px; font-weight: 700; }
+  .pcard .d { font-size: 12.5px; color: var(--text-dim); margin-top: 4px; line-height: 1.5; }
+  .pcard .sc { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--accent-ink); margin-top: 6px; }
+  .shots { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s4); }
+  .shot { border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--sh-1); overflow: hidden; }
+  .shot img { width: 100%; display: block; border-bottom: 1px solid var(--border); }
+  .shot .cap { padding: var(--s3) var(--s4); font-size: 12.5px; color: var(--text-dim); }
+  .shot .cap b { color: var(--text); }
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s4); }
+  .col { border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); padding: var(--s5); }
+  .col h3 { margin: 0 0 var(--s2); font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .col h3 .tag { font-family: var(--font-mono); font-size: 9px; padding: 2px 7px; border-radius: var(--r-pill); }
+  .col ul { margin: 0; padding-left: 1.1em; font-size: 13px; color: var(--text-dim); line-height: 1.8; }
+  .col.body h3 .tag { background: var(--bg-tint); color: var(--text-dim); }
+  .col.link h3 .tag { background: var(--accent-soft); color: var(--accent-ink); }
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); overflow: hidden; margin-top: var(--s2); }
+  thead th { text-align: left; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); padding: var(--s3) var(--s4); border-bottom: 1px solid var(--border); background: var(--surface-2); }
+  tbody td { padding: var(--s3) var(--s4); border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: top; line-height: 1.5; }
+  tbody tr:last-child td { border-bottom: 0; }
+  td .f { font-family: var(--font-mono); font-size: 12px; font-weight: 600; }
+  .gap-card { border: 1px solid #ECDFA8; background: var(--accent-soft); border-radius: var(--r-card); padding: var(--s4) var(--s5); margin-bottom: var(--s3); }
+  .gap-card .gt { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--accent-ink); }
+  .gap-card .gd { font-size: 13px; color: var(--text-dim); margin-top: 5px; line-height: 1.6; }
+  .gap-card .gd b { color: var(--text); }
+  .demo-list { display: flex; flex-direction: column; gap: 8px; }
+  .demo-row { display: flex; align-items: center; gap: 10px; font-size: 13.5px; padding: 9px 13px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+  .open-issues { border: 1px solid #F0CFCB; background: var(--avoid-soft); border-radius: var(--r-card); padding: var(--s4) var(--s5); }
+  .open-issues ul { margin: 0; padding-left: 1.1em; font-size: 13.5px; color: var(--text-dim); line-height: 1.8; }
+  .foot { margin-top: var(--s16); padding-top: var(--s6); border-top: 1px solid var(--border-strong); }
+  .foot .q { font-family: var(--font-serif); font-size: 19px; font-weight: 700; margin: 0 0 var(--s2); }
+  .foot p { font-size: 14px; color: var(--text-dim); line-height: 1.7; }
+  @media (max-width: 860px) { .hero h1 { font-size: 30px; } .shots, .split { grid-template-columns: 1fr; } .wrap { padding: var(--s10) var(--s4); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">CharacterHub · Slice 2 · 角色體驗</div>
+    <h1>Slice 2 驗收</h1>
+    <p class="lead">角色詳情與角色編輯器完成。核心是把 <b>Character 本體</b>（由擁有者維護）與 <b>企劃限定設定 ProjectCharacterLink</b>（依權限）在 UI 上徹底分區，並加上企劃版本切換、分享視圖、儲存／未儲存流程與手機編輯／預覽切換。</p>
+    <div class="chips">
+      <span class="badge approved"><span class="d" style="background:var(--must)"></span>character.html</span>
+      <span class="badge approved"><span class="d" style="background:var(--must)"></span>editor.html</span>
+      <span class="badge">11 個共用元件</span>
+      <span class="demo-only">所有儲存為 Demo only</span>
+    </div>
+  </div>
+
+  <!-- hero end -->
+  <section>
+    <div class="sh"><span class="ix">00</span><h2>Slice 2.1 校正</h2><span class="en">Corrections</span><span class="rule"></span></div>
+    <table>
+      <thead><tr><th style="width:26%">項目</th><th>作法</th></tr></thead>
+      <tbody>
+        <tr><td class="f">分享企劃版本</td><td>ShareDrawer 移除 showProjectData 開關，改為明確選「不包含企劃限定資料」或<b>單一 projectCharacterLinkId</b>；不預設帶出全部。「完整設定」→「完整可分享設定」。</td></tr>
+        <tr><td class="f">主持人限定欄位</td><td>UI 獨立成區段，但<b>不另建重複 hostOnlyFields</b>：欄位定義在 ProjectTemplateField（帶 visibility），值仍存 ProjectCharacterLink.fieldValues，由 renderer 依 viewer 裁切。</td></tr>
+        <tr><td class="f">Dirty 分區</td><td>Character 本體 dirty 與<b>每個 ProjectCharacterLink 版本 dirty 分開</b>。切換企劃只檢查目前 Link；離開 Editor 檢查所有範圍。已驗：本體改→切企劃不丟、常夜國 Link 改→切校園會提示、儲存不誤清另一區。</td></tr>
+        <tr><td class="f">Link 狀態</td><td>補齊 pending / approved / rejected / archived / removed。archived、removed 唯讀無編輯；rejected 顯示退回原因與重新提交入口。</td></tr>
+        <tr><td class="f">關係 Scope</td><td>角色詳情「關係」分頁改為<b>依企劃分組</b>（「在 X 關係圖中查看」），不再是未定義的全域角色關係。</td></tr>
+        <tr><td class="f">鍵盤 / Focus</td><td>ShareDrawer 與未儲存對話框加上 Esc 關閉、Focus Trap、role=dialog / aria-modal，關閉後焦點回到觸發元。</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 1 pages -->
+  <section>
+    <div class="sh"><span class="ix">01</span><h2>可點擊頁面</h2><span class="en">Clickable</span><span class="rule"></span></div>
+    <div class="pages">
+      <a class="pcard" href="pages/character.html?c=yoi"><span class="n">角色詳情 · 宵霧</span><span class="d">六個分頁：總覽／圖設定／文設定／圖庫／關係／加入的企劃。</span><span class="sc">character.html</span></a>
+      <a class="pcard" href="pages/editor.html?c=yoi&project=tokoyo"><span class="n">角色編輯器 · 宵霧</span><span class="d">本體 vs 企劃限定分區、版本切換、即時預覽。</span><span class="sc">editor.html</span></a>
+      <a class="pcard" href="pages/character.html?c=guest1"><span class="n">他人擁有的角色 · 霜</span><span class="d">OwnerNotice；本體唯讀，企劃連結可由主持人管理。</span><span class="sc">?c=guest1</span></a>
+      <a class="pcard" href="pages/character.html?c=hai"><span class="n">私人 / 未加入企劃 · 灰</span><span class="d">私人角色；加入的企劃為空狀態 + CTA。</span><span class="sc">?c=hai</span></a>
+    </div>
+  </section>
+
+  <!-- 2 body vs link -->
+  <section>
+    <div class="sh"><span class="ix">02</span><h2>本體 vs 企劃限定</h2><span class="en">Character · ProjectCharacterLink</span><span class="rule"></span></div>
+    <p class="note">兩頁都用<b>同一條界線</b>切分。編輯器分成「角色本體」與「企劃限定設定」兩個區塊；詳情頁的「加入的企劃」分頁則把每個企劃連結獨立成卡。<b>主持人能管理 link，永遠不能改別人的本體。</b></p>
+    <div class="split" style="margin-top:var(--s4)">
+      <div class="col body"><h3>角色本體 · Character <span class="tag">擁有者維護</span></h3>
+        <ul><li>名稱、暱稱、簡介</li><li>圖設定（色票／必畫／不可畫／配件）</li><li>文設定（背景／動機／說話／禁忌）</li><li>個人標籤、代表圖片</li><li>角色本體可見性</li></ul></div>
+      <div class="col link"><h3>企劃限定設定 · Link <span class="tag">依權限</span></h3>
+        <ul><li>陣營、企劃職位</li><li>企劃限定背景</li><li>templateVersionId · fieldValues</li><li>審核狀態、企劃內可見性</li><li>主持人限定欄位（僅主持人可見）</li></ul></div>
+    </div>
+  </section>
+
+  <!-- 3 screenshots -->
+  <section>
+    <div class="sh"><span class="ix">03</span><h2>畫面</h2><span class="en">Screens</span><span class="rule"></span></div>
+    <div class="shots">
+      <div class="shot"><img src="screenshots/s2-char-art.png" alt="圖設定"><div class="cap"><b>角色詳情 · 圖設定</b>：色票、必畫重點、不可畫錯、配件，給繪師看的版本。</div></div>
+      <div class="shot"><img src="screenshots/s2-char-projects.png" alt="加入的企劃"><div class="cap"><b>加入的企劃</b>：宵霧在常夜國＋校園 AU；每張卡有狀態、企劃內可見性、限定欄位摘要與操作。</div></div>
+      <div class="shot"><img src="screenshots/s2-char-text.png" alt="文設定"><div class="cap"><b>角色詳情 · 文設定</b>：背景／動機／禁忌／可以使用，給文手看的版本。</div></div>
+      <div class="shot"><img src="screenshots/s2-editor-host-link.png" alt="主持人編輯他人角色"><div class="cap"><b>編輯器 · 主持人視角</b>：霜的本體鎖定（@hoshimi 維護），但常夜國企劃限定設定可管理。</div></div>
+    </div>
+  </section>
+
+  <!-- 4 permissions -->
+  <section>
+    <div class="sh"><span class="ix">04</span><h2>權限差異</h2><span class="en">Owner · Host · Member</span><span class="rule"></span></div>
+    <table>
+      <thead><tr><th style="width:20%">視角</th><th>角色本體</th><th>企劃限定設定</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge role-owner">角色擁有者</span></td><td>可編輯全部本體欄位</td><td>可編輯自己角色的 link 欄位</td></tr>
+        <tr><td><span class="badge role-owner">主持人（非擁有者）</span></td><td>🔒 唯讀，顯示 OwnerNotice「由 @owner 維護」＋查看角色</td><td>可管理自己有權的企劃 link（含主持人限定欄位）</td></tr>
+        <tr><td><span class="badge role-member">一般參與者</span></td><td>🔒 唯讀（非自己角色）</td><td>只能改自己的 link；主持人限定欄位不顯示</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 5 share -->
+  <section>
+    <div class="sh"><span class="ix">05</span><h2>分享視圖與裁切</h2><span class="en">Share Drawer</span><span class="rule"></span></div>
+    <p class="note">「分享」開啟 ShareDrawer，四種類型（一般／繪師／文手／<b>完整可分享設定</b>）。<b>企劃限定資料預設「不包含」</b>，且一次只能選一個企劃版本（projectCharacterLinkId），不會預設帶出所有企劃資料。私人企劃需符合可見性或明確授權。預覽標 <span class="mono">Share Preview · Demo interaction only</span>。</p>
+    <div class="open-issues" style="border-color:#CDE8D8;background:var(--must-soft);margin-top:var(--s3)">
+      <b style="font-size:13.5px;color:#1F6B43">預設永不分享</b>
+      <ul style="color:#2C2A27">
+        <li>私人筆記（privateNotes，owner-only）</li>
+        <li>主持人限定欄位</li>
+        <li>審核紀錄</li>
+        <li>未授權的企劃資料、其他企劃版本</li>
+      </ul>
+    </div>
+    <p class="note" style="margin-top:var(--s3)"><a href="pages/character.html?c=yoi" style="color:var(--accent-ink);font-weight:600">開啟宵霧詳情 → 點「分享」</a> 試單一企劃版本分享（只帶出選定的企劃）。</p>
+  </section>
+
+  <!-- 6 save flow -->
+  <section>
+    <div class="sh"><span class="ix">06</span><h2>儲存與未儲存流程</h2><span class="en">Save states</span><span class="rule"></span></div>
+    <p class="note">編輯器右上 SaveStatus 走完整狀態機；皆為 Demo（不做正式 persistence）。</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin:var(--s4) 0">
+      <span class="savest"><span class="d"></span>尚未儲存</span>
+      <span class="savest saving"><span class="d"></span>儲存中…</span>
+      <span class="savest saved"><span class="d"></span>已儲存</span>
+      <span class="savest error"><span class="d"></span>儲存失敗</span>
+    </div>
+    <div class="demo-list">
+      <div class="demo-row"><span class="demo-only">demo</span>修改欄位 → 尚未儲存（段落導覽出現 dirty 點）</div>
+      <div class="demo-row"><span class="demo-only">demo</span>按儲存 → 儲存中… → 已儲存 Toast（<a href="pages/editor.html?c=yoi&project=tokoyo" style="color:var(--accent-ink);font-weight:600">試</a>）</div>
+      <div class="demo-row"><span class="demo-only">demo</span>模擬失敗 → 儲存失敗 Toast（<a href="pages/editor.html?c=yoi&project=tokoyo&fail=1" style="color:var(--accent-ink);font-weight:600">?fail=1</a>）</div>
+      <div class="demo-row"><span class="demo-only">demo</span>切換企劃版本 / 離開頁面 / 重設區段 → 未儲存確認對話框</div>
+    </div>
+  </section>
+
+  <!-- 7 mobile -->
+  <section>
+    <div class="sh"><span class="ix">07</span><h2>桌機與手機</h2><span class="en">Responsive</span><span class="rule"></span></div>
+    <p class="note">桌機（≥1080px）為三欄：<b>左段落導覽 · 中編輯表單 · 右即時預覽</b>，段落導覽顯示完成／未完成／未儲存點。窄於 1080px（含手機）改為：頂部角色名＋儲存狀態、<b>編輯／預覽 Segmented Control</b>、底部上一節／下一節／儲存；企劃版本切換在編輯區上方。不直接縮小三欄。請在實際瀏覽器以 360 / 390px 確認（預覽工具無法真正改視窗寬度）。</p>
+  </section>
+
+  <!-- 8 files -->
+  <section>
+    <div class="sh"><span class="ix">08</span><h2>修改檔案</h2><span class="en">Files changed</span><span class="rule"></span></div>
+    <table>
+      <thead><tr><th style="width:30%">檔案</th><th>變更</th></tr></thead>
+      <tbody>
+        <tr><td class="f">assets/data.js</td><td>OCData 補 Character 本體 detail（general/art/text/gallery、privateNotes）、completion／linkCompletion／shareScopes／characterFull helper；新增 guest2（他人擁有、我為成員）與 archived link。</td></tr>
+        <tr><td class="f">assets/character.css</td><td>Slice 2 共用樣式：CharacterHeader、Tabs、詳情區塊、ShareDrawer、三欄編輯器、SaveStatus、SectionNav、PreviewPanel、手機 Segmented。</td></tr>
+        <tr><td class="f">assets/character.js</td><td>11 個共用元件：CharacterHeader / CharacterTabs / ShareDrawer / ProjectVersionSwitcher / SaveStatus / UnsavedChangesDialog / FieldVisibilityBadge / CompletionIndicator / OwnerNotice 等。</td></tr>
+        <tr><td class="f">pages/character.html</td><td>重構為角色詳情（六分頁、OwnerNotice、分享）。</td></tr>
+        <tr><td class="f">pages/editor.html</td><td>重構為角色編輯器（本體/企劃限定分區、版本切換、儲存流程、離開提示、手機切換）。Slice 2.1：每版本 dirty 分區、link 狀態（rejected/archived）。</td></tr>
+      </tbody>
+    </table>
+    <div class="open-issues" style="border-color:#CBDDF0;background:#E8EEF6;margin-top:var(--s4)">
+      <b style="font-size:13.5px;color:#355C86">交接註記 · Combined Editor 的兩個正式入口 Route</b>
+      <ul style="color:#2C2A27">
+        <li><span class="mono">/app/characters/:characterId/edit</span> — Account scope；預設區段＝角色本體；儲存目標＝Character；權限＝擁有者。</li>
+        <li><span class="mono">/app/projects/:projectId/characters/:linkId/edit</span> — Project scope；預設區段＝該企劃限定設定；儲存目標＝ProjectCharacterLink；權限＝主持人或角色擁有者。</li>
+        <li>兩者<b>共用同一套 UI</b>，但 Context、預設區段、權限與儲存目標不同。原型的 <span class="mono">editor.html?c=&project=</span> 同時模擬兩者。</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 9 data gaps -->
+  <section>
+    <div class="sh"><span class="ix">09</span><h2>DATA GAP</h2><span class="en">新增欄位</span><span class="rule"></span></div>
+    <div class="gap-card"><div class="gt">DATA GAP · Character.detail（general / art / text / gallery）</div><div class="gd">歸屬 <b>Character</b>（本體）。這四個是 <b>UI 呈現分組（presentation grouping）</b>，<b>不暗示正式後端必須用同一包 JSON 儲存</b>；可拆成個別欄位或子表。需 persistence；可見：依角色可見性與分享設定；可修改：僅擁有者。</div></div>
+    <div class="gap-card"><div class="gt">DATA GAP · Character.privateNotes</div><div class="gd">歸屬 <b>Character</b>。私人筆記，<b>owner-only，永不分享</b>。需 persistence；可見：僅擁有者；可修改：僅擁有者。</div></div>
+    <div class="gap-card"><div class="gt">DATA GAP · ShareLink（分享設定）</div><div class="gd">歸屬<b>獨立 ShareLink entity（Character-owned）</b>，不可混入 Character 或 Link。欄位：scope（general/artist/writer/full）、visibility、顯示分頁/欄位、showOwner、<b>單一 projectCharacterLinkId（或 includedProjectLinkIds，預設空）</b>。需 persistence；可修改：僅擁有者。</div></div>
+    <div class="gap-card"><div class="gt">DATA GAP · 主持人限定欄位（決策修正）</div><div class="gd"><b>不另建 hostOnlyFields。</b>欄位定義在 <b>ProjectTemplateField</b>（帶 visibility：public/members/host）；值仍存 <b>ProjectCharacterLink.fieldValues</b>；由 <b>renderer 依 viewer 裁切</b>。主持人限定欄位永不分享。</div></div>
+    <div class="gap-card"><div class="gt">DATA GAP · ProjectCharacterLink.status + reviewMessage</div><div class="gd">歸屬 <b>ProjectCharacterLink</b>。status: pending / approved / rejected / archived / removed；rejected 携 reviewMessage（退回原因）。需 persistence；可見：成員；可修改：審核者（主持人）。reviewMessage 不進公開分享。</div></div>
+    <div class="gap-card"><div class="gt">DATA GAP · completion（衍生）</div><div class="gd">分區完成度（一般／圖／文／企劃角色卡）是 <b>UI 衍生資料</b>，由現有欄位算出，<b>不是使用者直接編輯的欄位、不需 persistence</b>。</div></div>
+  </section>
+
+  <!-- 10 open issues -->
+  <section>
+    <div class="sh"><span class="ix">10</span><h2>仍未完成的 UX</h2><span class="en">Open issues</span><span class="rule"></span></div>
+    <div class="open-issues">
+      <ul>
+        <li>即時預覽目前讀 mock，未即時反映輸入框的逐字修改（real app 會雙向綁定）。</li>
+        <li>圖庫為佔位圖；上傳、排序、設為代表圖尚未設計。</li>
+        <li>關係分頁目前導去企劃關係圖；角色層的關係摘要待 Slice 3。</li>
+        <li>color／標籤等欄位用純文字輸入，未做色票挑選器與 chip 編輯器。</li>
+        <li>手機版僅在實機縮放可完整驗證；預覽工具無法改視窗寬度。</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="foot">
+    <p class="q">Slice 2 完成，先停。等你驗收。</p>
+    <p>確認後再進 Slice 3（世界觀＋關係圖）。維持單一 OCData、Demo interaction only，未建立 Repository／API／Auth／第二套 Store。</p>
+  </div>
+</div>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#3B5E6B"/>
+    <text x="50" y="64" font-family="monospace" font-size="40" font-weight="700" fill="#fff" text-anchor="middle">S2</text>
+  </svg>
+</template>
+</body>
+</html>

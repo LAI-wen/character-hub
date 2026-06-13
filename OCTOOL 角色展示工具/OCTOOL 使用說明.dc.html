@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;}
+    body{margin:0;background:#e7dcc9;font-family:'Noto Sans TC',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .doc-wrap{padding:40px 16px;display:flex;flex-direction:column;align-items:center;gap:30px;}
+    .page{width:816px;max-width:100%;background:#fffdf8;border:1px solid #ece2d2;border-radius:5px;box-shadow:0 4px 22px rgba(74,63,53,0.12);padding:62px 68px;}
+    @media print{
+      body{background:#fff;}
+      .doc-wrap{padding:0;gap:0;}
+      .page{width:auto;max-width:none;border:none;border-radius:0;box-shadow:none;padding:0;break-after:page;}
+      .page:last-child{break-after:auto;}
+      section,.kv,.blk,.row{break-inside:avoid;}
+    }
+    @page{margin:0.7in;}
+  </style>
+</helmet>
+<div class="doc-wrap">
+
+  <!-- PAGE 1 -->
+  <div class="page" data-screen-label="封面與編輯資料">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+      <div style="width:46px;height:46px;border-radius:13px;background:#c98a5e;color:#fff;display:flex;align-items:center;justify-content:center;font-family:'LXGW WenKai TC',serif;font-weight:700;font-size:24px;flex-shrink:0;">設</div>
+      <div style="font-family:'Noto Sans TC';font-size:12px;font-weight:700;letter-spacing:3px;color:#b08a64;text-transform:uppercase;">OCTOOL · USER GUIDE</div>
+    </div>
+    <h1 style="font-family:'LXGW WenKai TC',serif;font-size:42px;font-weight:700;color:#4a3f35;margin:6px 0 6px;line-height:1.2;">OCTOOL 角色展示工具</h1>
+    <p style="font-size:15px;color:#8d7c69;margin:0 0 30px;line-height:1.8;text-wrap:pretty;">建立、編輯、展示你的原創角色（OC）設定集。資料存在本機瀏覽器、自動儲存，不需登入。整體流程刻意收斂成兩步：<b style="color:#5d4f42;">編輯內容 → 設計外觀</b>，預覽是兩者共用的狀態。</p>
+
+    <section style="margin-bottom:30px;">
+      <div style="font-family:'LXGW WenKai TC',serif;font-size:21px;font-weight:700;color:#4a3f35;border-left:5px solid #c98a5e;padding-left:12px;margin-bottom:16px;">一、頂層架構</div>
+      <div class="row" style="display:flex;gap:14px;">
+        <div style="flex:1;background:#faf6ef;border:1px solid #eaddc9;border-radius:14px;padding:18px 20px;">
+          <div style="font-family:'LXGW WenKai TC',serif;font-size:17px;font-weight:700;color:#4a3f35;margin-bottom:6px;">編輯資料</div>
+          <div style="font-size:13.5px;color:#8d7c69;line-height:1.7;">填角色的所有內容（資料結構）。</div>
+        </div>
+        <div style="flex:1;background:#faf6ef;border:1px solid #eaddc9;border-radius:14px;padding:18px 20px;">
+          <div style="font-family:'LXGW WenKai TC',serif;font-size:17px;font-weight:700;color:#4a3f35;margin-bottom:6px;">模板與展示</div>
+          <div style="font-size:13.5px;color:#8d7c69;line-height:1.7;">把內容排成版面，可「編輯／預覽」切換，並全螢幕展示。</div>
+        </div>
+      </div>
+      <div style="font-size:12.5px;color:#a8957e;margin-top:12px;line-height:1.7;padding-left:2px;">UIUX：刻意只留兩步。早期重複的「展示預覽」頁已合併成模板頁裡的「編輯／預覽」開關。</div>
+    </section>
+
+    <section>
+      <div style="font-family:'LXGW WenKai TC',serif;font-size:21px;font-weight:700;color:#4a3f35;border-left:5px solid #c98a5e;padding-left:12px;margin-bottom:16px;">二、編輯資料</div>
+      <p style="font-size:13.5px;color:#8d7c69;margin:0 0 14px;line-height:1.7;">四個子分頁（橫向排列，手機可滑動）：</p>
+      <div style="display:flex;flex-direction:column;gap:9px;">
+        <div class="kv" style="display:flex;gap:12px;align-items:baseline;"><span style="flex:0 0 80px;font-family:'LXGW WenKai TC',serif;font-size:15px;font-weight:700;color:#c98a5e;">基礎</span><span style="font-size:13.5px;color:#5d4f42;line-height:1.6;">名稱、頭像、主視覺、標語、主題色</span></div>
+        <div class="kv" style="display:flex;gap:12px;align-items:baseline;"><span style="flex:0 0 80px;font-family:'LXGW WenKai TC',serif;font-size:15px;font-weight:700;color:#c98a5e;">圖設定</span><span style="font-size:13.5px;color:#5d4f42;line-height:1.6;">官方設定相簿，可在圖上「標記」說明</span></div>
+        <div class="kv" style="display:flex;gap:12px;align-items:baseline;"><span style="flex:0 0 80px;font-family:'LXGW WenKai TC',serif;font-size:15px;font-weight:700;color:#c98a5e;">文設定</span><span style="font-size:13.5px;color:#5d4f42;line-height:1.6;">自由區塊與欄位（人設、背景故事等）</span></div>
+        <div class="kv" style="display:flex;gap:12px;align-items:baseline;"><span style="flex:0 0 80px;font-family:'LXGW WenKai TC',serif;font-size:15px;font-weight:700;color:#c98a5e;">圖庫</span><span style="font-size:13.5px;color:#5d4f42;line-height:1.6;">作品相簿，可「關聯」到某套設定</span></div>
+      </div>
+      <div style="margin-top:18px;background:#fbf1e6;border:1px solid #f0dcc4;border-radius:12px;padding:14px 18px;">
+        <div style="font-size:13px;font-weight:700;color:#a9683a;margin-bottom:8px;">關鍵 UIUX</div>
+        <ul style="margin:0;padding-left:18px;font-size:13px;color:#6b5d4d;line-height:1.85;">
+          <li><b>「歸在分頁」</b>：區塊歸在文／圖設定，只是編輯歸檔，不影響展示。</li>
+          <li>圖片三分類用<b>視覺區隔</b>（官方設定／作品／主視覺），不靠長文字解釋。</li>
+          <li><b>自動儲存</b>只呈現狀態文字，不做成假按鈕；右側即時預覽（手機自動收起）。</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <!-- PAGE 2 -->
+  <div class="page" data-screen-label="模板與積木">
+    <section style="margin-bottom:30px;">
+      <div style="font-family:'LXGW WenKai TC',serif;font-size:21px;font-weight:700;color:#4a3f35;border-left:5px solid #c98a5e;padding-left:12px;margin-bottom:14px;">三、模板與展示</div>
+      <p style="font-size:13.5px;color:#8d7c69;margin:0 0 14px;line-height:1.75;"><b style="color:#5d4f42;">模板＝一套版面</b>。可建多套、名稱自訂（如「名片」「完整設定」「委託資料」），每套用「積木」堆成。提供「編輯／預覽」切換與全螢幕展示（內建圓點＋箭頭＋頁碼導覽）。</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        <span style="font-size:12.5px;background:#f1ddc7;color:#a9683a;border-radius:999px;padding:6px 14px;font-weight:700;">名片</span>
+        <span style="font-size:12.5px;background:#f1ddc7;color:#a9683a;border-radius:999px;padding:6px 14px;font-weight:700;">設定集</span>
+        <span style="font-size:12.5px;background:#f1ddc7;color:#a9683a;border-radius:999px;padding:6px 14px;font-weight:700;">介紹這隻OC</span>
+        <span style="font-size:12.5px;background:#f1ddc7;color:#a9683a;border-radius:999px;padding:6px 14px;font-weight:700;">企劃介紹</span>
+        <span style="font-size:12.5px;background:#f1ddc7;color:#a9683a;border-radius:999px;padding:6px 14px;font-weight:700;">paro／AU</span>
+        <span style="font-size:12.5px;background:#f1ddc7;color:#a9683a;border-radius:999px;padding:6px 14px;font-weight:700;">圖集</span>
+        <span style="font-size:12.5px;background:#f1ddc7;color:#a9683a;border-radius:999px;padding:6px 14px;font-weight:700;">全部積木</span>
+        <span style="font-size:12.5px;background:#f1ddc7;color:#a9683a;border-radius:999px;padding:6px 14px;font-weight:700;">空白</span>
+      </div>
+    </section>
+
+    <section>
+      <div style="font-family:'LXGW WenKai TC',serif;font-size:21px;font-weight:700;color:#4a3f35;border-left:5px solid #c98a5e;padding-left:12px;margin-bottom:14px;">四、積木：通用樣式</div>
+      <p style="font-size:13.5px;color:#8d7c69;margin:0 0 14px;line-height:1.75;">積木是組成模板的最小單位，共 <b style="color:#5d4f42;">17 種</b>（下兩頁逐一列出）。多數積木都共用以下調整項，選取後在「元件樣式」面板設定：</p>
+      <div style="display:flex;flex-direction:column;gap:9px;">
+        <div class="kv" style="display:flex;gap:12px;align-items:baseline;"><span style="flex:0 0 92px;font-weight:700;font-size:13.5px;color:#c98a5e;">寬度</span><span style="font-size:13px;color:#5d4f42;line-height:1.6;">整欄 <code style="background:#f0e3d1;padding:0 5px;border-radius:4px;font-size:11.5px;">full</code> ／ 半欄 <code style="background:#f0e3d1;padding:0 5px;border-radius:4px;font-size:11.5px;">half</code> ／ ⅓ <code style="background:#f0e3d1;padding:0 5px;border-radius:4px;font-size:11.5px;">third</code>。各佔一排，並排要用「佈局」積木。</span></div>
+        <div class="kv" style="display:flex;gap:12px;align-items:baseline;"><span style="flex:0 0 92px;font-weight:700;font-size:13.5px;color:#c98a5e;">對齊</span><span style="font-size:13px;color:#5d4f42;line-height:1.6;">靠左 ／ 置中 ／ 靠右（窄於整欄時用 margin 真正置中）。</span></div>
+        <div class="kv" style="display:flex;gap:12px;align-items:baseline;"><span style="flex:0 0 92px;font-weight:700;font-size:13.5px;color:#c98a5e;">效果</span><span style="font-size:13px;color:#5d4f42;line-height:1.6;">無 ／ 柔影 ／ 浮起 ／ 光暈 ／ 玻璃（陰影、發光、毛玻璃質感）。</span></div>
+        <div class="kv" style="display:flex;gap:12px;align-items:baseline;"><span style="flex:0 0 92px;font-weight:700;font-size:13.5px;color:#c98a5e;">自訂外觀</span><span style="font-size:13px;color:#5d4f42;line-height:1.6;">透明度、圓角、自訂底色／文字色／外框。<b>支援積木</b>：標題、標語、區塊、配色、相簿、文字、頭像、主視覺。</span></div>
+        <div class="kv" style="display:flex;gap:12px;align-items:baseline;"><span style="flex:0 0 92px;font-weight:700;font-size:13.5px;color:#c98a5e;">內距</span><span style="font-size:13px;color:#5d4f42;line-height:1.6;">每個積木的上下左右留白（padding）。</span></div>
+      </div>
+      <div style="margin-top:16px;background:#fbf1e6;border:1px solid #f0dcc4;border-radius:12px;padding:13px 18px;font-size:12.5px;color:#6b5d4d;line-height:1.7;">記號說明：<b style="color:#a9683a;">⟲ 自動帶入</b>＝內容取自「編輯資料」，改資料就會同步；<b style="color:#a9683a;">✎ 自由輸入</b>＝直接在積木上打字；<b style="color:#a9683a;">⛶ 可滿版</b>＝能撐到整個畫面左右到邊。</div>
+    </section>
+  </div>
+
+  <!-- BLOCK REFERENCE A -->
+  <div class="page" data-screen-label="積木參考A">
+    <div style="font-family:'LXGW WenKai TC',serif;font-size:21px;font-weight:700;color:#4a3f35;border-left:5px solid #c98a5e;padding-left:12px;margin-bottom:6px;">積木參考 ① 自動帶入角色資料</div>
+    <p style="font-size:12.5px;color:#a8957e;margin:0 0 18px;line-height:1.6;padding-left:2px;">這些積木的內容來自「編輯資料」，只負責「怎麼呈現」，不重複輸入文字。</p>
+
+    <div style="display:flex;flex-direction:column;gap:13px;">
+      <div class="blk" style="background:#faf6ef;border:1px solid #eaddc9;border-radius:13px;padding:15px 18px;">
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px;"><span style="font-family:'LXGW WenKai TC',serif;font-size:16px;font-weight:700;color:#4a3f35;">名稱</span><code style="background:#f0e3d1;padding:1px 7px;border-radius:5px;font-size:11px;color:#9a6a3e;">heading</code><span style="font-size:11px;color:#b08a64;">⟲ 自動帶入</span></div>
+        <div style="font-size:13px;color:#6b5d4d;line-height:1.65;">取角色名稱，楷體大標。尺寸 sm／md／lg／xl ＝ 26／32／40／50px。預設置中。</div>
+      </div>
+      <div class="blk" style="background:#faf6ef;border:1px solid #eaddc9;border-radius:13px;padding:15px 18px;">
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px;"><span style="font-family:'LXGW WenKai TC',serif;font-size:16px;font-weight:700;color:#4a3f35;">一句話</span><code style="background:#f0e3d1;padding:1px 7px;border-radius:5px;font-size:11px;color:#9a6a3e;">tagline</code><span style="font-size:11px;color:#b08a64;">⟲ 自動帶入</span></div>
+        <div style="font-size:13px;color:#6b5d4d;line-height:1.65;">取角色標語，斜體、加「」引號。尺寸 sm～xl ＝ 16／19／23／28px。</div>
+      </div>
+      <div class="blk" style="background:#faf6ef;border:1px solid #eaddc9;border-radius:13px;padding:15px 18px;">
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px;"><span style="font-family:'LXGW WenKai TC',serif;font-size:16px;font-weight:700;color:#4a3f35;">頭像</span><code style="background:#f0e3d1;padding:1px 7px;border-radius:5px;font-size:11px;color:#9a6a3e;">avatar</code><span style="font-size:11px;color:#b08a64;">⟲ 自動帶入</span></div>
+        <div style="font-size:13px;color:#6b5d4d;line-height:1.65;">圓形頭像。尺寸 sm／md／lg／xl ＝ 76／108／140／180px。無圖時顯示名稱首字。展示時可點開放大。</div>
+      </div>
+      <div class="blk" style="background:#faf6ef;border:1px solid #eaddc9;border-radius:13px;padding:15px 18px;">
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px;"><span style="font-family:'LXGW WenKai TC',serif;font-size:16px;font-weight:700;color:#4a3f35;">主視覺</span><code style="background:#f0e3d1;padding:1px 7px;border-radius:5px;font-size:11px;color:#9a6a3e;">cover</code><span style="font-size:11px;color:#b08a64;">⟲ 自動帶入　⛶ 可滿版</span></div>
+        <div style="font-size:13px;color:#6b5d4d;line-height:1.65;">大圖。寬度 sm～xl ＝ 55／78／92／100%。比例：原圖／橫幅 21:9／寬 16:9／標準 4:3／方形 1:1。預設圓角 16。</div>
+      </div>
+      <div class="blk" style="background:#faf6ef;border:1px solid #eaddc9;border-radius:13px;padding:15px 18px;">
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px;"><span style="font-family:'LXGW WenKai TC',serif;font-size:16px;font-weight:700;color:#4a3f35;">區塊</span><code style="background:#f0e3d1;padding:1px 7px;border-radius:5px;font-size:11px;color:#9a6a3e;">section</code><span style="font-size:11px;color:#b08a64;">⟲ 自動帶入</span></div>
+        <div style="font-size:13px;color:#6b5d4d;line-height:1.65;">綁定一個資料區塊（sourceId）。版式：清單 ／ 卡片。欄位型態自動套對應樣式——長文、標籤雲、屬性表（鍵：值）、物件卡（圖＋名＋註）、✓ 喜好（綠）、✕ 雷點（紅）、一般鍵值。可隱藏標題或覆寫標題。</div>
+      </div>
+      <div class="blk" style="background:#faf6ef;border:1px solid #eaddc9;border-radius:13px;padding:15px 18px;">
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px;"><span style="font-family:'LXGW WenKai TC',serif;font-size:16px;font-weight:700;color:#4a3f35;">配色</span><code style="background:#f0e3d1;padding:1px 7px;border-radius:5px;font-size:11px;color:#9a6a3e;">palette</code><span style="font-size:11px;color:#b08a64;">⟲ 自動帶入</span></div>
+        <div style="font-size:13px;color:#6b5d4d;line-height:1.65;">取角色色票。三種樣式：色卡（色塊＋名稱＋色碼）／色條（連續色帶）／圓點。</div>
+      </div>
+      <div class="blk" style="background:#faf6ef;border:1px solid #eaddc9;border-radius:13px;padding:15px 18px;">
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px;"><span style="font-family:'LXGW WenKai TC',serif;font-size:16px;font-weight:700;color:#4a3f35;">相簿</span><code style="background:#f0e3d1;padding:1px 7px;border-radius:5px;font-size:11px;color:#9a6a3e;">album</code><span style="font-size:11px;color:#b08a64;">⟲ 自動帶入</span></div>
+        <div style="font-size:13px;color:#6b5d4d;line-height:1.65;">綁定一本相簿。版式：格狀（可設欄數與比例）／輪播。展示時點圖可放大看標註。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BLOCK REFERENCE B -->
+  <div class="page" data-screen-label="積木參考B">
+    <div style="font-family:'LXGW WenKai TC',serif;font-size:21px;font-weight:700;color:#4a3f35;border-left:5px solid #c98a5e;padding-left:12px;margin-bottom:6px;">積木參考 ② 自由內容</div>
+    <p style="font-size:12.5px;color:#a8957e;margin:0 0 16px;line-height:1.6;padding-left:2px;">直接在積木上輸入內容，與角色資料無關。</p>
+    <div style="display:flex;flex-direction:column;gap:11px;margin-bottom:26px;">
+      <div class="blk" style="background:#faf6ef;border:1px solid #eaddc9;border-radius:13px;padding:14px 18px;">
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:5px;"><span style="font-family:'LXGW WenKai TC',serif;font-size:15.5px;font-weight:700;color:#4a3f35;">標籤</span><code style="background:#f0e3d1;padding:1px 7px;border-radius:5px;font-size:11px;color:#9a6a3e;">badges</code><span style="font-size:11px;color:#b08a64;">✎ 自由輸入</span></div>
+        <div style="font-size:12.5px;color:#6b5d4d;line-height:1.6;">一組標籤，每顆可單獨設顏色。樣式：實心 ／ 外框。</div>
+      </div>
+      <div class="blk" style="background:#faf6ef;border:1px solid #eaddc9;border-radius:13px;padding:14px 18px;">
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:5px;"><span style="font-family:'LXGW WenKai TC',serif;font-size:15.5px;font-weight:700;color:#4a3f35;">小視窗</span><code style="background:#f0e3d1;padding:1px 7px;border-radius:5px;font-size:11px;color:#9a6a3e;">popup</code><span style="font-size:11px;color:#b08a64;">✎ 自由輸入</span></div>
+        <div style="font-size:12.5px;color:#6b5d4d;line-height:1.6;">點擊開啟彈窗，放隱藏設定（二設、雷點、條件等）。觸發樣式：按鈕 ／ 縮圖。含標題、內文、可選配圖。</div>
+      </div>
+      <div class="blk" style="background:#faf6ef;border:1px solid #eaddc9;border-radius:13px;padding:14px 18px;">
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:5px;"><span style="font-family:'LXGW WenKai TC',serif;font-size:15.5px;font-weight:700;color:#4a3f35;">文字</span><code style="background:#f0e3d1;padding:1px 7px;border-radius:5px;font-size:11px;color:#9a6a3e;">text</code><span style="font-size:11px;color:#b08a64;">✎ 自由輸入</span></div>
+        <div style="font-size:12.5px;color:#6b5d4d;line-height:1.6;">自由段落，保留換行。尺寸 sm～xl ＝ 14／15.5／18／22px。</div>
+      </div>
+      <div class="blk" style="background:#faf6ef;border:1px solid #eaddc9;border-radius:13px;padding:14px 18px;">
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:5px;"><span style="font-family:'LXGW WenKai TC',serif;font-size:15.5px;font-weight:700;color:#4a3f35;">跑馬燈</span><code style="background:#f0e3d1;padding:1px 7px;border-radius:5px;font-size:11px;color:#9a6a3e;">marquee</code><span style="font-size:11px;color:#b08a64;">✎ 自由輸入　⛶ 可滿版</span></div>
+        <div style="font-size:12.5px;color:#6b5d4d;line-height:1.6;">文字無縫橫向捲動。速度：慢 28s ／ 中 18s ／ 快 10s。可設底色、文字色、圓角；滿版時變整頁橫幅。</div>
+      </div>
+      <div class="blk" style="background:#faf6ef;border:1px solid #eaddc9;border-radius:13px;padding:14px 18px;">
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:5px;"><span style="font-family:'LXGW WenKai TC',serif;font-size:15.5px;font-weight:700;color:#4a3f35;">按鈕</span><code style="background:#f0e3d1;padding:1px 7px;border-radius:5px;font-size:11px;color:#9a6a3e;">button</code><span style="font-size:11px;color:#b08a64;">✎ 自由輸入</span></div>
+        <div style="font-size:12.5px;color:#6b5d4d;line-height:1.6;">膠囊狀視覺元素（裝飾用，非連結）。可設文字、圓角、底色、文字色、外框。</div>
+      </div>
+    </div>
+
+    <div style="font-family:'LXGW WenKai TC',serif;font-size:21px;font-weight:700;color:#4a3f35;border-left:5px solid #c98a5e;padding-left:12px;margin-bottom:6px;">積木參考 ③ 結構與排版</div>
+    <p style="font-size:12.5px;color:#a8957e;margin:0 0 16px;line-height:1.6;padding-left:2px;">不放內容，負責版面結構。</p>
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div class="blk" style="background:#faf6ef;border:1px solid #eaddc9;border-radius:13px;padding:14px 18px;">
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:5px;"><span style="font-family:'LXGW WenKai TC',serif;font-size:15.5px;font-weight:700;color:#4a3f35;">佈局</span><code style="background:#f0e3d1;padding:1px 7px;border-radius:5px;font-size:11px;color:#9a6a3e;">columns</code></div>
+        <div style="font-size:12.5px;color:#6b5d4d;line-height:1.6;"><b style="color:#a9683a;">唯一能讓積木並排的容器</b>。2～3 欄，欄寬可拖曳調整，垂直對齊上／中／下。把其他積木拖進欄位裡。手機自動疊成單欄。</div>
+      </div>
+      <div class="blk" style="background:#faf6ef;border:1px solid #eaddc9;border-radius:13px;padding:14px 18px;">
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:5px;"><span style="font-family:'LXGW WenKai TC',serif;font-size:15.5px;font-weight:700;color:#4a3f35;">分隔線</span><code style="background:#f0e3d1;padding:1px 7px;border-radius:5px;font-size:11px;color:#9a6a3e;">divider</code><span style="font-size:11px;color:#b08a64;">⛶ 可滿版</span></div>
+        <div style="font-size:12.5px;color:#6b5d4d;line-height:1.6;">水平線。可設顏色、粗細、線型（實線／虛線／點線／雙線）。</div>
+      </div>
+      <div class="blk" style="background:#faf6ef;border:1px solid #eaddc9;border-radius:13px;padding:14px 18px;">
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:5px;"><span style="font-family:'LXGW WenKai TC',serif;font-size:15.5px;font-weight:700;color:#4a3f35;">間距</span><code style="background:#f0e3d1;padding:1px 7px;border-radius:5px;font-size:11px;color:#9a6a3e;">spacer</code></div>
+        <div style="font-size:12.5px;color:#6b5d4d;line-height:1.6;">純空白，用內距控制高度（預設 36px），調節區塊之間的呼吸感。</div>
+      </div>
+      <div class="blk" style="background:#faf6ef;border:1px solid #eaddc9;border-radius:13px;padding:14px 18px;">
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:5px;"><span style="font-family:'LXGW WenKai TC',serif;font-size:15.5px;font-weight:700;color:#4a3f35;">分頁</span><code style="background:#f0e3d1;padding:1px 7px;border-radius:5px;font-size:11px;color:#9a6a3e;">pagebreak</code></div>
+        <div style="font-size:12.5px;color:#6b5d4d;line-height:1.6;">把模板切成「頁」。驅動全螢幕翻頁、頁面導覽列、以及固定一屏的分頁。</div>
+      </div>
+      <div class="blk" style="background:#faf6ef;border:1px solid #eaddc9;border-radius:13px;padding:14px 18px;">
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:5px;"><span style="font-family:'LXGW WenKai TC',serif;font-size:15.5px;font-weight:700;color:#4a3f35;">導覽條</span><code style="background:#f0e3d1;padding:1px 7px;border-radius:5px;font-size:11px;color:#9a6a3e;">nav</code></div>
+        <div style="font-size:12.5px;color:#6b5d4d;line-height:1.6;">手動跳頁列，列出各頁、點了可跳。若開了全域「頁面導覽列」，此積木展示時自動隱藏。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: 排版輔助 + 手機 ... -->
+  <div class="page" data-screen-label="排版輔助">
+    <section>
+      <div style="font-family:'LXGW WenKai TC',serif;font-size:21px;font-weight:700;color:#4a3f35;border-left:5px solid #c98a5e;padding-left:12px;margin-bottom:14px;">五、排版輔助</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="kv" style="display:flex;gap:12px;align-items:baseline;"><span style="flex:0 0 110px;font-weight:700;font-size:13.5px;color:#c98a5e;">首屏輔助線</span><span style="font-size:13px;color:#5d4f42;line-height:1.6;">畫出每一屏邊界（第2屏、第3屏…），看內容跨幾屏。</span></div>
+        <div class="kv" style="display:flex;gap:12px;align-items:baseline;"><span style="flex:0 0 110px;font-weight:700;font-size:13.5px;color:#c98a5e;">每頁高度</span><span style="font-size:13px;color:#5d4f42;line-height:1.6;">固定一屏 ／ 自動高度。固定一屏超出時，提供 ✂ 一鍵「自動分頁這頁」。</span></div>
+        <div class="kv" style="display:flex;gap:12px;align-items:baseline;"><span style="flex:0 0 110px;font-weight:700;font-size:13.5px;color:#c98a5e;">頁面導覽列</span><span style="font-size:13px;color:#5d4f42;line-height:1.6;">全域開關，多頁時自動產生跳頁列（開啟時自動隱藏手動導覽積木）。</span></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- PAGE 3 -->
+  <div class="page" data-screen-label="手機編輯與開啟方式">
+    <section style="margin-bottom:30px;">
+      <div style="font-family:'LXGW WenKai TC',serif;font-size:21px;font-weight:700;color:#4a3f35;border-left:5px solid #c98a5e;padding-left:12px;margin-bottom:14px;">六、手機編輯</div>
+      <div style="background:#faf6ef;border:1px solid #eaddc9;border-radius:14px;padding:18px 22px;">
+        <ul style="margin:0;padding-left:18px;font-size:13.5px;color:#5d4f42;line-height:1.95;">
+          <li>工具列<b>橫向滑動</b>，不擠成多排，點擊區 ≥42px。</li>
+          <li>點積木 → 底部<b>小工具列</b>（上移／下移／複製／刪除／樣式／✕），<b style="color:#a9683a;">不會亂跳整個面板</b>。</li>
+          <li>排序用按鈕、<b>免拖曳</b>；右下角浮動鈕「＋積木／設計」。</li>
+          <li>手機開啟時自動預設「<b>手機</b>」裝置——你排的就是手機看到的版面。</li>
+        </ul>
+      </div>
+    </section>
+
+    <section style="margin-bottom:30px;">
+      <div style="font-family:'LXGW WenKai TC',serif;font-size:21px;font-weight:700;color:#4a3f35;border-left:5px solid #c98a5e;padding-left:12px;margin-bottom:14px;">七、視覺風格</div>
+      <p style="font-size:13.5px;color:#8d7c69;margin:0 0 14px;line-height:1.75;">奶油暖色系搭配多組主題色，中文字型用霞鶩文楷／思源宋黑，圓角卡片、柔和陰影。色彩集中管理，換主題一鍵套用。</p>
+      <div class="row" style="display:flex;gap:10px;">
+        <div style="flex:1;height:54px;border-radius:11px;background:#faf6ef;border:1px solid #eaddc9;display:flex;align-items:flex-end;padding:7px 10px;font-size:11px;color:#8d7c69;">#faf6ef 底</div>
+        <div style="flex:1;height:54px;border-radius:11px;background:#fffdf8;border:1px solid #eaddc9;display:flex;align-items:flex-end;padding:7px 10px;font-size:11px;color:#8d7c69;">#fffdf8 卡片</div>
+        <div style="flex:1;height:54px;border-radius:11px;background:#c98a5e;display:flex;align-items:flex-end;padding:7px 10px;font-size:11px;color:#fff;">#c98a5e 強調</div>
+        <div style="flex:1;height:54px;border-radius:11px;background:#4a3f35;display:flex;align-items:flex-end;padding:7px 10px;font-size:11px;color:#e7dcc9;">#4a3f35 文字</div>
+      </div>
+    </section>
+
+    <section>
+      <div style="font-family:'LXGW WenKai TC',serif;font-size:21px;font-weight:700;color:#4a3f35;border-left:5px solid #c98a5e;padding-left:12px;margin-bottom:14px;">八、開啟與保存</div>
+      <div style="background:#fbf1e6;border:1px solid #f0dcc4;border-radius:14px;padding:18px 22px;">
+        <ul style="margin:0;padding-left:18px;font-size:13px;color:#6b5d4d;line-height:1.95;">
+          <li>專案含三個互相連動的檔：<b>OCTOOL.dc.html</b>、<b>TemplateCanvas.dc.html</b>、<b>support.js</b>——請保持同一層、勿改名。</li>
+          <li>用本機伺服器開啟（不要直接 file:// 雙擊）：於資料夾執行 <code style="background:#f0e3d1;padding:1px 6px;border-radius:5px;font-size:12px;">python3 -m http.server</code>，瀏覽 <code style="background:#f0e3d1;padding:1px 6px;border-radius:5px;font-size:12px;">localhost:8000/OCTOOL.dc.html</code>。</li>
+          <li>所有角色資料存在該裝置的瀏覽器，會自動儲存。換裝置請用內建的「備份與格式」匯出／匯入。</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <!-- UIUX DETAILS -->
+  <div class="page" data-screen-label="互動細節">
+    <div style="font-family:'LXGW WenKai TC',serif;font-size:21px;font-weight:700;color:#4a3f35;border-left:5px solid #c98a5e;padding-left:12px;margin-bottom:6px;">九、互動細節（UIUX）</div>
+    <p style="font-size:12.5px;color:#a8957e;margin:0 0 18px;line-height:1.6;padding-left:2px;">這些是讓編輯「順手」的小規則，復刻時別漏。</p>
+
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="blk" style="background:#fbf1e6;border:1px solid #f0dcc4;border-radius:13px;padding:15px 18px;">
+        <div style="font-family:'LXGW WenKai TC',serif;font-size:15.5px;font-weight:700;color:#a9683a;margin-bottom:6px;">加入積木的位置</div>
+        <div style="font-size:13px;color:#6b5d4d;line-height:1.7;">選取某個積木時，新加的積木會插入在它的<b>正下方</b>（不是丟到最底部）；加入後自動選取新積木並切回「設計」分頁，可立刻調樣式。沒有選取任何積木時，才加到模板最底部。面板會即時顯示提示文字告訴你會加在哪。</div>
+      </div>
+      <div class="blk" style="background:#faf6ef;border:1px solid #eaddc9;border-radius:13px;padding:15px 18px;">
+        <div style="font-family:'LXGW WenKai TC',serif;font-size:15.5px;font-weight:700;color:#4a3f35;margin-bottom:6px;">選取與取消</div>
+        <div style="font-size:13px;color:#6b5d4d;line-height:1.7;">點積木＝選取，右側面板切到「元件樣式」即時編輯；點畫布空白處＝取消選取，面板回到「全域網站設計」。</div>
+      </div>
+      <div class="blk" style="background:#faf6ef;border:1px solid #eaddc9;border-radius:13px;padding:15px 18px;">
+        <div style="font-family:'LXGW WenKai TC',serif;font-size:15.5px;font-weight:700;color:#4a3f35;margin-bottom:6px;">排序與微調</div>
+        <div style="font-size:13px;color:#6b5d4d;line-height:1.7;">拖曳積木左側把手可調順序；面板也有<b>上移／下移</b>按鈕（手機免拖曳）。每個積木都能一鍵<b>複製</b>或<b>刪除</b>——刪除鈕平時低調、滑過才轉紅，避免誤觸。</div>
+      </div>
+      <div class="blk" style="background:#faf6ef;border:1px solid #eaddc9;border-radius:13px;padding:15px 18px;">
+        <div style="font-family:'LXGW WenKai TC',serif;font-size:15.5px;font-weight:700;color:#4a3f35;margin-bottom:6px;">即時同步與自動儲存</div>
+        <div style="font-size:13px;color:#6b5d4d;line-height:1.7;">改「編輯資料」的內容，所有引用該資料的模板會<b>即時更新</b>。所有變更即時存在本機瀏覽器，面板顯示「已自動儲存」狀態（非按鈕）。</div>
+      </div>
+      <div class="blk" style="background:#faf6ef;border:1px solid #eaddc9;border-radius:13px;padding:15px 18px;">
+        <div style="font-family:'LXGW WenKai TC',serif;font-size:15.5px;font-weight:700;color:#4a3f35;margin-bottom:6px;">寬度 ≠ 並排</div>
+        <div style="font-size:13px;color:#6b5d4d;line-height:1.7;">把積木設窄（半欄／⅓）只是讓它變窄、仍各佔一排，並依對齊靠左／中／右擺放。真正要<b>並排</b>，請用「佈局」積木把元件放進同一列。</div>
+      </div>
+      <div class="blk" style="background:#faf6ef;border:1px solid #eaddc9;border-radius:13px;padding:15px 18px;">
+        <div style="font-family:'LXGW WenKai TC',serif;font-size:15.5px;font-weight:700;color:#4a3f35;margin-bottom:6px;">預覽與展示</div>
+        <div style="font-size:13px;color:#6b5d4d;line-height:1.7;">模板頁可切「編輯／預覽」；全螢幕展示內建圓點、箭頭與鍵盤翻頁。有分頁積木時可開「頁面導覽列」自動產生跳頁列。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPENDIX: DATA MODEL -->
+  <div class="page" data-screen-label="附錄資料模型">
+    <div style="font-family:'LXGW WenKai TC',serif;font-size:21px;font-weight:700;color:#4a3f35;border-left:5px solid #c98a5e;padding-left:12px;margin-bottom:6px;">附錄 · 資料模型</div>
+    <p style="font-size:12.5px;color:#a8957e;margin:0 0 18px;line-height:1.6;padding-left:2px;">想完整復刻時的資料結構。全部存在瀏覽器 localStorage（主資料鍵 <code style="background:#f0e3d1;padding:0 5px;border-radius:4px;font-size:11px;">octool:v3</code>、欄位模板 <code style="background:#f0e3d1;padding:0 5px;border-radius:4px;font-size:11px;">octool:forms</code>）。</p>
+
+    <div style="font-size:13px;font-weight:700;color:#a9683a;margin-bottom:8px;">① 角色 character</div>
+    <pre style="margin:0 0 20px;background:#2c2722;color:#e7dcc9;border-radius:12px;padding:16px 18px;font-size:12px;line-height:1.7;overflow-x:auto;font-family:'Menlo','Consolas',monospace;white-space:pre;">character = {
+  name, nickname, tagline,        <span style="color:#b3a48f;">// 文字</span>
+  avatarUrl, mainVisualUrl,       <span style="color:#b3a48f;">// 頭像、主視覺圖片網址</span>
+  palette: [ { id, label, hex } ],          <span style="color:#b3a48f;">// 色票</span>
+  sections: [ {
+    id, title,
+    group: 'text' | 'image',                <span style="color:#b3a48f;">// 歸在哪個編輯分頁</span>
+    fields: [ { id, label, type, value } ]
+  } ],
+  albums: [ {
+    id, name,
+    kind: 'gallery' | 'ref',                <span style="color:#b3a48f;">// 作品 / 設定相簿</span>
+    images: [ { id, url, caption, annotations: [] } ]
+  } ]
+}</pre>
+
+    <div style="font-size:13px;font-weight:700;color:#a9683a;margin-bottom:8px;">② 欄位型態 field.type</div>
+    <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:22px;">
+      <span style="font-size:12px;background:#faf6ef;border:1px solid #eaddc9;color:#6b5d4d;border-radius:8px;padding:6px 11px;"><code style="color:#9a6a3e;">text</code> 單行</span>
+      <span style="font-size:12px;background:#faf6ef;border:1px solid #eaddc9;color:#6b5d4d;border-radius:8px;padding:6px 11px;"><code style="color:#9a6a3e;">longtext</code> 長文</span>
+      <span style="font-size:12px;background:#faf6ef;border:1px solid #eaddc9;color:#6b5d4d;border-radius:8px;padding:6px 11px;"><code style="color:#9a6a3e;">tags</code> 標籤雲</span>
+      <span style="font-size:12px;background:#faf6ef;border:1px solid #eaddc9;color:#6b5d4d;border-radius:8px;padding:6px 11px;"><code style="color:#9a6a3e;">attr</code> 屬性表（鍵：值）</span>
+      <span style="font-size:12px;background:#faf6ef;border:1px solid #eaddc9;color:#6b5d4d;border-radius:8px;padding:6px 11px;"><code style="color:#9a6a3e;">object</code> 物件卡（名｜圖｜註）</span>
+      <span style="font-size:12px;background:#faf6ef;border:1px solid #eaddc9;color:#6b5d4d;border-radius:8px;padding:6px 11px;"><code style="color:#9a6a3e;">check</code> ✓ 喜好</span>
+      <span style="font-size:12px;background:#faf6ef;border:1px solid #eaddc9;color:#6b5d4d;border-radius:8px;padding:6px 11px;"><code style="color:#9a6a3e;">avoid</code> ✕ 雷點</span>
+    </div>
+
+    <div style="font-size:13px;font-weight:700;color:#a9683a;margin-bottom:8px;">③ 模板 template</div>
+    <pre style="margin:0 0 20px;background:#2c2722;color:#e7dcc9;border-radius:12px;padding:16px 18px;font-size:12px;line-height:1.7;overflow-x:auto;font-family:'Menlo','Consolas',monospace;white-space:pre;">template = {
+  name,                                     <span style="color:#b3a48f;">// 自訂（名片／委託資料…）</span>
+  design: { bg, primary, font, width,
+            pageFit, autoNav, bgImage … },   <span style="color:#b3a48f;">// 全域外觀</span>
+  blocks: [ {
+    id, type,                               <span style="color:#b3a48f;">// 17 種積木之一</span>
+    style: { width, align, fx, opacity,
+             radius, bgColor, fullBleed … },
+    …type-specific                          <span style="color:#b3a48f;">// sourceId / text / speed / tags…</span>
+  } ]
+}</pre>
+
+    <div style="font-size:13px;font-weight:700;color:#a9683a;margin-bottom:8px;">④ 欄位模板 form（只存結構、不含內容）</div>
+    <pre style="margin:0 0 24px;background:#2c2722;color:#e7dcc9;border-radius:12px;padding:16px 18px;font-size:12px;line-height:1.7;overflow-x:auto;font-family:'Menlo','Consolas',monospace;white-space:pre;">form = {
+  id, name,
+  sections: [ { title, group, fields: [ { label, type } ] } ]
+}   <span style="color:#b3a48f;">// 可在「備份與格式」匯出／匯入，套到不同角色</span></pre>
+
+    <div style="background:#fbf1e6;border:1px solid #f0dcc4;border-radius:12px;padding:13px 18px;font-size:12.5px;color:#6b5d4d;line-height:1.7;">關係：<b style="color:#a9683a;">section / album 積木</b>用 <code style="background:#f0e3d1;padding:0 5px;border-radius:4px;font-size:11px;">sourceId</code> 綁定 character 裡的 section / album——所以同一份資料可被多套模板重複取用，改資料即時同步到所有模板。</div>
+
+    <div style="margin-top:30px;text-align:center;font-size:11.5px;letter-spacing:1px;color:#b3a48f;">OCTOOL 角色展示工具 · 使用說明</div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

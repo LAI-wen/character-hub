@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>我的企劃 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/ds.css">
+<link rel="stylesheet" href="../assets/shell.css">
+<link rel="stylesheet" href="../assets/components.css">
+<style>
+  .mp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--s5); }
+  .mp { border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--sh-1); overflow: hidden; display: flex; flex-direction: column; }
+  .mp .cv { height: 64px; position: relative; }
+  .mp .mk { position: absolute; left: var(--s5); bottom: -20px; width: 48px; height: 48px; border-radius: 13px; display: grid; place-items: center; font-family: var(--font-serif); font-size: 23px; font-weight: 800; color: #fff; border: 3px solid var(--surface); }
+  .mp .bd { padding: var(--s6) var(--s5) var(--s5); }
+  .mp .hh { display: flex; align-items: baseline; gap: 9px; }
+  .mp .nm { font-family: var(--font-serif); font-size: 21px; font-weight: 800; }
+  .mp .en { font-family: var(--font-mono); font-size: 9px; letter-spacing: .14em; color: var(--text-faint); text-transform: uppercase; }
+  .mp .bl { font-size: 13px; color: var(--text-dim); line-height: 1.55; margin: var(--s2) 0 var(--s4); text-wrap: pretty; min-height: 2.7em; }
+  .mp .badges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: var(--s4); }
+  .mp .stats { display: flex; gap: var(--s5); padding-top: var(--s4); border-top: 1px solid var(--border); }
+  .mp .stat { display: flex; flex-direction: column; }
+  .mp .stat b { font-family: var(--font-serif); font-size: 19px; font-weight: 800; line-height: 1; }
+  .mp .stat span { font-size: 11px; color: var(--text-faint); margin-top: 3px; }
+  .mp .go { margin-top: var(--s4); display: flex; gap: var(--s2); }
+  .newp { border: 1px dashed var(--border-strong); border-radius: var(--r-card); background: var(--surface-2); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 240px; cursor: pointer; color: var(--text-dim); font-weight: 600; font-size: 14px; }
+  .newp:hover { border-color: var(--accent); color: var(--accent-ink); background: var(--accent-soft); }
+  .newp .plus { width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid currentColor; display: grid; place-items: center; font-size: 22px; }
+</style>
+</head>
+<body>
+<div class="page" id="root"></div>
+
+<script src="../assets/data.js"></script>
+<script src="../assets/components.js"></script>
+<script>
+  (function () {
+    var root = document.getElementById('root');
+    var ROLE = OCData.getRole();
+    var ROLE_LABEL = { owner: '主持人', member: '參與者', visitor: '訪客' };
+    function collabLabel(p) { return p.collaborationMode === 'open' ? '公開招募' : p.collaborationMode === 'closed' ? '私人共創' : '個人企劃'; }
+
+    var html = OCUI.contextHeader({ scope: 'account', crumbs: ['我的企劃'] });
+    html += '<div class="pageh"><div class="ht"><h1>我的企劃 <span class="en">Projects</span></h1>'
+      + '<p class="sub">每個企劃是一個獨立的宇宙——角色、世界觀、關係、故事都歸屬其中。挑一個進去，或開一個新的。</p></div>'
+      + '<div class="acts"><button class="btn btn-accent" id="newP">＋ 建立企劃</button></div></div>';
+
+    html += '<div class="mp-grid">' + OCData.activeProjects().map(function (p) {
+      var vis = p.visibility === 'public' ? '<span class="badge public"><span class="d" style="background:var(--must)"></span>公開</span>' : '<span class="badge private"><span class="d" style="background:var(--text-faint)"></span>私人</span>';
+      return '<div class="mp"><div class="cv" style="background:' + p.c + '"><span class="mk" style="background:' + p.c + '">' + p.name[0] + '</span></div>'
+        + '<div class="bd"><div class="hh"><span class="nm">' + p.name + '</span><span class="en">' + p.en + '</span></div>'
+        + '<div class="bl">' + p.blurb + '</div>'
+        + '<div class="badges">' + vis + '<span class="badge">' + collabLabel(p) + '</span><span class="badge role-' + ROLE + '">你是' + ROLE_LABEL[ROLE] + '</span></div>'
+        + '<div class="stats"><div class="stat"><b>' + p.stats.chars + '</b><span>角色</span></div><div class="stat"><b>' + p.stats.world + '</b><span>世界觀</span></div><div class="stat"><b>' + p.stats.rels + '</b><span>關係</span></div><div class="stat"><b>' + p.stats.ideas + '</b><span>靈感</span></div></div>'
+        + '<div class="go"><button class="btn btn-primary" style="flex:1;justify-content:center" data-p="' + p.id + '">進入企劃</button><a class="btn" href="portal.html?project=' + p.id + '" title="公開頁">↗</a></div>'
+        + '</div></div>';
+    }).join('') + '<button class="newp" id="newP2"><span class="plus">＋</span>建立新企劃</button></div>';
+
+    root.innerHTML = html;
+    function enter(id) { localStorage.setItem('ch:proj', id); location.href = 'overview.html?project=' + id; }
+    root.querySelectorAll('[data-p]').forEach(function (b) { b.onclick = function () { enter(b.dataset.p); }; });
+    document.getElementById('newP').onclick = document.getElementById('newP2').onclick = function () { OCUI.toast('建立新企劃', { demo: true }); };
+  })();
+</script>
+<script src="../assets/shell.js"></script>
+</body>
+</html>

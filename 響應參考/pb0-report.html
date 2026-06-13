@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PB0 驗收 · 公開頁 Builder · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/ds.css">
+<link rel="stylesheet" href="assets/components.css">
+<style>
+  body { background: var(--bg); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: var(--s12) var(--s8) var(--s16); }
+  .hero { border-bottom: 1px solid var(--border-strong); padding-bottom: var(--s8); margin-bottom: var(--s10); }
+  .hero .eyebrow { margin-bottom: 12px; }
+  .hero h1 { font-family: var(--font-serif); font-size: 40px; font-weight: 900; margin: 0; letter-spacing: -.025em; line-height: 1.06; }
+  .hero .lead { color: var(--text-dim); font-size: 16px; margin: var(--s4) 0 0; max-width: 64ch; line-height: 1.65; text-wrap: pretty; }
+  .hero .chips { display: flex; gap: var(--s2); margin-top: var(--s5); flex-wrap: wrap; }
+  section { margin-top: var(--s12); }
+  .sh { display: flex; align-items: baseline; gap: var(--s4); margin-bottom: var(--s5); }
+  .sh .ix { font-family: var(--font-mono); font-size: 13px; color: var(--text-faint); }
+  .sh h2 { font-family: var(--font-serif); font-size: 24px; font-weight: 800; margin: 0; }
+  .sh .en { font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); }
+  .sh .rule { flex: 1; height: 1px; background: var(--border); align-self: center; }
+  p.note { font-size: 14.5px; color: var(--text-dim); line-height: 1.7; max-width: 74ch; text-wrap: pretty; }
+  p.note b { color: var(--text); }
+  .pages { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: var(--s3); }
+  .pcard { display: flex; flex-direction: column; gap: 3px; padding: var(--s4) var(--s5); border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--sh-1); text-decoration: none; color: inherit; transition: box-shadow .15s, transform .15s; }
+  .pcard:hover { box-shadow: var(--sh-2); transform: translateY(-2px); }
+  .pcard .n { font-family: var(--font-serif); font-size: 16px; font-weight: 700; }
+  .pcard .d { font-size: 12.5px; color: var(--text-dim); margin-top: 4px; line-height: 1.5; }
+  .pcard .sc { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--accent-ink); margin-top: 6px; }
+  .shots { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s4); }
+  .shot { border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--sh-1); overflow: hidden; }
+  .shot img { width: 100%; display: block; border-bottom: 1px solid var(--border); }
+  .shot .cap { padding: var(--s3) var(--s4); font-size: 12.5px; color: var(--text-dim); }
+  .shot .cap b { color: var(--text); }
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s4); }
+  .col { border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); padding: var(--s5); }
+  .col h3 { margin: 0 0 var(--s2); font-size: 14px; font-weight: 700; }
+  .col ul { margin: 0; padding-left: 1.1em; font-size: 12.5px; color: var(--text-dim); line-height: 1.8; }
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); overflow: hidden; margin-top: var(--s2); }
+  thead th { text-align: left; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); padding: var(--s3) var(--s4); border-bottom: 1px solid var(--border); background: var(--surface-2); }
+  tbody td { padding: var(--s3) var(--s4); border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: top; line-height: 1.5; }
+  tbody tr:last-child td { border-bottom: 0; }
+  td .f { font-family: var(--font-mono); font-size: 12px; font-weight: 600; }
+  .gap-card { border: 1px solid #ECDFA8; background: var(--accent-soft); border-radius: var(--r-card); padding: var(--s4) var(--s5); margin-bottom: var(--s3); }
+  .gap-card .gt { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--accent-ink); }
+  .gap-card .gd { font-size: 13px; color: var(--text-dim); margin-top: 5px; line-height: 1.6; }
+  .gap-card .gd b { color: var(--text); }
+  .gap-card.bad { border-color: #F0CFCB; background: var(--avoid-soft); } .gap-card.bad .gt { color: #9E332B; }
+  .gap-card.ok { border-color: #CDE8D8; background: var(--must-soft); } .gap-card.ok .gt { color: #1F6B43; }
+  .demo-list { display: flex; flex-direction: column; gap: 8px; }
+  .demo-row { display: flex; align-items: center; gap: 10px; font-size: 13.5px; padding: 9px 13px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+  .open-issues { border: 1px solid #F0CFCB; background: var(--avoid-soft); border-radius: var(--r-card); padding: var(--s4) var(--s5); }
+  .open-issues ul { margin: 0; padding-left: 1.1em; font-size: 13.5px; color: var(--text-dim); line-height: 1.8; }
+  .foot { margin-top: var(--s16); padding-top: var(--s6); border-top: 1px solid var(--border-strong); }
+  .foot .q { font-family: var(--font-serif); font-size: 19px; font-weight: 700; margin: 0 0 var(--s2); }
+  .foot p { font-size: 14px; color: var(--text-dim); line-height: 1.7; }
+  @media (max-width: 860px) { .hero h1 { font-size: 30px; } .shots, .split { grid-template-columns: 1fr; } .wrap { padding: var(--s10) var(--s4); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">CharacterHub · Special Slice PB0 · Public Page Builder</div>
+    <h1>PB0 驗收</h1>
+    <p class="lead">公開頁 Builder 架構與 UI 原型完成。核心：<b>同一份 Character／ProjectCharacterLink／Project／Asset 資料，套不同公開頁版型</b>，產出角色頁／企劃頁／委託頁。版型管「如何呈現」，與角色卡欄位模板（管「填什麼」）<b>嚴格分離</b>。</p>
+    <div class="chips">
+      <span class="badge approved"><span class="d" style="background:var(--must)"></span>public-pages.html</span>
+      <span class="badge approved"><span class="d" style="background:var(--must)"></span>portal.html（Renderer）</span>
+      <span class="demo-only">所有儲存為 Demo only</span>
+    </div>
+  </div>
+
+  <section>
+    <div class="sh"><span class="ix">01</span><h2>四個可點擊畫面</h2><span class="en">Clickable</span><span class="rule"></span></div>
+    <div class="pages">
+      <a class="pcard" href="pages/public-pages.html?project=tokoyo"><span class="n">① 公開頁列表</span><span class="d">頁面名稱／類型／版型／狀態／可見性／網址／建立。</span><span class="sc">public-pages.html</span></a>
+      <a class="pcard" href="pages/public-pages.html?project=tokoyo"><span class="n">② 建立流程</span><span class="d">用途 → 資料來源 → 版型 → 資料檢查 → 建立 Draft（列表的「＋建立公開頁」）。</span><span class="sc">create flow</span></a>
+      <a class="pcard" href="pages/public-pages.html?project=tokoyo&page=pp1&mode=builder"><span class="n">③ Builder</span><span class="d">Top Bar＋左 Panel（新增/圖層/資料）＋Canvas＋右 Inspector（內容/樣式/響應式/可見性）。</span><span class="sc">?mode=builder</span></a>
+      <a class="pcard" href="pages/portal.html?slug=tokoyo%2Fyoi" target="_blank"><span class="n">④ Public Renderer</span><span class="d">純公開頁：無側欄、無管理控制、讀 Published Version、公開裁切。</span><span class="sc">portal.html</span></a>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">02</span><h2>畫面</h2><span class="en">Screens</span><span class="rule"></span></div>
+    <div class="shots">
+      <div class="shot"><img src="screenshots/pb0-list.png" alt="公開頁列表"><div class="cap"><b>公開頁列表</b>：宵霧角色頁（已發布 v1·有未發布修改）、常夜國企劃頁（v2）等，含類型／狀態／可見性／公開網址。</div></div>
+      <div class="shot"><img src="screenshots/pb0-renderer.png" alt="Public Renderer"><div class="cap"><b>Public Renderer</b>：同一份宵霧資料經版型渲染——企劃標誌、角色名（綁定）、陣營/職位、角色檔案、圖庫、色票、委託按鈕。無管理 chrome。</div></div>
+      <div class="shot"><div class="cap" style="padding:var(--s5)"><b>Builder（桌機三欄）</b><br><span style="color:var(--text-dim)">已驗證：Canvas 渲染 12 區塊、4 個鎖定徽章、標題綁定顯示「宵霧」。左 Panel 14 種 Block、圖層樹、資料面板；右 Inspector 四分頁＋主持人鎖定。<br><span style="color:var(--text-faint);font-size:11px">（Builder 為 position:fixed 全螢幕覆蓋，html-to-image 無法截圖，實機正常。）</span></span></div></div>
+      <div class="shot"><div class="cap" style="padding:var(--s5)"><b>裝置預覽 / 發布流程</b><br><span style="color:var(--text-dim)">Top Bar 桌機/平板/手機切換改 Canvas 寬度；發布顯示 Draft Layout → 權限裁切 → Public Data Snapshot → Published Version 四步。Renderer 有 Draft 預覽橫幅。</span></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">03</span><h2>兩種模板分離</h2><span class="en">Two templates</span><span class="rule"></span></div>
+    <div class="split">
+      <div class="col"><h3>角色卡欄位模板 · ProjectTemplate</h3><ul><li>＝角色加入企劃要<b>填什麼</b>欄位</li><li>資料輸入模板（Slice 5A）</li></ul></div>
+      <div class="col"><h3>公開頁版型 · PublicPageTemplate</h3><ul><li>＝公開頁<b>如何排列與顯示</b></li><li>內容呈現模板（block tree）</li></ul></div>
+    </div>
+    <p class="note" style="margin-top:var(--s3)">兩者不混用，UI 文案分別為「角色卡欄位模板」與「公開頁版型」。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">04</span><h2>結構 / 資料綁定 / Registry</h2><span class="en">Structure</span><span class="rule"></span></div>
+    <p class="note"><b>Layout</b>：Page › Section › Stack|Grid › Block（最多三層巢狀、桌機最多四欄、手機自動收欄、<b>無自由座標</b>）。<b>資料綁定</b>：用可選擇／可驗證的 binding {source, entity, field}（Character.name、ProjectCharacterLink.fieldValues["ability_type"]、AssetLink role="gallery"…），<b>不讓使用者輸入工程 path</b>，不另建第二份角色資料（PageDataContext 僅供渲染）。<b>Block Registry</b>：14 種 Block 共用 {type,label,category,defaultProps} 契約，Inspector 統一，不各自長出設定 UI。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">05</span><h2>企劃版型：鎖定與 Member override</h2><span class="en">Lock · override</span><span class="rule"></span></div>
+    <p class="note">主持人建立企劃公開頁版型，Block 可設 <span class="mono">locked／required／memberCanHide／memberCanReorder／memberCanRestyle</span>。主持人可鎖定 Logo、角色名稱、陣營等必要區塊（已驗證 4 個鎖定徽章）；<b>成員套用版型時只能調整被允許的部分</b>，鎖定區塊 Inspector 顯示「由主持人鎖定，你不能修改」。Host 編輯版型時 Inspector 顯示「主持人鎖定」開關組。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">06</span><h2>Draft / Publish / Renderer</h2><span class="en">Versioning</span><span class="rule"></span></div>
+    <p class="note">Builder 編輯 <b>Draft</b>；發布展示 Draft Layout → 權限裁切 → Public Data Snapshot → Published Version 四步。<b>Public Renderer 只讀 Published Version</b>（<span class="mono">?preview=draft</span> 才看草稿，附預覽橫幅）。狀態：尚未發布／有未發布修改／已發布／發布失敗（<span class="mono">?failpublish=1</span>）／預覽 Draft／預覽 Published／回滾。<b>公開裁切</b>：頁面或其綁定資料非公開時 Renderer 擋下、不洩漏；綁定失效顯示 Broken Binding，缺資料顯示 Missing。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">07</span><h2>Responsive / A11y / 狀態</h2><span class="en">Responsive · A11y</span><span class="rule"></span></div>
+    <p class="note"><b>≥1200</b> 左 Panel＋Canvas＋右 Inspector；<b>768–1199</b> Inspector 收起；<b>&lt;768</b> 提示複雜版面建議桌機（不縮三欄）。A11y：Block 鍵盤選取、排序上移/下移替代、Inspector 表單 label、Modal Focus Trap＋Esc、選取不只靠顏色、reduced-motion。狀態：Empty Page／Missing Data／Save Error／Publish Error／Forbidden／Broken Binding／Missing Asset／Template Update／Unsaved。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">08</span><h2>修改檔案</h2><span class="en">Files</span><span class="rule"></span></div>
+    <table>
+      <thead><tr><th style="width:26%">檔案</th><th>變更</th></tr></thead>
+      <tbody>
+        <tr><td class="f">assets/data.js</td><td>PublicPageTemplate（含鎖定 block tree）／PublicPage 實例（draft/published/unpublished）／Block Registry（14）＋helper（publicPagesOf/pageTemplate/resolveBinding/pagePublicData…）；ACTION_GRANTS 補 publicPage／pageTemplate。</td></tr>
+        <tr><td class="f">assets/pagerender.js</td><td>共用 block 樹渲染器（Builder 與 Renderer 共用、同一 Registry 契約、binding 解析、Broken/Missing）。</td></tr>
+        <tr><td class="f">assets/pagebuilder.css</td><td>列表、Builder 三欄殼、Canvas、左 Panel、Inspector、發布步驟、Renderer。</td></tr>
+        <tr><td class="f">pages/public-pages.html</td><td>列表＋建立流程＋Builder（Top Bar/左 Panel/Canvas/Inspector/裝置預覽/發布）。</td></tr>
+        <tr><td class="f">pages/portal.html</td><td>重寫為 Published Public Renderer（無側欄、讀 Published、公開裁切、Draft 預覽）。</td></tr>
+        <tr><td class="f">assets/shell.js · index.html</td><td>側欄「公開頁」指向 public-pages.html；總覽連結更新。</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">08.5</span><h2>PB0.2 交接註記</h2><span class="en">Handoff notes</span><span class="rule"></span></div>
+    <div class="gap-card"><div class="gt">1 · 模式切換依權限顯示</div><div class="gd">模式切換以 action permission 控制：沒有 <span class="mono">pageTemplate:update</span> 的使用者<b>不顯示也不可進入「版型設計」</b>模式（按鈕隱藏，非僅 disabled）。內容／進階模式依 <span class="mono">publicPage:update</span> 顯示。</div></div>
+    <div class="gap-card"><div class="gt">2 · 切換模式保留狀態 + 未儲存確認</div><div class="gd">切換 內容／進階／版型 時，<b>保留目前頁面、選取區塊、裝置預覽與未儲存狀態</b>；若有未儲存變更，先跳「儲存後切換／放棄／取消」確認，不可靜默丟棄。</div></div>
+    <div class="gap-card"><div class="gt">3 · 綁定資料區塊的兩個明確操作</div><div class="gd">綁定資料的 Block 提供兩個動作：<b>編輯原始資料</b>（前往 Character／ProjectCharacterLink 正式編輯器，影響資料本身）與<b>改用自訂內容</b>（解除或覆寫此 Block 的 Binding，<b>只影響此公開頁</b>，不動原始資料）。兩者語意必須分清。</div></div>
+    <div class="gap-card"><div class="gt">4 · Usability 任務需真人測試</div><div class="gd">目前五個 Usability 任務屬<b>原型路徑驗證</b>（路徑可走通）。正式交接前需做<b>真人任務測試</b>，記錄入口發現、步驟數、誤操作與完成結果，作為 UX 依據。</div></div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">09</span><h2>Contract / API Status</h2><span class="en">Status</span><span class="rule"></span></div>
+    <div class="gap-card ok"><div class="gt">DOMAIN CONTRACT READY · PublicPageTemplate / PublicPage / Block</div><div class="gd">UI 與結構概念已確定。Block 綁定既有資料，PageDataContext 僅供渲染，非 source of truth。</div></div>
+    <div class="gap-card"><div class="gt">DATA GAP · PageVersion / 回滾 / member override 儲存</div><div class="gd">Published Version 快照、回滾、成員對版型的 override（隱藏/排序/樣式）持久化結構需正式 schema。</div></div>
+    <div class="gap-card bad"><div class="gt">API STATUS · NOT IMPLEMENTED</div><div class="gd">本地正式 Page API、D1、R2、Auth、發布快照與 roundtrip 尚未完成。無自由座標／HTML Embed／多人協作／模板商城（本輪刻意不做）。</div></div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">10</span><h2>Demo-only / 尚未完成</h2><span class="en">Demo · Open issues</span><span class="rule"></span></div>
+    <div class="open-issues">
+      <ul>
+        <li>新增／排序／刪除 Block、改綁定、樣式、鎖定切換、發布皆為 Demo（不寫回）。</li>
+        <li>拖曳排序與拖曳綁定為示意；Undo/Redo 為 UI 佔位。</li>
+        <li>Builder 為 position:fixed 全螢幕覆蓋，截圖工具無法擷取（實機正常，已用 eval 驗證 DOM）。</li>
+        <li>成員 override 的真實儲存與「保留現有自訂或套用新版」流程待後端。</li>
+        <li>真實 persistence／發布快照未接。</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="foot">
+    <p class="q">PB0 完成，先停。等你驗收，再回頭做 Participants／Permissions。</p>
+    <p>維持單一 OCData、Demo interaction only，未建立 Repository／API／D1／R2／Auth／第二套 Store。</p>
+  </div>
+</div>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#2F8F5B"/>
+    <text x="50" y="62" font-family="monospace" font-size="30" font-weight="700" fill="#fff" text-anchor="middle">PB0</text>
+  </svg>
+</template>
+</body>
+</html>

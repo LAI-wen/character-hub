@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>角色詳情 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/ds.css">
+<link rel="stylesheet" href="../assets/shell.css">
+<link rel="stylesheet" href="../assets/components.css">
+<link rel="stylesheet" href="../assets/character.css">
+</head>
+<body>
+<div class="page" id="root"></div>
+
+<script src="../assets/data.js"></script>
+<script src="../assets/components.js"></script>
+<script src="../assets/char-visual.js"></script>
+<script src="../assets/character.js"></script>
+<script>
+  (function () {
+    var root = document.getElementById('root');
+    var qp = new URLSearchParams(location.search);
+    var SR = OCData.resolveScope('character.html', location.search);
+
+    // Phase 0.1: invalid project-character context → explicit state, never a
+    // silent account fallback.
+    if (SR.scope === 'invalid') {
+      var R = SR.invalidReason, cc = SR.currentCharacterId;
+      var bodyHref = cc ? 'character.html?c=' + cc : null;
+      var msg = ({ project_missing: '找不到這個企劃。', missing_link: '缺少企劃角色版本（link）。', link_missing: '找不到這個企劃角色版本。', link_mismatch: '這個版本不屬於指定企劃。', link_removed: '這個角色已從企劃移除。', char_mismatch: '角色與企劃角色版本不符。' })[R] || '找不到這個企劃角色版本。';
+      root.innerHTML = OCUI.contextHeader({ scope: 'account', crumbs: ['我的角色', '企劃角色版本'] });
+      var box = OCUI.errorState({ title: 'Invalid Project Context · ' + msg, code: 'INVALID_CONTEXT · ' + R });
+      root.appendChild(box);
+      var acts = document.createElement('div'); acts.style.cssText = 'display:flex;gap:var(--s2);justify-content:center;margin-top:var(--s4)';
+      acts.innerHTML = (bodyHref ? '<a class="btn" href="' + bodyHref + '">查看角色本體</a>' : '')
+        + (SR.currentProjectId && OCData.project(SR.currentProjectId) ? '<a class="btn btn-accent" href="roster.html?project=' + SR.currentProjectId + '">返回企劃角色</a>' : '<a class="btn btn-accent" href="dashboard.html">返回我的角色</a>');
+      root.appendChild(acts);
+      throw 0;
+    }
+
+    var inProject = SR.scope === 'project';
+    var projId = SR.currentProjectId, linkId = SR.currentProjectCharacterLinkId;
+    var cid = qp.get('c') || (linkId && (OCData.links.filter(function (l) { return l.id === linkId; })[0] || {}).character) || 'yoi';
+    var full = OCData.characterFull(cid);
+    if (!full) { root.innerHTML = ''; root.appendChild(OCUI.errorState({ title: '找不到這個角色。', code: 'NOT_FOUND · 404' })); throw 0; }
+    // archived character → read-only banner
+    var archived = full.status === 'archived';
+
+    var ROLE = OCData.getRole(projId);
+    var canEditBody = full.mine; // ONLY the owner edits the body
+    var tab = qp.get('tab') || 'overview';
+    var compl = OCData.completion(cid);
+    var editHref = inProject ? 'editor.html?project=' + projId + '&link=' + linkId + '&c=' + cid : 'editor.html?c=' + cid;
+
+    function ctx() {
+      // scope decided by ROUTE (resolver), not inferred from links
+      if (inProject) { var pj = OCData.project(projId) || {}; return OCUI.contextHeader({ scope: 'project', crumbs: [pj.name || '企劃', '企劃角色', full.name] }); }
+      return OCUI.contextHeader({ scope: 'account', crumbs: [full.mine ? '我的角色' : '角色', full.name] });
+    }
+
+    function render() {
+      var html = ctx();
+      root.innerHTML = html;
+
+      // archived character → read-only banner with restore (Phase 0.1)
+      if (archived) {
+        var ab = document.createElement('div');
+        ab.className = 'state'; ab.style.cssText = 'margin-bottom:var(--s4);border-color:#ECDFA8;background:var(--accent-soft);padding:var(--s4) var(--s5);align-items:flex-start;text-align:left;flex-direction:row;gap:10px';
+        ab.innerHTML = OCIcon('archive') + '<div style="flex:1"><div style="font-weight:700;font-size:13.5px;color:var(--accent-ink)">這個角色已封存（唯讀）</div><div style="font-size:12.5px;color:var(--text-dim);margin-top:3px">封存的角色不出現在一般列表。' + (full.mine ? '可恢復後再編輯。' : '') + '</div></div>'
+          + '<div style="display:flex;gap:6px"><a class="btn btn-sm" href="dashboard.html">返回列表</a>' + (full.mine ? '<button class="btn btn-sm btn-accent" id="restoreC">恢復</button>' : '') + '</div>';
+        root.appendChild(ab);
+        var rc = ab.querySelector('#restoreC'); if (rc) rc.onclick = function () { OCDemo.updateCharacter(cid, { status: 'active' }); OCUI.toast('已恢復角色', { demo: true }); setTimeout(function () { location.reload(); }, 300); };
+      }
+
+      // owner notice if not mine
+      if (!full.mine) { var on = document.createElement('div'); on.innerHTML = OCChar.ownerNotice(full.ownerSummary, cid); root.appendChild(on.firstChild); }
+
+      root.appendChild(OCChar.characterHeader({ full: full, canEditBody: canEditBody,
+        onEdit: function () { location.href = editHref; },
+        onShare: function () { OCChar.shareDrawer({ full: full }); } }));
+
+      var TABS = [
+        { id: 'overview', label: '總覽' },
+        { id: 'art', label: '圖設定' },
+        { id: 'text', label: '文設定' },
+        { id: 'gallery', label: '圖庫', ct: full.detail.gallery.length },
+        { id: 'rels', label: '關係' },
+        { id: 'projects', label: '加入的企劃', ct: full.links.length },
+      ];
+      root.appendChild(OCChar.tabs(TABS, tab, function (t) { tab = t; render(); }));
+
+      var body = document.createElement('div');
+      body.id = 'tabbody';
+      root.appendChild(body);
+      ({ overview: ovTab, art: artTab, text: textTab, gallery: galTab, rels: relsTab, projects: projTab }[tab] || ovTab)(body);
+    }
+
+    function ovTab(host) {
+      var g = full.detail.general;
+      var left = '<div class="block"><div class="bh">簡介</div><p>' + (full.blurb || g.tagline || '尚無簡介') + '</p></div>'
+        + '<div class="block"><div class="bh">基本資料</div><div class="kvs">' + (g.basics.length ? g.basics.map(function (b) { return '<div class="r"><span class="k">' + b[0] + '</span><span>' + b[1] + '</span></div>'; }).join('') : '<div class="r">尚無資料</div>') + '</div></div>'
+        + '<div class="block"><div class="bh">性格</div><p>' + (g.personality || '—') + '</p></div>'
+        + '<div class="block"><div class="bh">標籤</div><div class="tagrow">' + (g.tags.length ? g.tags.map(function (t) { return '<span class="chip">' + t + '</span>'; }).join('') : '—') + '</div></div>';
+      var rep = full.detail.gallery[0];
+      var heroSlot = window.OCVisual ? (OCVisual.slotImage(cid, 'hero') || OCVisual.slotImage(cid, 'avatar') || OCVisual.slotImage(cid, 'fullbody')) : null;
+      var repHtml = heroSlot
+        ? '<div class="ph" style="aspect-ratio:4/5;display:grid;place-items:end start;padding:10px;background:' + heroSlot.c + ';border-radius:var(--r-img);color:#fff"><span style="font-size:11px;background:rgba(0,0,0,.32);padding:2px 7px;border-radius:5px">' + heroSlot.label + '</span></div>'
+        : '<div class="ph" style="aspect-ratio:4/5" data-ph="' + full.name + ' 立繪"></div>';
+      var right = '<div class="block"><div class="bh">代表圖片</div>' + repHtml + '</div>'
+        + '<div class="block"><div class="bh">最近企劃</div>' + (full.links.length ? full.links.slice(0, 3).map(function (l) { return '<div class="kvs"><div class="r"><span class="mk" style="display:inline-grid;place-items:center;width:22px;height:22px;border-radius:6px;color:#fff;font-weight:700;background:' + l.projectColor + '">' + l.projectName[0] + '</span> <span>' + l.projectName + '</span><span style="margin-left:auto;color:var(--text-faint);font-size:12px">' + (l.projectRole || '') + '</span></div></div>'; }).join('') : '<p style="font-size:13px;color:var(--text-faint)">尚未加入企劃。</p>') + '</div>';
+      host.innerHTML = '<div class="det-grid"><div>' + left + '</div><div>' + right + '</div></div>';
+      hydratePh(host);
+    }
+
+    function artTab(host) {
+      var a = full.detail.art;
+      var html = '<div class="det-grid"><div>'
+        + '<div class="block"><div class="bh">色票 · Palette</div><div class="palette">' + (a.palette.length ? a.palette.map(function (p) { return '<span class="sw"><span class="c" style="background:' + p[1] + '"></span>' + p[0] + ' <span class="hex">' + p[1] + '</span></span>'; }).join('') : '—') + '</div></div>'
+        + '<div class="block"><div class="bh">必畫重點</div><div class="checks must">' + (a.mustDraw.length ? a.mustDraw.map(function (m) { return '<div class="c"><span class="m">✓</span>' + m + '</div>'; }).join('') : '—') + '</div></div>'
+        + '<div class="block"><div class="bh">不可畫錯</div><div class="checks avoid">' + (a.avoid.length ? a.avoid.map(function (m) { return '<div class="c"><span class="m">✕</span>' + m + '</div>'; }).join('') : '—') + '</div></div>'
+        + '</div><div>'
+        + '<div class="block"><div class="bh">配件</div><div class="tagrow">' + (a.accessories.length ? a.accessories.map(function (x) { return '<span class="chip">' + x + '</span>'; }).join('') : '—') + '</div></div>'
+        + '<div class="block"><div class="bh">可自由發揮</div><p>' + (a.freeform || '—') + '</p></div>'
+        + '<div class="block"><div class="bh">立繪</div><div class="ph" style="aspect-ratio:4/5" data-ph="正面立繪"></div></div>'
+        + '</div></div>';
+      host.innerHTML = html; hydratePh(host);
+    }
+
+    function textTab(host) {
+      var t = full.detail.text;
+      function blk(title, val) { return '<div class="block"><div class="bh">' + title + '</div><p>' + (val || '—') + '</p></div>'; }
+      var canUse = '<div class="block"><div class="bh">可以使用</div><div class="checks must">' + (t.canUse.length ? t.canUse.map(function (x) { return '<div class="c"><span class="m">✓</span>' + x + '</div>'; }).join('') : '—') + '</div></div>';
+      var cannot = '<div class="block"><div class="bh">不可使用</div><div class="checks avoid">' + (t.cannotUse.length ? t.cannotUse.map(function (x) { return '<div class="c"><span class="m">✕</span>' + x + '</div>'; }).join('') : '—') + '</div></div>';
+      host.innerHTML = '<div class="det-grid"><div>' + blk('背景', t.background) + blk('動機', t.motivation) + blk('說話方式', t.speech) + blk('人際互動', t.relations) + '</div><div>' + blk('禁忌', t.taboo) + canUse + cannot + '</div></div>';
+    }
+
+    function galTab(host) {
+      var g = full.detail.gallery;
+      if (!g.length) { host.appendChild(OCUI.emptyState({ title: '還沒有圖片。', body: full.mine ? '上傳立繪、賀圖或參考圖到這個角色。' : '擁有者還沒有公開圖片。', ctaLabel: full.mine ? '上傳圖片' : null, onCta: function () { OCUI.toast('上傳圖片', { demo: true }); } })); return; }
+      host.innerHTML = '<div class="gal">' + g.map(function (x) { return '<div><div class="ph" data-ph="' + x[0] + '"></div><div style="font-size:12px;color:var(--text-dim);margin-top:6px">' + x[0] + '</div></div>'; }).join('') + '</div>';
+      hydratePh(host);
+    }
+
+    function relsTab(host) {
+      // Relationship is project-scoped — group by each project this character is in.
+      if (!full.links.length) { host.appendChild(OCUI.emptyState({ title: '關係在企劃裡。', body: '角色關係屬於各企劃的「關係圖」。這個角色尚未加入任何企劃。' })); return; }
+      var wrap = el2('div', 'jp');
+      full.links.forEach(function (l) {
+        if (l.status === 'rejected') return;
+        var card = el2('div', 'card2',
+          '<div class="top"><span class="mk" style="background:' + l.projectColor + '">' + l.projectName[0] + '</span><div><div class="nm">' + l.projectName + '</div><div style="font-size:11.5px;color:var(--text-faint)">關係是這個企劃的設定</div></div></div>'
+          + '<div class="acts" style="margin-top:var(--s3)"><a class="btn btn-sm" href="relationships.html?project=' + l.project + '">在 ' + l.projectName + ' 關係圖中查看 →</a></div>');
+        wrap.appendChild(card);
+      });
+      host.innerHTML = '<p style="font-size:13px;color:var(--text-dim);margin:0 0 var(--s4)">關係是 <b>企劃範圍</b>的資料，沒有跨企劃的全域角色關係。依企劃查看：</p>';
+      host.appendChild(wrap);
+    }
+
+    function projTab(host) {
+      if (!full.links.length) {
+        host.appendChild(OCUI.emptyState({ title: '這個角色尚未加入任何企劃。', body: '把角色加入企劃後，就能設定它在該企劃的陣營、職位與限定資料。', ctaLabel: full.mine ? '將角色加入企劃' : null, onCta: function () { OCUI.toast('將角色加入企劃', { demo: true }); } }));
+        return;
+      }
+      var wrap = el2('div', 'jp');
+      full.links.forEach(function (l) {
+        var roster = OCData.roster(l.project, { includeArchived: true }).filter(function (r) { return r.character === cid; })[0] || {};
+        var canEditLink = full.mine || (['owner', 'host', 'cohost'].indexOf(ROLE) >= 0);
+        var fieldSummary = Object.keys(roster.fieldValues || {}).map(function (k) { return k + '：' + roster.fieldValues[k]; }).join(' · ') || '無企劃限定欄位';
+        var statusBadge = l.status === 'approved' ? '<span class="badge approved">已通過</span>' : l.status === 'pending' ? '<span class="badge pending">待審</span>' : '<span class="badge draft">已封存</span>';
+        var card = el2('div', 'card2',
+          '<div class="top"><span class="mk" style="background:' + l.projectColor + '">' + l.projectName[0] + '</span><div><div class="nm">' + l.projectName + '</div><div style="font-size:11.5px;color:var(--text-faint)">' + (roster.factionName || '') + (l.projectRole ? ' · ' + l.projectRole : '') + '</div></div><span style="margin-left:auto">' + statusBadge + '</span></div>'
+          + '<div class="meta">' + OCChar.visBadge(roster.projectVisibility || 'public', { public: '企劃內公開', members: '僅成員', private: '僅主持人' }[roster.projectVisibility] || '公開') + '<span class="badge">' + fieldSummary + '</span></div>'
+          + '<div class="acts"><a class="btn btn-sm" href="roster.html?project=' + l.project + '">查看此企劃中的版本</a>'
+          + (canEditLink ? '<a class="btn btn-sm" href="editor.html?c=' + cid + '&project=' + l.project + '">編輯企劃限定資料</a>' : '')
+          + (full.mine ? '<button class="btn btn-sm" data-leave="' + l.project + '">退出企劃</button>' : '') + '</div>');
+        wrap.appendChild(card);
+      });
+      host.appendChild(wrap);
+      host.querySelectorAll('[data-leave]').forEach(function (b) {
+        b.onclick = function () { OCUI.confirm({ title: '退出企劃？', message: '「' + full.name + '」會從這個企劃移除，<b>角色本體仍保留在你的帳號</b>。', confirmLabel: '退出', danger: true, onConfirm: function () { OCUI.toast('已退出企劃（角色本體保留）', { demo: true }); } }); };
+      });
+    }
+
+    function el2(t, c, h) { var n = document.createElement(t); if (c) n.className = c; if (h != null) n.innerHTML = h; return n; }
+    function hydratePh(scope) {
+      scope.querySelectorAll('.ph[data-ph]').forEach(function (p) {
+        p.style.cssText += ';display:grid;place-items:center;background:linear-gradient(135deg,var(--bg-tint),var(--surface-2));border:1px solid var(--border);border-radius:var(--r-img);color:var(--text-faint);font-size:11px;text-align:center;padding:8px';
+        if (!p.textContent) p.textContent = p.dataset.ph;
+      });
+    }
+
+    render();
+  })();
+</script>
+<script src="../assets/shell.js"></script>
+</body>
+</html>

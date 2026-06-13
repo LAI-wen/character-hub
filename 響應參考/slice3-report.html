@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Slice 3 驗收 · 世界觀＋關係圖 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/ds.css">
+<link rel="stylesheet" href="assets/components.css">
+<style>
+  body { background: var(--bg); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: var(--s12) var(--s8) var(--s16); }
+  .hero { border-bottom: 1px solid var(--border-strong); padding-bottom: var(--s8); margin-bottom: var(--s10); }
+  .hero .eyebrow { margin-bottom: 12px; }
+  .hero h1 { font-family: var(--font-serif); font-size: 40px; font-weight: 900; margin: 0; letter-spacing: -.025em; line-height: 1.06; }
+  .hero .lead { color: var(--text-dim); font-size: 16px; margin: var(--s4) 0 0; max-width: 64ch; line-height: 1.65; text-wrap: pretty; }
+  .hero .chips { display: flex; gap: var(--s2); margin-top: var(--s5); flex-wrap: wrap; }
+  section { margin-top: var(--s12); }
+  .sh { display: flex; align-items: baseline; gap: var(--s4); margin-bottom: var(--s5); }
+  .sh .ix { font-family: var(--font-mono); font-size: 13px; color: var(--text-faint); }
+  .sh h2 { font-family: var(--font-serif); font-size: 24px; font-weight: 800; margin: 0; }
+  .sh .en { font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); }
+  .sh .rule { flex: 1; height: 1px; background: var(--border); align-self: center; }
+  p.note { font-size: 14.5px; color: var(--text-dim); line-height: 1.7; max-width: 74ch; text-wrap: pretty; }
+  p.note b { color: var(--text); }
+  .pages { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: var(--s3); }
+  .pcard { display: flex; flex-direction: column; gap: 3px; padding: var(--s4) var(--s5); border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--sh-1); text-decoration: none; color: inherit; transition: box-shadow .15s, transform .15s; }
+  .pcard:hover { box-shadow: var(--sh-2); transform: translateY(-2px); }
+  .pcard .n { font-family: var(--font-serif); font-size: 16px; font-weight: 700; }
+  .pcard .d { font-size: 12.5px; color: var(--text-dim); margin-top: 4px; line-height: 1.5; }
+  .pcard .sc { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--accent-ink); margin-top: 6px; }
+  .shots { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s4); }
+  .shot { border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--sh-1); overflow: hidden; }
+  .shot img { width: 100%; display: block; border-bottom: 1px solid var(--border); }
+  .shot .cap { padding: var(--s3) var(--s4); font-size: 12.5px; color: var(--text-dim); }
+  .shot .cap b { color: var(--text); }
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); overflow: hidden; margin-top: var(--s2); }
+  thead th { text-align: left; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); padding: var(--s3) var(--s4); border-bottom: 1px solid var(--border); background: var(--surface-2); }
+  tbody td { padding: var(--s3) var(--s4); border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: top; line-height: 1.5; }
+  tbody tr:last-child td { border-bottom: 0; }
+  td .f { font-family: var(--font-mono); font-size: 12px; font-weight: 600; }
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s4); }
+  .col { border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); padding: var(--s5); }
+  .col h3 { margin: 0 0 var(--s2); font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .col h3 .tag { font-family: var(--font-mono); font-size: 9px; padding: 2px 7px; border-radius: var(--r-pill); }
+  .col ul { margin: 0; padding-left: 1.1em; font-size: 13px; color: var(--text-dim); line-height: 1.8; }
+  .col.a h3 .tag { background: #E8EEF6; color: #355C86; } .col.b h3 .tag { background: var(--bg-tint); color: var(--text-dim); }
+  .gap-card { border: 1px solid #ECDFA8; background: var(--accent-soft); border-radius: var(--r-card); padding: var(--s4) var(--s5); margin-bottom: var(--s3); }
+  .gap-card .gt { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--accent-ink); }
+  .gap-card .gd { font-size: 13px; color: var(--text-dim); margin-top: 5px; line-height: 1.6; }
+  .gap-card .gd b { color: var(--text); }
+  .demo-list { display: flex; flex-direction: column; gap: 8px; }
+  .demo-row { display: flex; align-items: center; gap: 10px; font-size: 13.5px; padding: 9px 13px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+  .open-issues { border: 1px solid #F0CFCB; background: var(--avoid-soft); border-radius: var(--r-card); padding: var(--s4) var(--s5); }
+  .open-issues ul { margin: 0; padding-left: 1.1em; font-size: 13.5px; color: var(--text-dim); line-height: 1.8; }
+  .foot { margin-top: var(--s16); padding-top: var(--s6); border-top: 1px solid var(--border-strong); }
+  .foot .q { font-family: var(--font-serif); font-size: 19px; font-weight: 700; margin: 0 0 var(--s2); }
+  .foot p { font-size: 14px; color: var(--text-dim); line-height: 1.7; }
+  @media (max-width: 860px) { .hero h1 { font-size: 30px; } .shots, .split { grid-template-columns: 1fr; } .wrap { padding: var(--s10) var(--s4); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">CharacterHub · Slice 3 · 內容工具</div>
+    <h1>Slice 3 驗收</h1>
+    <p class="lead">世界觀與關係圖完成。世界觀＝Project-scoped 階層 master-detail，關聯走 <b>EntityLink</b>；關係圖＝桌機畫布＋詳情，<b>手機改清單／唯讀</b>，Relationship 與 RelationshipLayout 分區，UI-only 狀態不入庫。</p>
+    <div class="chips">
+      <span class="badge approved"><span class="d" style="background:var(--must)"></span>worldview.html</span>
+      <span class="badge approved"><span class="d" style="background:var(--must)"></span>relationships.html</span>
+      <span class="demo-only">所有儲存為 Demo only</span>
+    </div>
+  </div>
+
+  <!-- 0 handoff note: application vs link -->
+  <section>
+    <div class="sh"><span class="ix">00</span><h2>交接註記</h2><span class="en">Application vs Link</span><span class="rule"></span></div>
+    <p class="note">承上輪：UI 把 pending／rejected／reviewMessage 與 approved／archived／removed 顯示成一條 <b>Combined Status</b>，但正式 ownership 分成兩個 entity：</p>
+    <div class="split" style="margin-top:var(--s4)">
+      <div class="col a"><h3>CharacterApplication <span class="tag">申請</span></h3>
+        <ul><li>pending</li><li>rejected · reviewMessage</li><li>withdrawn</li><li>submittedAt · reviewedAt</li></ul></div>
+      <div class="col b"><h3>ProjectCharacterLink <span class="tag">連結</span></h3>
+        <ul><li>approved / active</li><li>archived</li><li>removed</li></ul></div>
+    </div>
+    <p class="note" style="margin-top:var(--s3)"><b>申請通過後才建立正式 ProjectCharacterLink。</b>UI 可顯示 Combined Status，但不暗示所有狀態都存在 ProjectCharacterLink。</p>
+  </section>
+
+  <!-- 1 pages -->
+  <section>
+    <div class="sh"><span class="ix">01</span><h2>可點擊頁面</h2><span class="en">Clickable</span><span class="rule"></span></div>
+    <div class="pages">
+      <a class="pcard" href="pages/worldview.html?project=tokoyo"><span class="n">世界觀 · 常夜國</span><span class="d">三層階層、關聯角色、麵包屑、編輯／子條目／封存。</span><span class="sc">worldview.html</span></a>
+      <a class="pcard" href="pages/relationships.html?project=tokoyo"><span class="n">關係圖 · 常夜國</span><span class="d">畫布、節點聚焦、關係詳情、類型篩選、新增／刪除。</span><span class="sc">relationships.html</span></a>
+      <a class="pcard" href="pages/worldview.html?project=commset"><span class="n">模組未啟用</span><span class="d">委託角色集未啟用世界觀模組→ plug 空狀態。</span><span class="sc">?project=commset</span></a>
+      <a class="pcard" href="pages/relationships.html?project=hoshi"><span class="n">已啟用但無資料</span><span class="d">星海計畫：關係圖已啟用但尚無關係→「已啟用但還沒有關係」。</span><span class="sc">?project=hoshi</span></a>
+    </div>
+    <p class="note" style="margin-top:var(--s4)">切側欄左下「視角」可看 <b>主持／參與／公開預覽</b> 的差異。</p>
+  </section>
+
+  <!-- 2 screenshots -->
+  <section>
+    <div class="sh"><span class="ix">02</span><h2>畫面</h2><span class="en">Screens</span><span class="rule"></span></div>
+    <div class="shots">
+      <div class="shot"><img src="screenshots/s3-worldview.png" alt="世界觀"><div class="cap"><b>世界觀</b>：左階層樹（常夜國›邊境›廢稻荷神社）＋右詳情；類型篩選、搜尋、麵包屑。</div></div>
+      <div class="shot"><img src="screenshots/s3-rel-canvas.png" alt="關係圖畫布"><div class="cap"><b>關係圖（桌機）</b>：角色＋世界觀節點、方向箭頭、關係標籤；點節點聚焦、點線看詳情。</div></div>
+      <div class="shot"><div class="cap" style="padding:var(--s5)"><b>關係圖（手機 ≤1080px）</b><br><span style="color:var(--text-dim)">唯讀關係清單＋角色／條目篩選＋小型預覽圖，並提示「完整編輯畫布建議用平板或桌機」。響應式 CSS 已就位，請在實機 360／390px 確認（預覽工具無法縮小視窗截圖）。</span></div></div>
+      <div class="shot"><img src="screenshots/s3-worldview-preview.png" alt="世界觀預覽"><div class="cap"><b>公開預覽</b>：橫幅＋只顯示公開條目（私人「月蝕停戰」隱藏），無編輯工具。</div></div>
+    </div>
+  </section>
+
+  <!-- 3 worldview UX -->
+  <section>
+    <div class="sh"><span class="ix">03</span><h2>WorldEntry 階層 UX</h2><span class="en">Hierarchy</span><span class="rule"></span></div>
+    <p class="note">左欄階層樹可展開／收合，搜尋或篩選時切成扁平結果。詳情面板顯示<b>麵包屑（祖先可點）</b>、摘要、內容、下層條目。新增同層／子條目、編輯（含移動上層，<b>parent cycle 會擋下並提示</b>）、封存／刪除（<b>有子條目時走特別確認流程</b>）。</p>
+    <div class="demo-list" style="margin-top:var(--s4)">
+      <div class="demo-row"><span class="demo-only">demo</span>三層：常夜國 › 邊境 › 廢稻荷神社</div>
+      <div class="demo-row"><span class="demo-only">demo</span>編輯時把條目移到自己的子條目 → ⚠ 循環提示擋下</div>
+      <div class="demo-row"><span class="demo-only">demo</span>刪除常夜國（有 4 個子條目）→ 特別確認流程</div>
+    </div>
+  </section>
+
+  <!-- 4 entitylink -->
+  <section>
+    <div class="sh"><span class="ix">04</span><h2>EntityLink 顯示方式</h2><span class="en">Cross-entity links</span><span class="rule"></span></div>
+    <p class="note">跨實體關聯（條目↔角色、條目↔條目）<b>以 EntityLink 為唯一概念來源</b>。UI 顯示名稱、頭像、關係標籤與摘要，但<b>不只存名稱字串</b>——每個 chip 背後是一筆 EntityLink（sourceType/sourceId/targetType/targetId/relationType/label）。例：廢稻荷神社 → 宵霧（駐守）、燈守（本體所在）；守燈之約 → 廢稻荷神社（締約地點）。點角色 chip 直接進角色詳情。</p>
+  </section>
+
+  <!-- 5 relationship vs layout -->
+  <section>
+    <div class="sh"><span class="ix">05</span><h2>Relationship 與 Layout 分區</h2><span class="en">Data vs canvas</span><span class="rule"></span></div>
+    <div class="split">
+      <div class="col a"><h3>Relationship <span class="tag">資料</span></h3>
+        <ul><li>sourceRef / targetRef（{type,id}）</li><li>type · label · description</li><li>direction（none/forward/both）</li><li>visibility</li></ul></div>
+      <div class="col b"><h3>RelationshipLayout <span class="tag">畫布</span></h3>
+        <ul><li>nodePositions · groupPositions · collapsedGroups</li><li>viewport · edgeRoutes[relationshipId]</li><li><b>不重複保存</b> label / direction / type / sourceRef / targetRef（由 Relationship 提供）</li><li><b>不存</b> selected / hover / lightbox / focus / zoom（UI-only）</li></ul></div>
+    </div>
+    <p class="note" style="margin-top:var(--s3)"><b>刪除關係不留殘留線條</b>：畫布每次都從 relationships 陣列重建，刪除後對應 path＋label 一併消失（已驗證：類型篩選只剩 1 關係時，畫布精確只剩 1 條線、1 個標籤、2 個節點）。</p>
+  </section>
+
+  <!-- 6 permissions -->
+  <section>
+    <div class="sh"><span class="ix">06</span><h2>權限差異</h2><span class="en">Host · Member · Visitor Preview</span><span class="rule"></span></div>
+    <table>
+      <thead><tr><th style="width:22%">視角</th><th>世界觀</th><th>關係圖</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge role-owner">Host 主持人</span></td><td>建立／編輯／子條目／封存刪除</td><td>新增／編輯／刪除關係、聚焦、重設視圖</td></tr>
+        <tr><td><span class="badge role-member">Member</span></td><td colspan="2">僅 fixture 身分——正式 UI 依 <b>viewerPermissions</b> 的<b>動作權限</b>判斷（worldEntry:* / relationship:* / relationshipLayout:update），不寫死 Member 一定能或不能編輯某模組。</td></tr>
+        <tr><td><span class="badge role-visitor">Visitor 預覽</span></td><td>只顯示公開條目、無編輯工具、私人條目隱藏</td><td>只顯示公開關係、無編輯、內部關係隱藏</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 7 mobile -->
+  <section>
+    <div class="sh"><span class="ix">07</span><h2>關係圖手機版</h2><span class="en">Mobile</span><span class="rule"></span></div>
+    <p class="note">手機<b>不強迫使用完整桌機畫布</b>（≤1080px 切換）。提供：關係清單、角色／條目篩選、關係詳情、<b>簡化小型預覽圖</b>，並標示「完整編輯畫布建議用平板或桌機」。手機仍能搜尋關係、查看詳情、聚焦某角色、開啟相關角色／世界觀、唯讀瀏覽。請在實機 360／390px 確認。</p>
+  </section>
+
+  <!-- 8 files -->
+  <section>
+    <div class="sh"><span class="ix">08</span><h2>修改檔案</h2><span class="en">Files changed</span><span class="rule"></span></div>
+    <table>
+      <thead><tr><th style="width:30%">檔案</th><th>變更</th></tr></thead>
+      <tbody>
+        <tr><td class="f">assets/data.js</td><td>WorldEntry 階層（parentId/sortOrder/visibility/content）、EntityLink、Relationship、RelationshipLayout＋helper（worldChildren/worldAncestors/wouldCycle/descendantCount/linksOfEntity/relationshipsOf/relationshipsForCharacter/relationshipLayout）。</td></tr>
+        <tr><td class="f">assets/worldrel.css</td><td>世界觀 master-detail＋階層樹；關係圖畫布／節點／邊／詳情／清單／手機 mini。</td></tr>
+        <tr><td class="f">pages/worldview.html</td><td>重構：階層樹、搜尋／類型篩選、麵包屑、EntityLink 關聯、Loading/Empty/Error/Forbidden、新增／子條目／編輯／封存、cycle 防呆。</td></tr>
+        <tr><td class="f">pages/relationships.html</td><td>重構：畫布＋詳情＋清單、節點聚焦、類型篩選、新增／編輯／刪除（無殘留）、重設視圖、手機唯讀清單／mini 圖。</td></tr>
+        <tr><td class="f">index.html</td><td>世界觀／關係圖標記為已重設計，加 Slice 3 報告連結。</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 8.5 slice 3.1 corrections -->
+  <section>
+    <div class="sh"><span class="ix">08.5</span><h2>Slice 3.1 契約校正</h2><span class="en">Corrections</span><span class="rule"></span></div>
+    <table>
+      <thead><tr><th style="width:26%">項目</th><th>作法</th></tr></thead>
+      <tbody>
+        <tr><td class="f">RelationshipLayout</td><td>只存 <b>nodePositions / groupPositions / collapsedGroups / viewport / edgeRoutes</b>；label、方向、source/target、類型由 Relationship 本體提供，不重複保存。手動曲線用 edgeRoutes[relationshipId]；刪除 Relationship 時 edgeRoute 一併移除。</td></tr>
+        <tr><td class="f">Empty State 分類</td><td>世界觀與關係圖分四態：<b>模組未啟用</b>（plug 圖示）· <b>已啟用但無資料</b> · <b>無權限</b>（Forbidden）· <b>載入失敗</b>（可重試）。不再用同一空狀態代表「未啟用」與「沒內容」。</td></tr>
+        <tr><td class="f">權限判斷</td><td>按鈕依<b>動作權限概念</b>：worldEntry:create/update/archive、relationship:create/update/delete、relationshipLayout:update。Owner/Host/Member 只是 fixture 身分，不寫成固定產品規則。</td></tr>
+        <tr><td class="f">有子條目的封存</td><td>三選一：<b>封存此條目與所有子條目</b> · <b>將子條目移到上一層再封存</b> · 取消。不產生 parent 指向不存在條目的孤兒資料。</td></tr>
+        <tr><td class="f">EntityLink 公開裁切</td><td>公開預覽顯示 Link 時同時確認 <b>Link 可見 ∧ source 可見 ∧ target 可見</b>；關聯到私人角色／條目時整筆不顯示，不洩漏名稱頭像。反向關聯從同一筆 Link 查詢。</td></tr>
+        <tr><td class="f">無障礙／替代檢視</td><td>關係清單為桌機替代檢視（不只手機）；節點可鍵盤 Focus + Enter、類型不只靠顏色（加字形）、SVG 有文字替代、prefers-reduced-motion、清單／畫布切換。</td></tr>
+        <tr><td class="f">Responsive 分級</td><td>≥1200px 完整畫布＋詳情・768–1199px 簡化畫布／清單切換・&lt;768px 關係清單＋mini preview。</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 9 data gaps -->
+  <section>
+    <div class="sh"><span class="ix">09</span><h2>資料契約狀態</h2><span class="en">Contract status</span><span class="rule"></span></div>
+    <p class="note"><b>以下四種資料模型與本地 API 已存在，不是新的 Data Gap</b>，本輪不需重建：</p>
+    <div class="gap-card" style="border-color:#CDE8D8;background:var(--must-soft)"><div class="gt" style="color:#1F6B43">LOCAL CONTRACT AVAILABLE · 需 UI handoff／正式接線</div><div class="gd"><b>WorldEntry</b>（projectId/title/type/summary/content/parentId/sortOrder/visibility）、<b>EntityLink</b>（sourceType/sourceId/targetType/targetId/relationType/label/visibility）、<b>Relationship</b>（sourceRef/targetRef/type/label/description/direction/visibility）、<b>RelationshipLayout</b>（nodePositions/groupPositions/collapsedGroups/viewport/edgeRoutes）。原型已依這些欄位渲染，交接時只需接線。</div></div>
+    <p class="note" style="margin-top:var(--s4)"><b>真正尚缺的 UX／資料銜接</b>：</p>
+    <div class="gap-card"><div class="gt">GAP · EntityLink 建立／編輯介面</div><div class="gd">目前只有顯示與導覽，建立關聯的 UI 尚未設計。</div></div>
+    <div class="gap-card"><div class="gt">GAP · 節點拖曳與 RelationshipLayout 寫回</div><div class="gd">拖曳存位、edgeRoutes 手動曲線的編輯與持久化。</div></div>
+    <div class="gap-card"><div class="gt">GAP · Relationship Group 正式模型</div><div class="gd">群組（groupPositions/collapsedGroups）的正式資料模型與編輯介面。</div></div>
+    <div class="gap-card"><div class="gt">GAP · 世界觀相簿 AssetLink</div><div class="gd">條目的圖片／相簿需 AssetLink（上傳、縮圖、排序）。</div></div>
+    <div class="gap-card"><div class="gt">GAP · 自動佈局、縮放、平移、手機互動圖</div><div class="gd">畫布自動佈局與縮放／平移；手機 mini 預覽的互動縮放。</div></div>
+  </section>
+
+  <!-- 10 demo-only -->
+  <section>
+    <div class="sh"><span class="ix">10</span><h2>Demo-only 操作</h2><span class="en">Demo interaction only</span><span class="rule"></span></div>
+    <div class="demo-list">
+      <div class="demo-row"><span class="demo-only">demo</span>世界觀：新增／子條目／編輯／封存刪除（cycle 與「有子條目」確認為真實互動，儲存為 Demo）</div>
+      <div class="demo-row"><span class="demo-only">demo</span>關係圖：新增／編輯／刪除關係（刪除即時從畫布移除，無殘留；不寫回 OCData）</div>
+      <div class="demo-row"><span class="demo-only">demo</span>聚焦節點、類型篩選、搜尋、重設視圖＝真實 UI-only 狀態（不持久）</div>
+    </div>
+  </section>
+
+  <!-- 11 open issues -->
+  <section>
+    <div class="sh"><span class="ix">11</span><h2>尚未完成的 UX</h2><span class="en">Open issues</span><span class="rule"></span></div>
+    <div class="open-issues">
+      <ul>
+        <li>畫布節點座標為 mock 固定值，未做拖曳存位（RelationshipLayout 寫入留待正式 persistence）。</li>
+        <li>畫布無縮放／平移；節點多時可能重疊，需自動佈局或群組。</li>
+        <li>世界觀圖庫為佔位圖；相簿 AssetLink 上傳與排序未做。</li>
+        <li>EntityLink 的新增／編輯介面尚未做（顯示／導覽／公開裁切完整，建立關聯走 Demo）。</li>
+        <li>Relationship Group 正式模型與群組編輯未做。</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="foot">
+    <p class="q">Slice 3 完成，先停。等你驗收。</p>
+    <p>維持單一 OCData、Demo interaction only，未建立 Repository／API／Auth／第二套 Store。</p>
+  </div>
+</div>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#5E7E55"/>
+    <text x="50" y="64" font-family="monospace" font-size="40" font-weight="700" fill="#fff" text-anchor="middle">S3</text>
+  </svg>
+</template>
+</body>
+</html>

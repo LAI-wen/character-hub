@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>整理規劃 · 現況盤點與 IA · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/ds.css">
+<style>
+  body { background: var(--bg); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: var(--s12) var(--s8) var(--s16); }
+
+  /* hero */
+  .hero { border-bottom: 1px solid var(--border-strong); padding-bottom: var(--s8); margin-bottom: var(--s10); }
+  .hero .eyebrow { margin-bottom: var(--s3); }
+  .hero h1 { font-family: var(--font-serif); font-size: 42px; font-weight: 900; margin: 0; letter-spacing: -.025em; line-height: 1.06; }
+  .hero .lead { color: var(--text-dim); font-size: 16px; margin: var(--s4) 0 0; max-width: 60ch; line-height: 1.65; text-wrap: pretty; }
+  .hero .phase { display: inline-flex; align-items: center; gap: 8px; margin-top: var(--s5); font-family: var(--font-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent-ink); background: var(--accent-soft); border: 1px solid #ECDFA8; padding: 6px 12px; border-radius: var(--r-pill); }
+
+  section { margin-top: var(--s12); scroll-margin-top: var(--s6); }
+  .sh { display: flex; align-items: baseline; gap: var(--s4); margin-bottom: var(--s5); }
+  .sh .ix { font-family: var(--font-mono); font-size: 13px; color: var(--text-faint); }
+  .sh h2 { font-family: var(--font-serif); font-size: 25px; font-weight: 800; margin: 0; letter-spacing: -.01em; }
+  .sh .en { font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); }
+  .sh .rule { flex: 1; height: 1px; background: var(--border); align-self: center; }
+  p.note { font-size: 14.5px; color: var(--text-dim); line-height: 1.7; max-width: 72ch; text-wrap: pretty; }
+  p.note b { color: var(--text); }
+
+  /* callout */
+  .callout { border: 1px solid #ECDFA8; background: var(--accent-soft); border-radius: var(--r-card); padding: var(--s5) var(--s6); margin: var(--s4) 0; }
+  .callout.green { border-color: #CDE8D8; background: var(--must-soft); }
+  .callout.red { border-color: #F0CFCB; background: var(--avoid-soft); }
+  .callout h3 { margin: 0 0 var(--s2); font-size: 15px; font-weight: 700; }
+  .callout p { margin: 0; font-size: 14px; color: var(--text-dim); line-height: 1.65; }
+  .callout ul { margin: var(--s2) 0 0; padding-left: 1.1em; font-size: 14px; color: var(--text-dim); line-height: 1.7; }
+
+  /* tables */
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); overflow: hidden; margin-top: var(--s2); }
+  thead th { text-align: left; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); padding: var(--s3) var(--s4); border-bottom: 1px solid var(--border); background: var(--surface-2); }
+  tbody td { padding: var(--s3) var(--s4); border-bottom: 1px solid var(--border); font-size: 13.5px; vertical-align: top; line-height: 1.5; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: var(--surface-2); }
+  td .f { font-family: var(--font-mono); font-size: 12px; font-weight: 600; }
+  td .purpose { color: var(--text-dim); }
+
+  .tag { display: inline-block; font-family: var(--font-mono); font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: var(--r-pill); white-space: nowrap; border: 1px solid transparent; }
+  .t-keep { background: var(--must-soft); color: #1F6B43; border-color: #CDE8D8; }
+  .t-merge { background: #E8EEF6; color: #355C86; border-color: #CBDDF0; }
+  .t-archive { background: #F1F1F3; color: var(--text-dim); border-color: var(--border-strong); }
+  .t-exp { background: #F3EDF8; color: #6B4E8F; border-color: #E2D5EE; }
+  .t-sep { background: var(--surface); color: var(--text-faint); border-color: var(--border); }
+  .scope-pill { display: inline-block; font-size: 10px; font-family: var(--font-mono); padding: 2px 7px; border-radius: var(--r-pill); border: 1px solid var(--border); color: var(--text-dim); }
+
+  /* IA tree */
+  .ia { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s4); }
+  .ia .col { border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--sh-1); overflow: hidden; }
+  .ia .col .ch { padding: var(--s4) var(--s5); border-bottom: 1px solid var(--border); }
+  .ia .col .ch .nm { font-size: 15px; font-weight: 800; }
+  .ia .col .ch .sub { font-family: var(--font-mono); font-size: 10px; letter-spacing: .06em; color: var(--text-faint); text-transform: uppercase; margin-top: 2px; }
+  .ia .col.account .ch { border-top: 3px solid var(--accent); }
+  .ia .col.project .ch { border-top: 3px solid #3B5E6B; }
+  .ia .col.public .ch { border-top: 3px solid var(--must); }
+  .ia ul { list-style: none; margin: 0; padding: var(--s3) var(--s4); display: flex; flex-direction: column; gap: 2px; }
+  .ia li { font-size: 13px; padding: 7px 9px; border-radius: 8px; display: flex; align-items: center; gap: 8px; color: var(--text); }
+  .ia li:hover { background: var(--surface-2); }
+  .ia li .b2 { margin-left: auto; font-family: var(--font-mono); font-size: 9px; color: var(--text-faint); border: 1px solid var(--border); border-radius: var(--r-pill); padding: 1px 6px; }
+  .ia li.lbl { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); padding: 9px 9px 3px; pointer-events: none; }
+  .ia li .dot { width: 7px; height: 7px; border-radius: 50%; flex: none; background: var(--text-faint); }
+  .ia li.b1 .dot { background: var(--must); }
+
+  /* component grid */
+  .comp { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--s2); }
+  .comp .c { border: 1px solid var(--border); background: var(--surface); border-radius: 10px; padding: 11px 13px; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .comp .c .st { font-family: var(--font-mono); font-size: 9px; padding: 2px 6px; border-radius: var(--r-pill); }
+  .comp .c .st.has { background: var(--must-soft); color: #1F6B43; }
+  .comp .c .st.partial { background: var(--accent-soft); color: var(--accent-ink); }
+  .comp .c .st.todo { background: var(--avoid-soft); color: #9E332B; }
+
+  /* cards list */
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); }
+  .mini { border: 1px solid var(--border); background: var(--surface); border-radius: var(--r-card); padding: var(--s4) var(--s5); }
+  .mini h4 { margin: 0 0 var(--s2); font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .mini h4 .n { width: 20px; height: 20px; border-radius: 50%; background: var(--avoid); color: #fff; font-size: 11px; font-weight: 700; display: grid; place-items: center; flex: none; }
+  .mini p { margin: 0; font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+  .mini .fix { margin-top: var(--s2); font-size: 12.5px; color: #1F6B43; font-weight: 600; }
+
+  /* batch list */
+  .batch { display: flex; flex-direction: column; gap: var(--s2); }
+  .brow { display: flex; align-items: center; gap: var(--s3); border: 1px solid var(--border); background: var(--surface); border-radius: 10px; padding: var(--s3) var(--s4); }
+  .brow .num { width: 26px; height: 26px; border-radius: 50%; background: var(--text); color: #fff; font-family: var(--font-serif); font-weight: 700; font-size: 13px; display: grid; place-items: center; flex: none; }
+  .brow .nm { font-size: 14px; font-weight: 700; }
+  .brow .src { font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); margin-left: auto; text-align: right; }
+  .brow .act { font-size: 11.5px; font-weight: 600; padding: 3px 9px; border-radius: var(--r-pill); }
+  .brow .act.from { background: var(--must-soft); color: #1F6B43; }
+  .brow .act.new { background: #E8EEF6; color: #355C86; }
+
+  .foot { margin-top: var(--s16); padding-top: var(--s6); border-top: 1px solid var(--border-strong); }
+  .foot .q { font-family: var(--font-serif); font-size: 19px; font-weight: 700; margin: 0 0 var(--s3); }
+  .foot ol { margin: 0; padding-left: 1.3em; font-size: 14.5px; color: var(--text-dim); line-height: 1.9; }
+  .foot ol b { color: var(--text); }
+
+  @media (max-width: 860px) {
+    .hero h1 { font-size: 32px; }
+    .ia, .cards { grid-template-columns: 1fr; }
+    table { font-size: 12px; }
+    .sh { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">CharacterHub · 整理規劃 Cleanup &amp; IA Plan</div>
+    <h1>現況盤點與<br>重新設計規劃</h1>
+    <p class="lead">這是第一階段的整理報告——盤點目前所有頁面、找出重複與衝突、提出單一 IA 與 App Shell 方案，並排出第一批要重設計的核心頁面。先給你確認，<b>確認後才動手改檔</b>。</p>
+    <div class="phase">● Phase 1 · 盤點與規劃 · 尚未大量改檔</div>
+  </div>
+
+  <!-- 0. scope reset -->
+  <section id="reset">
+    <div class="sh"><span class="ix">00</span><h2>定位校正</h2><span class="en">Scope reset</span><span class="rule"></span></div>
+    <p class="note">這個專案的角色是 <b>UI／UX 設計工作室與可點擊原型</b>，不是正式後端。前幾輪我把方向帶偏，建立了 Repository／Store／localStorage 持久化等「正式資料層」——這些<b>本輪起視為超出範圍</b>，建議封存到 <span class="mono">_archive/</span>（不刪除，之後本地端開發可參考），但設計原型本身不再依賴它們。</p>
+    <div class="callout green">
+      <h3>✓ 保留：既有的單一 mock 與 App Shell</h3>
+      <p>好消息是地基已經在了——<b>assets/data.js（OCData）是唯一 mock 資料源</b>，<b>assets/shell.js 是一套完整 App Shell</b>（Sidebar＋Project Switcher＋⌘K 搜尋＋收藏／最近＋手機抽屜＋角色 hover 卡），絕大多數原始頁面都已經接上它們。整理的主軸就是「把所有頁面收斂到這一套」。</p>
+    </div>
+    <div class="callout red">
+      <h3>↩ 封存：本輪偏離範圍的資料層與重複頁</h3>
+      <ul>
+        <li><span class="mono">app/repositories/</span>、<span class="mono">app/adapters/</span>、<span class="mono">app/screens/</span>、<span class="mono">app/components/</span>、<span class="mono">app/mock-data.js</span>、<span class="mono">app/domain.js</span>、<span class="mono">app/smoke-test.js</span> → 封存</li>
+        <li><span class="mono">pages/worldview-screen.html</span>、<span class="mono">pages/my-characters.html</span>、<span class="mono">pages/project-overview.html</span>（我重做的簡化版）→ 封存，改用原始較完整的頁面</li>
+        <li><span class="mono">architecture.html</span>、<span class="mono">smoke-test.html</span>（資料層導向）→ 封存</li>
+        <li><span class="mono">docs/pages/*.md</span>、<span class="mono">uploads/*.md</span>（規格與契約）→ <b>留著</b>當交接文件，但不在設計原型中執行</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 1. inventory -->
+  <section id="inventory">
+    <div class="sh"><span class="ix">01</span><h2>頁面盤點</h2><span class="en">Page inventory</span><span class="rule"></span></div>
+    <p class="note">目前 <b>pages/</b> 共 24 個 HTML。下表標出每頁的範圍、目的與處置。圖例：<span class="tag t-keep">保留</span> 正式設計候選 · <span class="tag t-merge">合併</span> 收進其他頁／Shell · <span class="tag t-archive">封存</span> 重複或過時 · <span class="tag t-exp">實驗稿</span></p>
+    <table>
+      <thead><tr><th style="width:20%">檔案</th><th style="width:13%">範圍</th><th>目的</th><th style="width:13%">處置</th></tr></thead>
+      <tbody>
+        <tr><td class="f">workspace.html</td><td><span class="scope-pill">帳號／企劃</span></td><td class="purpose">多視圖 hub：所有企劃／企劃總覽／靈感匣／待委託。職責過載，需拆分。</td><td><span class="tag t-merge">合併拆分</span></td></tr>
+        <tr><td class="f">dashboard.html</td><td><span class="scope-pill">帳號</span></td><td class="purpose">我的角色（帳號層 6 隻 OC，跨企劃）。已接 Shell。</td><td><span class="tag t-keep">保留</span></td></tr>
+        <tr><td class="f">character.html</td><td><span class="scope-pill">企劃</span></td><td class="purpose">角色詳情（立繪、設定、必畫重點、關係）。已接 Shell。</td><td><span class="tag t-keep">保留</span></td></tr>
+        <tr><td class="f">editor.html</td><td><span class="scope-pill">企劃</span></td><td class="purpose">角色編輯器（依企劃角色卡模板填欄位）。已接 Shell。</td><td><span class="tag t-keep">保留</span></td></tr>
+        <tr><td class="f">roster.html</td><td><span class="scope-pill">企劃</span></td><td class="purpose">角色名冊＝企劃角色（ProjectCharacterLink：陣營／職位／審核）。已接 Shell。</td><td><span class="tag t-keep">保留</span></td></tr>
+        <tr><td class="f">worldview.html</td><td><span class="scope-pill">企劃</span></td><td class="purpose">世界觀（階層條目、關聯角色、雙向牽連、相簿）。完整原版。</td><td><span class="tag t-keep">保留</span></td></tr>
+        <tr><td class="f">relationships.html</td><td><span class="scope-pill">企劃</span></td><td class="purpose">關係圖（畫布、雙人設定、共同相簿、時間線）。已接 Shell。</td><td><span class="tag t-keep">保留</span></td></tr>
+        <tr><td class="f">story.html</td><td><span class="scope-pill">企劃</span></td><td class="purpose">故事（章節＋時間軸事件）。第二批。</td><td><span class="tag t-keep">保留 · B2</span></td></tr>
+        <tr><td class="f">gallery.html</td><td><span class="scope-pill">企劃</span></td><td class="purpose">圖庫（立繪／賀圖／參考）。第二批。</td><td><span class="tag t-keep">保留 · B2</span></td></tr>
+        <tr><td class="f">template-builder.html</td><td><span class="scope-pill">企劃</span></td><td class="purpose">角色卡模板（企劃專用欄位定義）。第二批。</td><td><span class="tag t-keep">保留 · B2</span></td></tr>
+        <tr><td class="f">submissions.html</td><td><span class="scope-pill">企劃</span></td><td class="purpose">投稿審核（公開頁來的圖／文／角色提案）。第二批。</td><td><span class="tag t-keep">保留 · B2</span></td></tr>
+        <tr><td class="f">participants.html</td><td><span class="scope-pill">企劃</span></td><td class="purpose">參與者（主持人／協作／參與者權限）。第二批。</td><td><span class="tag t-keep">保留 · B2</span></td></tr>
+        <tr><td class="f">portal.html</td><td><span class="scope-pill">公開</span></td><td class="purpose">公開企劃頁（訪客視角，裁切後內容）。第二批。</td><td><span class="tag t-keep">保留 · B2</span></td></tr>
+        <tr><td class="f">commissions.html</td><td><span class="scope-pill">帳號／工具</span></td><td class="purpose">委託收件匣（看板）。全域工具。</td><td><span class="tag t-keep">保留</span></td></tr>
+        <tr><td class="f">height-compare.html</td><td><span class="scope-pill">帳號／工具</span></td><td class="purpose">身高比較（等比例剪影）。全域工具。</td><td><span class="tag t-keep">保留</span></td></tr>
+        <tr><td class="f">settings.html</td><td><span class="scope-pill">帳號</span></td><td class="purpose">設定（個人檔案、委託預設、隱私、帳號）。已接 Shell。</td><td><span class="tag t-keep">保留</span></td></tr>
+        <tr><td class="f">landing.html</td><td><span class="scope-pill">登入前</span></td><td class="purpose">行銷首頁（產品介紹）。Shell 外。</td><td><span class="tag t-keep">保留</span></td></tr>
+        <tr><td class="f">login.html</td><td><span class="scope-pill">登入前</span></td><td class="purpose">登入頁。Shell 外。</td><td><span class="tag t-keep">保留</span></td></tr>
+        <tr><td class="f">index.html</td><td><span class="scope-pill">索引</span></td><td class="purpose">設計 Showroom／導覽索引。</td><td><span class="tag t-keep">保留</span></td></tr>
+        <tr><td class="f">project-overview.html</td><td><span class="scope-pill">企劃</span></td><td class="purpose">我重做的企劃總覽（簡化、未接 Shell）。與 workspace 的總覽視圖重複。</td><td><span class="tag t-archive">封存</span></td></tr>
+        <tr><td class="f">worldview-screen.html</td><td><span class="scope-pill">企劃</span></td><td class="purpose">我重做的世界觀（簡化、未接 Shell）。原 worldview.html 更完整。</td><td><span class="tag t-archive">封存</span></td></tr>
+        <tr><td class="f">my-characters.html</td><td><span class="scope-pill">帳號</span></td><td class="purpose">我重做的我的角色（未接 Shell）。與 dashboard.html 重複。</td><td><span class="tag t-archive">封存</span></td></tr>
+        <tr><td class="f">char-hero-explore.html</td><td><span class="scope-pill">實驗</span></td><td class="purpose">角色頁首屏的設定圖式探索。</td><td><span class="tag t-exp">實驗稿</span></td></tr>
+        <tr><td class="f">design-canvas.jsx</td><td><span class="scope-pill">實驗</span></td><td class="purpose">設計畫布探索（與 explore/ 重複）。</td><td><span class="tag t-exp">實驗稿</span></td></tr>
+      </tbody>
+    </table>
+    <p class="note" style="margin-top:var(--s3)">另有 <span class="mono">explore/</span>（relationship-explore、design-canvas）與 <span class="mono">pages/char-hero.css/.js</span> 屬探索檔，建議整批移到 <span class="mono">_archive/explore/</span>。</p>
+  </section>
+
+  <!-- 2. conflicts -->
+  <section id="conflicts">
+    <div class="sh"><span class="ix">02</span><h2>重複與衝突</h2><span class="en">Duplicates &amp; conflicts</span><span class="rule"></span></div>
+    <div class="cards">
+      <div class="mini"><h4><span class="n">1</span>我的角色 ×2</h4><p><span class="mono">dashboard.html</span>（原版，已接 Shell）vs <span class="mono">my-characters.html</span>（我的重做，未接 Shell）。</p><div class="fix">→ 保留 dashboard.html，封存重做版</div></div>
+      <div class="mini"><h4><span class="n">2</span>世界觀 ×2</h4><p><span class="mono">worldview.html</span>（完整：階層／相簿／雙向關聯）vs <span class="mono">worldview-screen.html</span>（簡化）。</p><div class="fix">→ 保留 worldview.html，封存簡化版</div></div>
+      <div class="mini"><h4><span class="n">3</span>企劃總覽 ×2</h4><p><span class="mono">workspace.html?view=overview</span> vs <span class="mono">project-overview.html</span>。</p><div class="fix">→ 收斂成一個 Shell 內的企劃總覽</div></div>
+      <div class="mini"><h4><span class="n">4</span>兩套資料源</h4><p><span class="mono">assets/data.js</span>（OCData，全頁共用）vs <span class="mono">app/mock-data.js</span>＋repositories（我新增）。</p><div class="fix">→ 單一保留 OCData，封存 app/ 資料層</div></div>
+      <div class="mini"><h4><span class="n">5</span>兩套外殼</h4><p><span class="mono">assets/shell.js</span>（完整 App Shell）vs 我那三頁各自的 topbar。</p><div class="fix">→ 全部統一用 shell.js</div></div>
+      <div class="mini"><h4><span class="n">6</span>workspace 職責過載</h4><p>同一頁塞了 所有企劃／總覽／靈感匣／待委託 四種視圖。</p><div class="fix">→ 拆：企劃列表歸帳號層、總覽／靈感／待委託歸企劃層</div></div>
+    </div>
+  </section>
+
+  <!-- 3. IA -->
+  <section id="ia">
+    <div class="sh"><span class="ix">03</span><h2>單一資訊架構</h2><span class="en">Target IA · 3 scopes</span><span class="rule"></span></div>
+    <p class="note">整個原型只保留三種範圍。<b>Project Switcher 只切換企劃</b>（不展開成資料夾樹）；<b>Sidebar 只顯示目前企劃可用、且你有權限的功能</b>。<span class="dot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--must);vertical-align:middle"></span> = 第一批重設計。</p>
+    <div class="ia">
+      <div class="col account">
+        <div class="ch"><div class="nm">我的空間</div><div class="sub">Account scope</div></div>
+        <ul>
+          <li class="b1"><span class="dot"></span>工作台<span class="b2">B1</span></li>
+          <li class="b1"><span class="dot"></span>我的角色<span class="b2">B1</span></li>
+          <li><span class="dot"></span>我的企劃</li>
+          <li class="lbl">全域工具</li>
+          <li><span class="dot"></span>委託收件匣</li>
+          <li><span class="dot"></span>身高比較</li>
+          <li><span class="dot"></span>帳號設定</li>
+        </ul>
+      </div>
+      <div class="col project">
+        <div class="ch"><div class="nm">目前企劃</div><div class="sub">Project scope</div></div>
+        <ul>
+          <li class="b1"><span class="dot"></span>企劃總覽<span class="b2">B1</span></li>
+          <li class="b1"><span class="dot"></span>企劃角色<span class="b2">B1</span></li>
+          <li class="b1"><span class="dot"></span>世界觀<span class="b2">B1</span></li>
+          <li class="b1"><span class="dot"></span>關係圖<span class="b2">B1</span></li>
+          <li><span class="dot"></span>故事</li>
+          <li><span class="dot"></span>圖庫</li>
+          <li><span class="dot"></span>靈感匣</li>
+          <li class="lbl">企劃管理（依權限）</li>
+          <li><span class="dot"></span>公開頁</li>
+          <li><span class="dot"></span>共創管理</li>
+          <li><span class="dot"></span>企劃設定</li>
+        </ul>
+      </div>
+      <div class="col public">
+        <div class="ch"><div class="nm">公開頁</div><div class="sub">Public scope</div></div>
+        <ul>
+          <li><span class="dot"></span>公開企劃頁</li>
+          <li><span class="dot"></span>公開角色頁</li>
+          <li><span class="dot"></span>訪客投稿／加入入口</li>
+          <li class="lbl">說明</li>
+          <li style="font-size:12px;color:var(--text-dim)">與內部工作台是不同畫面，只顯示裁切後的公開內容。</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout">
+      <h3>關鍵區分（避免迷路的根因）</h3>
+      <p><b>我的角色</b>（帳號層角色本體 Character）≠ <b>企劃角色</b>（角色在某企劃的 ProjectCharacterLink：陣營／職位／審核）。同一隻角色可以本體只有一份，卻在多個企劃各有不同連結。第一批會把這個區分在 UI 上講清楚。</p>
+    </div>
+  </section>
+
+  <!-- 4. App Shell -->
+  <section id="shell">
+    <div class="sh"><span class="ix">04</span><h2>App Shell 現況</h2><span class="en">assets/shell.js</span><span class="rule"></span></div>
+    <p class="note">既有 Shell 已涵蓋大部分需求，整理重點是<b>補上「範圍切換」與「權限／capability 過濾」</b>，而不是重寫。</p>
+    <div class="comp">
+      <div class="c">Sidebar<span class="st has">已有</span></div>
+      <div class="c">Project Switcher<span class="st has">已有</span></div>
+      <div class="c">搜尋 ⌘K<span class="st has">已有</span></div>
+      <div class="c">收藏／最近<span class="st has">已有</span></div>
+      <div class="c">手機抽屜<span class="st has">已有</span></div>
+      <div class="c">角色 hover 卡<span class="st has">已有</span></div>
+      <div class="c">使用者區<span class="st has">已有</span></div>
+      <div class="c">範圍切換（我的空間／企劃）<span class="st partial">待補</span></div>
+      <div class="c">Context Header<span class="st partial">待統一</span></div>
+      <div class="c">Page Header<span class="st partial">待統一</span></div>
+      <div class="c">權限／capability 過濾<span class="st todo">待做</span></div>
+      <div class="c">快速新增（＋）<span class="st partial">部分</span></div>
+    </div>
+  </section>
+
+  <!-- 5. components -->
+  <section id="components">
+    <div class="sh"><span class="ix">05</span><h2>共用元件</h2><span class="en">Component library</span><span class="rule"></span></div>
+    <p class="note">目前元件樣式<b>散落在各頁 &lt;style&gt; 內</b>，同類元件在不同頁長得不太一樣。計畫把它們收斂成 <span class="mono">ds.css</span> ＋ 一支 <span class="mono">components.css</span> 的共用 class（純 CSS，給所有靜態頁直接用，不是 JS 模組）。狀態：<span class="tag t-keep" style="font-size:9px">已有基礎</span> <span class="tag" style="background:var(--accent-soft);color:var(--accent-ink);font-size:9px">需統一</span> <span class="tag t-archive" style="font-size:9px">待建</span></p>
+    <div class="comp">
+      <div class="c">Button<span class="st has">已有</span></div>
+      <div class="c">Pill / Chip<span class="st has">已有</span></div>
+      <div class="c">Card<span class="st has">已有</span></div>
+      <div class="c">Entity Card<span class="st partial">需統一</span></div>
+      <div class="c">Badge<span class="st partial">需統一</span></div>
+      <div class="c">Tabs<span class="st partial">需統一</span></div>
+      <div class="c">Input / Select<span class="st partial">需統一</span></div>
+      <div class="c">Filter Bar<span class="st partial">需統一</span></div>
+      <div class="c">Detail Panel<span class="st partial">需統一</span></div>
+      <div class="c">Toast<span class="st partial">需統一</span></div>
+      <div class="c">Modal<span class="st todo">待建</span></div>
+      <div class="c">Drawer<span class="st has">已有</span></div>
+      <div class="c">Confirm Dialog<span class="st todo">待建</span></div>
+      <div class="c">Empty State<span class="st partial">零散</span></div>
+      <div class="c">Error State<span class="st todo">待建</span></div>
+      <div class="c">Forbidden State<span class="st todo">待建</span></div>
+      <div class="c">Loading Skeleton<span class="st todo">待建</span></div>
+      <div class="c">Context Header<span class="st todo">待建</span></div>
+    </div>
+  </section>
+
+  <!-- 6. missing states -->
+  <section id="states">
+    <div class="sh"><span class="ix">06</span><h2>缺少的狀態與手機問題</h2><span class="en">States &amp; mobile</span><span class="rule"></span></div>
+    <div class="cards">
+      <div class="mini"><h4><span class="n" style="background:var(--accent)">L</span>Loading</h4><p>多數頁從 inline 資料同步渲染，沒有骨架。切企劃／篩選時缺過場。</p><div class="fix">→ 共用 Loading Skeleton，模擬非同步</div></div>
+      <div class="mini"><h4><span class="n" style="background:var(--must)">E</span>Empty</h4><p>gallery／story／worldview 有空狀態，但文案與樣式各異。</p><div class="fix">→ 統一 Empty State（說明＋單一 CTA）</div></div>
+      <div class="mini"><h4><span class="n">!</span>Error</h4><p>幾乎沒有錯誤狀態。Demo 也該能展示「載入失敗→重試」。</p><div class="fix">→ 共用 Error State</div></div>
+      <div class="mini"><h4><span class="n">⊘</span>Forbidden</h4><p>沒有權限態。參與者 vs 主持人看到的東西目前一樣。</p><div class="fix">→ Forbidden State＋Sidebar 權限過濾</div></div>
+    </div>
+    <p class="note" style="margin-top:var(--s4)"><b>手機：</b>Shell 抽屜已可用；但 <span class="mono">relationships.html</span>（畫布）、<span class="mono">editor.html</span>、<span class="mono">height-compare.html</span> 偏桌機，需要手機版檢視或唯讀縮放。<b>容易迷路處：</b>① workspace 一頁多用途；② 「角色」在帳號層與企劃層意義不同卻同名；③ 缺少「我現在在哪個範圍」的頂部提示（Context Header）。</p>
+  </section>
+
+  <!-- 7. batch 1 -->
+  <section id="batch">
+    <div class="sh"><span class="ix">07</span><h2>第一批重設計</h2><span class="en">Batch 1 · 8 pages</span><span class="rule"></span></div>
+    <p class="note">先做這八頁，做完要能驗證：範圍是否清楚、Character／ProjectCharacterLink 是否不混淆、Sidebar／Switcher 是否好用、Loading／Empty／Error 是否齊備、桌機與手機是否都能操作。</p>
+    <div class="batch">
+      <div class="brow"><span class="num">1</span><span class="nm">工作台</span><span class="act from">改 workspace.html</span><span class="src">帳號層首頁 · 拆出企劃列表</span></div>
+      <div class="brow"><span class="num">2</span><span class="nm">我的角色</span><span class="act from">改 dashboard.html</span><span class="src">帳號層角色本體庫</span></div>
+      <div class="brow"><span class="num">3</span><span class="nm">角色詳情</span><span class="act from">改 character.html</span><span class="src">本體 ＋ 企劃連結分區</span></div>
+      <div class="brow"><span class="num">4</span><span class="nm">角色編輯器</span><span class="act from">改 editor.html</span><span class="src">本體欄位 vs 企劃欄位</span></div>
+      <div class="brow"><span class="num">5</span><span class="nm">企劃總覽</span><span class="act new">收進 Shell</span><span class="src">合併 workspace 總覽視圖</span></div>
+      <div class="brow"><span class="num">6</span><span class="nm">企劃角色</span><span class="act from">改 roster.html</span><span class="src">ProjectCharacterLink 名冊</span></div>
+      <div class="brow"><span class="num">7</span><span class="nm">世界觀</span><span class="act from">改 worldview.html</span><span class="src">保留完整功能，整理層級</span></div>
+      <div class="brow"><span class="num">8</span><span class="nm">關係圖</span><span class="act from">改 relationships.html</span><span class="src">畫布＋詳情＋手機清單</span></div>
+    </div>
+    <p class="note" style="margin-top:var(--s4)"><b>第二批：</b>故事 · 圖庫 · 靈感匣 · 共創管理（名冊／審核／參與者／模板）· 公開頁 Builder · 公開 Renderer。</p>
+  </section>
+
+  <!-- 8. scope of changes -->
+  <section id="scope">
+    <div class="sh"><span class="ix">08</span><h2>會碰／不會碰</h2><span class="en">Change scope</span><span class="rule"></span></div>
+    <div class="cards">
+      <div class="mini"><h4 style="color:#1F6B43"><span class="n" style="background:var(--must)">✓</span>會碰</h4><p>pages/ 的核心頁 markup＋頁內樣式、<span class="mono">assets/shell.js/.css</span>（補範圍切換與權限過濾）、<span class="mono">assets/ds.css</span>＋新 <span class="mono">components.css</span>（統一元件）、<span class="mono">assets/data.js</span>（補 mock 欄位，沿用正式概念名）。互動一律標 <span class="mono">Demo interaction only</span>。</p></div>
+      <div class="mini"><h4 style="color:#9E332B"><span class="n">✕</span>不會碰</h4><p>不建 Repository／API Client／第二套 Store；不做 D1 Schema／Migration／Auth；不接 Cloudflare Worker；不宣稱正式資料持久化；不為各頁另立互不相容的資料模型；不大量新增重複 HTML。</p></div>
+    </div>
+    <div class="callout">
+      <h3>資料命名（沿用正式概念，不混 ownership）</h3>
+      <p>Project · Character · ProjectCharacterLink · WorldEntry · EntityLink · Relationship · RelationshipLayout · Story · Chapter · StoryEvent · Asset · AssetLink · CharacterApplication · ContentSubmission。需要未知欄位時標 <span class="mono">DATA GAP</span>（欄位名／歸屬 Entity／用途／是否儲存／誰可見）。</p>
+    </div>
+  </section>
+
+  <div class="foot">
+    <p class="q">請你確認後我才開工 — 想先聽你的三個決定：</p>
+    <ol>
+      <li><b>封存方式：</b>把偏離範圍的 app/ 資料層、重複頁、architecture/smoke-test 移到 <span class="mono">_archive/</span>（不刪），可以嗎？還是你想直接刪除？</li>
+      <li><b>IA 與第一批名單：</b>上面的三範圍 IA 與第一批 8 頁，照這樣走嗎？有沒有想調整順序或增減？</li>
+      <li><b>起手頁：</b>第一批要從哪一頁先動工？我建議先做 <b>App Shell 的範圍切換＋權限過濾</b>（牽動全站），再做 <b>① 工作台</b> 與 <b>② 我的角色／⑥ 企劃角色</b>（最能驗證 Character vs ProjectCharacterLink）。</li>
+    </ol>
+  </div>
+
+</div>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#A67F0E"/>
+    <g fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round">
+      <path d="M26 30h48M26 50h48M26 70h30"/>
+    </g>
+  </svg>
+</template>
+</body>
+</html>

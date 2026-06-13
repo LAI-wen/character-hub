@@ -7,11 +7,11 @@
     "packages/*"
   ],
   "scripts": {
-    "dev:web": "npm run dev --workspace=apps/web",
-    "dev:api": "npm run dev --workspace=api",
-    "build:web": "npm run build --workspace=apps/web",
-    "deploy:web": "npm run deploy --workspace=apps/web",
-    "deploy:api": "npm run deploy --workspace=api",
+    "dev:web": "npm run dev -w apps/web",
+    "dev:api": "npm run dev -w api",
+    "build:web": "npm run build -w apps/web",
+    "deploy:web": "wrangler pages deploy dist --project-name oc-tools --branch main --commit-dirty=true --cwd apps/web",
+    "deploy:api": "wrangler deploy --cwd api",
     "typecheck": "npm run typecheck --workspaces --if-present"
   },
   "engines": {

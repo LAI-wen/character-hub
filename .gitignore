@@ -7,3 +7,7 @@ dist/
 .DS_Store
 *.log
 *.zip
+.playwright-mcp/
+_archive/
+v3/
+編輯和模板/

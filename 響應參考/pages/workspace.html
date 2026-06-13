@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>工作台 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/ds.css">
+<link rel="stylesheet" href="../assets/shell.css">
+<link rel="stylesheet" href="../assets/components.css">
+<style>
+  .greet { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--s5); flex-wrap: wrap; margin-bottom: var(--s8); }
+  .greet h1 { font-family: var(--font-serif); font-size: 34px; font-weight: 800; margin: 0; letter-spacing: -.02em; }
+  .greet .meta { font-size: 14px; color: var(--text-dim); margin-top: 6px; }
+  .greet .meta b { color: var(--text); font-weight: 700; }
+  .wk-grid { display: grid; grid-template-columns: 2fr 1fr; gap: var(--s6); align-items: start; }
+  .pcards { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s4); }
+  .pcard { border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--sh-1); overflow: hidden; cursor: pointer; transition: box-shadow .15s, transform .15s, border-color .15s; text-align: left; padding: 0; font: inherit; display: flex; flex-direction: column; }
+  .pcard:hover { box-shadow: var(--sh-2); transform: translateY(-2px); border-color: var(--border-strong); }
+  .pcard .cv { height: 8px; }
+  .pcard .pc-b { padding: var(--s4) var(--s5) var(--s5); }
+  .pcard .pc-h { display: flex; align-items: center; gap: 10px; }
+  .pcard .mk { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-family: var(--font-serif); font-size: 17px; font-weight: 800; color: #fff; flex: none; }
+  .pcard .nm { font-family: var(--font-serif); font-size: 18px; font-weight: 700; }
+  .pcard .en { font-family: var(--font-mono); font-size: 9px; letter-spacing: .14em; color: var(--text-faint); text-transform: uppercase; }
+  .pcard .bl { font-size: 12.5px; color: var(--text-dim); line-height: 1.55; margin: var(--s3) 0 var(--s4); text-wrap: pretty; min-height: 2.6em; }
+  .pcard .st { display: flex; gap: var(--s4); font-size: 12px; color: var(--text-dim); }
+  .pcard .st b { font-family: var(--font-serif); font-size: 16px; color: var(--text); font-weight: 700; }
+  .side .card { padding: var(--s5); margin-bottom: var(--s4); }
+  .side .ch { font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint); margin: 0 0 var(--s3); }
+  .recent-i { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--border); font-size: 13px; }
+  .recent-i:first-of-type { border-top: none; }
+  .recent-i .ty { font-family: var(--font-mono); font-size: 9px; color: var(--text-faint); border: 1px solid var(--border); border-radius: var(--r-pill); padding: 2px 7px; }
+  .recent-i .ago { margin-left: auto; font-size: 11px; color: var(--text-faint); }
+  .mini-chars { display: flex; flex-direction: column; gap: 2px; }
+  .mini-char { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: 9px; cursor: pointer; text-decoration: none; color: inherit; }
+  .mini-char:hover { background: var(--surface-2); }
+  .mini-char .av { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-serif); font-size: 13px; font-weight: 700; color: #fff; flex: none; }
+  .mini-char .nm { font-size: 13.5px; font-weight: 600; }
+  .mini-char .lk { margin-left: auto; font-size: 11px; color: var(--text-faint); }
+  @media (max-width: 920px) { .wk-grid { grid-template-columns: 1fr; } .pcards { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="page" id="root"></div>
+
+<script src="../assets/data.js"></script>
+<script src="../assets/components.js"></script>
+<script>
+  (function () {
+    var root = document.getElementById('root');
+    var projs = OCData.projects;
+    var mine = OCData.myCharacters();
+    var totalChars = mine.length;
+
+    // merge recent across projects (mock)
+    var recent = [];
+    projs.forEach(function (p) { (p.recent || []).forEach(function (r) { recent.push({ t: r.t, ty: r.ty, ago: r.ago, proj: p.name, pc: p.c }); }); });
+    recent = recent.slice(0, 6);
+
+    var hour = new Date().getHours();
+    var greet = hour < 11 ? '早安' : hour < 18 ? '午安' : '晚安';
+
+    var html = OCUI.contextHeader({ scope: 'account', crumbs: ['工作台'] });
+    html += '<div class="greet"><div><h1>' + greet + '，' + OCData.viewer.name + '</h1>'
+      + '<div class="meta">你有 <b>' + projs.length + '</b> 個企劃 · <b>' + totalChars + '</b> 個角色。挑一個繼續，或開始新的。</div></div>'
+      + '<button class="btn btn-accent" id="newChar">＋ 新角色</button></div>';
+
+    html += '<div class="wk-grid"><div class="main">';
+    html += '<div class="sec-head" style="margin-bottom:var(--s4)"><h2>我的企劃</h2><span class="en">Projects</span><span class="sec-rule"></span><a href="my-projects.html" style="font-size:12.5px;font-weight:600;color:var(--accent-ink)">全部 →</a></div>';
+    html += '<div class="pcards">' + projs.map(function (p) {
+      return '<button class="pcard" data-p="' + p.id + '"><div class="cv" style="background:' + p.c + '"></div><div class="pc-b">'
+        + '<div class="pc-h"><span class="mk" style="background:' + p.c + '">' + p.name[0] + '</span><div><div class="nm">' + p.name + '</div><div class="en">' + p.en + '</div></div></div>'
+        + '<div class="bl">' + p.blurb + '</div>'
+        + '<div class="st"><span><b>' + p.stats.chars + '</b> 角色</span><span><b>' + p.stats.world + '</b> 世界觀</span><span><b>' + p.stats.rels + '</b> 關係</span></div>'
+        + '</div></button>';
+    }).join('') + '</div>';
+    html += '</div>';
+
+    // side column
+    html += '<div class="side">';
+    html += '<div class="card"><p class="ch">最近活動</p>' + recent.map(function (r) {
+      return '<div class="recent-i"><span class="ty">' + r.ty + '</span><span>' + r.t + '</span><span class="ago">' + r.proj + ' · ' + r.ago + '</span></div>';
+    }).join('') + '</div>';
+    html += '<div class="card"><p class="ch">我的角色 · ' + totalChars + '</p><div class="mini-chars">' + mine.slice(0, 5).map(function (c) {
+      var lk = c.links.length ? c.links.length + ' 企劃' : '未加入企劃';
+      return '<a class="mini-char" href="character.html?c=' + c.id + '"><span class="av" style="background:' + c.c + '" data-hc-id="' + c.id + '">' + c.name[0] + '</span><span class="nm">' + c.name + '</span><span class="lk">' + lk + '</span></a>';
+    }).join('') + '</div><a href="dashboard.html" class="btn btn-sm" style="width:100%;justify-content:center;margin-top:var(--s3)">看全部角色</a></div>';
+    html += '</div></div>';
+
+    root.innerHTML = html;
+    root.querySelectorAll('.pcard').forEach(function (b) { b.onclick = function () { localStorage.setItem('ch:proj', b.dataset.p); location.href = 'overview.html?project=' + b.dataset.p; }; });
+    document.getElementById('newChar').onclick = function () { var nc = OCDemo.createCharacter({}); location.href = 'editor.html?c=' + nc.id + '&new=1'; };
+  })();
+</script>
+<script src="../assets/shell.js"></script>
+</body>
+</html>

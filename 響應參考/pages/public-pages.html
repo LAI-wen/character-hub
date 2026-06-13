@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>公開頁 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/ds.css">
+<link rel="stylesheet" href="../assets/shell.css">
+<link rel="stylesheet" href="../assets/components.css">
+<link rel="stylesheet" href="../assets/pagebuilder.css">
+</head>
+<body>
+<div class="page" id="root"></div>
+
+<script src="../assets/data.js"></script>
+<script src="../assets/components.js"></script>
+<script src="../assets/char-visual.js"></script>
+<script src="../assets/pagerender.js"></script>
+<script>
+  (function () {
+    var params = new URLSearchParams(location.search);
+    var root = document.getElementById('root');
+    var pid = params.get('project') || localStorage.getItem('ch:proj') || 'tokoyo';
+    if (!OCData.project(pid)) pid = OCData.projects[0].id;
+    var p = OCData.project(pid);
+    var ROLE = OCData.getRole(pid);
+    var isPreview = ROLE === 'visitor';
+    var A = function (act) { return OCData.canAction(act, pid) && !isPreview; };
+    var canTemplate = A('pageTemplate:update') || A('pageTemplate:create');
+    var view = params.get('mode'); // 'builder'
+    var pageId = params.get('page');
+    var startMode = params.get('m') || 'content'; // content | design | template
+
+    if (view === 'builder' && pageId) { mountBuilder(pageId, startMode); return; }
+
+    // scope: no ?project= → Account（我的公開頁）; with ?project= → Project（企劃公開頁）
+    var acctScope = !params.get('project');
+    if (acctScope) { renderAccountList(); return; }
+
+    // ================= ACCOUNT: 我的公開頁 =================
+    function renderAccountList() {
+      root.innerHTML = OCUI.contextHeader({ scope: 'account', crumbs: ['我的公開頁'] });
+      var head = document.createElement('div'); head.className = 'pageh';
+      head.innerHTML = '<div class="ht"><h1>我的公開頁 <span class="en">My Public Pages</span></h1><p class="sub">你擁有的所有公開頁——個人角色頁、委託資訊、自訂頁，以及你在各企劃的<b>角色展示頁</b>（即使尚未綁定任何企劃也在這）。企劃官方頁請到該企劃的「公開展示」。</p></div><div class="acts"><button class="btn btn-accent" id="newPage">＋ 新增公開頁</button></div>';
+      root.appendChild(head);
+      var pages = OCData.myPublicPages();
+      if (!pages.length) { root.appendChild(OCUI.emptyState({ title: '還沒有公開頁。', body: '建立角色頁、委託頁或自訂頁——不需要先有企劃。', ctaLabel: '＋ 新增公開頁', onCta: function () { OCUI.toast('新增公開頁', { demo: true }); } })); shell(); return; }
+      var grid = document.createElement('div'); grid.className = 'pp-grid';
+      grid.innerHTML = pages.map(function (pg) {
+        var proj = pg.projectId ? OCData.project(pg.projectId) : null;
+        var ctx = pg.purpose === 'project_character' && proj
+          ? '<div class="pp-link"><span class="d" style="background:' + proj.c + '"></span>連結企劃：' + proj.name + (pg.templateId ? ' · 使用企劃版型' : '') + '</div>'
+          : '<div class="pp-link"><span class="d" style="background:var(--text-faint)"></span>' + OCData.purposeLabel(pg.purpose) + ' · 個人擁有</div>';
+        var st = pg.status === 'published' ? '<span class="badge approved">已發布</span>' : '<span class="badge draft">草稿</span>';
+        var vis = '<span class="badge ' + (pg.visibility === 'public' ? 'public' : 'private') + '">' + OCData.pageVisLabel(pg.visibility) + '</span>';
+        return '<button class="pp-card" data-pg="' + pg.id + '"><div class="pp-h"><span class="pp-nm">' + pg.name + '</span>' + st + '</div>' + ctx + '<div class="pp-meta">' + vis + '<span class="pp-upd">' + (pg.updatedAt || '') + '</span></div></button>';
+      }).join('');
+      root.appendChild(grid);
+      grid.querySelectorAll('[data-pg]').forEach(function (b) { b.onclick = function () { location.href = 'public-pages.html?mode=builder&page=' + b.dataset.pg; }; });
+      var nb = document.getElementById('newPage'); if (nb) nb.onclick = function () { OCUI.toast('新增公開頁', { demo: true }); };
+      shell();
+    }
+
+    // ================= LIST =================
+    function renderList() {
+      root.innerHTML = OCUI.contextHeader({ scope: 'project', crumbs: [p.name, '公開頁'] });
+      if (isPreview) { root.appendChild(OCUI.forbiddenState({ title: '沒有檢視權限。', body: '公開頁管理僅企劃成員可見。' })); shell(); return; }
+      if (!p.portalEnabled) { root.appendChild(OCUI.emptyState({ title: '公開頁未啟用。', body: '可在企劃設定中啟用。', icon: 'plug' })); shell(); return; }
+      var head = document.createElement('div'); head.className = 'pageh';
+      head.innerHTML = '<div class="ht"><h1>公開頁 <span class="en">Public Pages</span></h1><p class="sub">同一份資料套不同<b>公開頁版型</b>。編輯時會清楚分成<b>編輯內容</b>、<b>自訂版面</b>' + (canTemplate ? '、<b>設計企劃版型</b>' : '') + '三種模式。</p></div>'
+        + (A('publicPage:create') ? '<div class="acts"><button class="btn btn-accent" id="newPage">＋ 建立公開頁</button></div>' : '');
+      root.appendChild(head);
+      var np = head.querySelector('#newPage'); if (np) np.onclick = createFlow;
+
+      // host template-design entry (only if can manage templates)
+      if (canTemplate) {
+        var tdiv = document.createElement('div'); tdiv.style.marginBottom = 'var(--s5)';
+        var tpls = OCData.pageTemplatesOf(pid);
+        tdiv.innerHTML = '<div class="pb-banner" style="border-radius:10px;border:1px solid #ECDFA8">' + OCIcon('palette') + ' 你是主持人，可<b style="margin:0 4px">設計企劃版型</b>（鎖定必要區塊、決定成員能改什麼）。'
+          + tpls.map(function (t) { return '<button class="btn btn-sm" data-tpl="' + t.id + '" style="margin-left:6px">設計「' + t.name + '」</button>'; }).join('') + '</div>';
+        root.appendChild(tdiv);
+        tdiv.querySelectorAll('[data-tpl]').forEach(function (b) { b.onclick = function () { location.search = '?project=' + pid + '&page=' + firstPageForTemplate(b.dataset.tpl) + '&mode=builder&m=template'; }; });
+      }
+
+      var pages = OCData.publicPagesOf(pid);
+      var grid = document.createElement('div'); grid.className = 'pp-grid';
+      grid.innerHTML = pages.map(function (pg) {
+        var col = (pg.dataRef && pg.dataRef.characterId ? (OCData.entity(pg.dataRef.characterId) || {}).c : p.c) || '#888';
+        var st = pg.status === 'published' ? '<span class="pp-st published">已發布 v' + pg.publishedVersion + '</span>' : '<span class="pp-st draft">草稿</span>';
+        var un = pg.hasUnpublished && pg.status === 'published' ? '<span class="pp-st unpub">有未發布修改</span>' : '';
+        return '<div class="ppcard"><div class="cv" style="background:' + col + '"></div><div class="pad">'
+          + '<div class="nm">' + pg.name + '</div>'
+          + '<div class="meta"><span class="badge">' + OCData.purposeLabel(pg.purpose) + '</span>' + st + un + '<span class="badge">' + OCData.pageVisLabel(pg.visibility) + '</span></div>'
+          + '<div class="url">/p/' + pg.slug + ' · 更新 ' + pg.updatedAt + '</div></div>'
+          + '<div class="foot"><button class="btn btn-sm btn-accent" data-edit="' + pg.id + '">編輯內容</button><button class="btn btn-sm" data-design="' + pg.id + '">自訂版面</button>'
+          + (pg.status === 'published' && pg.visibility !== 'private' ? '<a class="btn btn-sm" href="portal.html?slug=' + encodeURIComponent(pg.slug) + '" target="_blank">↗</a>' : '')
+          + '</div></div>';
+      }).join('');
+      root.appendChild(grid);
+      grid.querySelectorAll('[data-edit]').forEach(function (b) { b.onclick = function () { location.search = '?project=' + pid + '&page=' + b.dataset.edit + '&mode=builder&m=content'; }; });
+      grid.querySelectorAll('[data-design]').forEach(function (b) { b.onclick = function () { location.search = '?project=' + pid + '&page=' + b.dataset.design + '&mode=builder&m=design'; }; });
+      shell();
+    }
+    function firstPageForTemplate(tid) { var pg = OCData.publicPagesOf(pid).filter(function (x) { return x.templateId === tid; })[0]; return pg ? pg.id : OCData.publicPagesOf(pid)[0].id; }
+
+    // ================= CREATE FLOW =================
+    function createFlow() {
+      var step = 1, purpose = 'project_character', dataRef = {}, templateId = null;
+      var box = document.createElement('div');
+      function draw() {
+        if (step === 1) {
+          box.innerHTML = '<div class="pb-addgrp" style="margin-top:0">① 用途</div>' + [['project_character', '角色介紹'], ['character', '繪師參考'], ['project', '世界觀首頁／企劃頁'], ['worldEntry', '世界觀條目'], ['commission', '委託參考'], ['custom', '自訂頁']].map(function (pp) { return '<button class="pb-smartblk" data-p="' + pp[0] + '"' + (purpose === pp[0] ? ' style="border-color:var(--accent);background:var(--accent-soft)"' : '') + '><span class="ic">◳</span><div class="b"><div class="t">' + pp[1] + '</div></div></button>'; }).join('');
+          box.querySelectorAll('[data-p]').forEach(function (b) { b.onclick = function () { purpose = b.dataset.p; draw(); }; });
+        } else if (step === 2) {
+          var chars = OCData.roster(pid, { approvedOnly: true });
+          box.innerHTML = '<div class="pb-addgrp" style="margin-top:0">② 資料來源</div>'
+            + (purpose === 'project_character' || purpose === 'character' ? chars.map(function (r) { return '<button class="pb-smartblk" data-c="' + r.character + '" data-l="' + r.linkId + '"><span class="ic">' + OCIcon('user') + '</span><div class="b"><div class="t">' + r.name + '</div></div></button>'; }).join('') : '<div style="font-size:13px;color:var(--text-dim)">使用企劃「' + p.name + '」資料。</div>');
+          if (!(purpose === 'project_character' || purpose === 'character')) dataRef = { projectId: pid };
+          box.querySelectorAll('[data-c]').forEach(function (b) { b.onclick = function () { dataRef = { characterId: b.dataset.c, linkId: b.dataset.l, projectId: pid }; draw(); }; });
+        } else {
+          var tpls = OCData.pageTemplatesOf(pid, purpose);
+          box.innerHTML = '<div class="pb-addgrp" style="margin-top:0">③ 版型</div><button class="pb-smartblk" data-t=""' + (templateId === null ? ' style="border-color:var(--accent);background:var(--accent-soft)"' : '') + '><span class="ic">▢</span><div class="b"><div class="t">空白版型</div><div class="d">從頭設計</div></div></button>'
+            + tpls.map(function (t) { return '<button class="pb-smartblk" data-t="' + t.id + '"' + (templateId === t.id ? ' style="border-color:var(--accent);background:var(--accent-soft)"' : '') + '><span class="ic">' + OCIcon('gridsm') + '</span><div class="b"><div class="t">' + t.name + '</div><div class="d">企劃版型 · 推薦</div></div></button>'; }).join('')
+            + '<div class="pb-addgrp">④ 資料檢查</div>' + ((purpose === 'project_character' || purpose === 'character') && !dataRef.characterId ? '<div class="cv-broken" style="text-align:left">⚠ 尚未選角色</div>' : '<div style="font-size:12.5px;color:#1F6B43">✓ 資料齊備</div>');
+          box.querySelectorAll('[data-t]').forEach(function (b) { b.onclick = function () { templateId = b.dataset.t || null; draw(); }; });
+        }
+      }
+      draw();
+      OCUI.modal({ title: '建立公開頁', body: box, actions: [
+        { label: '上一步', onClick: function () { if (step > 1) { step--; setTimeout(draw, 0); return true; } } },
+        { label: '下一步 / 建立', kind: 'accent', onClick: function () { if (step < 3) { step++; setTimeout(draw, 0); return true; } if ((purpose === 'project_character' || purpose === 'character') && !dataRef.characterId) { OCUI.toast('請先選角色'); return true; } OCUI.toast('已建立 Draft（Demo）— 進入內容編輯', { demo: true }); } } ] });
+    }
+
+    // ================= BUILDER =================
+    function mountBuilder(id, m) {
+      var pg = OCData.publicPage(id);
+      if (!pg) { document.body.innerHTML = '<div style="padding:40px">找不到頁面。</div>'; return; }
+      document.body.classList.add('pb-builder');
+      var amHost = OCData.can('viewManage', pid);
+      var mode = m; // content | design | template
+      if (mode === 'template' && !canTemplate) mode = 'design';
+      var firstVisit = !(function () { try { return localStorage.getItem('ch:pbseen'); } catch (e) { return false; } })();
+      var dataRef = pg.dataRef || {};
+      var c = dataRef.characterId ? OCData.entity(dataRef.characterId) : null;
+
+      var tplTree = pg.templateId ? JSON.parse(JSON.stringify(OCData.pageTemplate(pg.templateId).tree)) : { type: 'page', props: { maxWidth: 880, accent: p.c }, children: [ { type: 'section', props: { pad: 'lg' }, children: [ { type: 'heading', props: { bind: c ? { source: 'character', field: 'name' } : { source: 'project', field: 'name' }, size: 'xl' } }, { type: 'text', props: { text: '從左側「常用區塊」加入內容。' } } ] } ] };
+      OCPage.ensureIds(tplTree);
+      var sel = null, vp = 'desktop', ltab = 'add', itab = 'content';
+
+      var wrap = document.createElement('div'); wrap.className = 'pb-wrap';
+      document.body.appendChild(wrap);
+
+      if (firstVisit) { renderStart(); return; }
+      renderBuilder();
+
+      // ---- onboarding start screen ----
+      function renderStart() {
+        wrap.innerHTML = topBar() + '<div class="pb-canvas-wrap" style="display:block;overflow:auto"><div class="pb-start"><h2>你想從哪裡開始？</h2><div class="pb-start-opts">'
+          + '<button class="pb-start-opt" data-s="template"><div class="ic">' + OCIcon('sparkle') + '</div><div class="t">套用推薦版型</div><div class="d">快速建立完整頁面</div></button>'
+          + '<button class="pb-start-opt" data-s="modify"><div class="ic">' + OCIcon('edit') + '</div><div class="t">修改目前版型</div><div class="d">改內容、圖片、主題與允許調整的區塊</div></button>'
+          + '<button class="pb-start-opt" data-s="blank"><div class="ic">' + OCIcon('block') + '</div><div class="t">從空白開始</div><div class="d">給熟悉版面設計的進階使用者</div></button>'
+          + '</div><div class="pb-addgrp">選用途（自動產生合理區塊，不必從 Section 搭建）</div><div class="pb-purpose">'
+          + [['角色介紹'], ['繪師參考'], ['文手設定'], ['企劃角色卡'], ['委託參考'], ['世界觀首頁'], ['世界觀條目']].map(function (x) { return '<button data-purpose>' + x[0] + '</button>'; }).join('')
+          + '</div></div></div>';
+        wireTop();
+        wrap.querySelectorAll('[data-s]').forEach(function (b) { b.onclick = function () { try { localStorage.setItem('ch:pbseen', '1'); } catch (e) {} if (b.dataset.s === 'blank') mode = 'design'; renderBuilder(); OCUI.toast(b.dataset.s === 'template' ? '已套用推薦版型' : b.dataset.s === 'blank' ? '空白頁面（進階）' : '修改目前版型', { demo: true }); }; });
+        wrap.querySelectorAll('[data-purpose]').forEach(function (b) { b.onclick = function () { try { localStorage.setItem('ch:pbseen', '1'); } catch (e) {} renderBuilder(); OCUI.toast('已產生「' + b.textContent + '」的智慧區塊', { demo: true }); }; });
+      }
+
+      function topBar() {
+        var modeBadge = { content: ['content', '內容編輯模式'], design: ['design', '進階設計模式'], template: ['template', '版型設計模式'] }[mode];
+        var ctxt = mode === 'template' ? p.name + ' · ' + (pg.templateId ? (OCData.pageTemplate(pg.templateId) || {}).name : '版型') : (c ? c.name : pg.name) + ' · 使用「' + (pg.templateId ? (OCData.pageTemplate(pg.templateId) || {}).name : '空白版型') + '」';
+        var modeSwitch = '<div class="pb-modeswitch"><button data-m="content"' + (mode === 'content' ? ' class="on"' : '') + '>內容</button><button data-m="design"' + (mode === 'design' ? ' class="on"' : '') + '>版面</button>' + (canTemplate ? '<button data-m="template"' + (mode === 'template' ? ' class="on"' : '') + '>版型</button>' : '') + '</div>';
+        return '<div class="pb-top"><button class="back" id="pbBack" aria-label="返回">←</button>'
+          + '<span class="pb-mode"><span class="badge2 ' + modeBadge[0] + '">' + modeBadge[1] + '</span><span class="ctxt">' + ctxt + '</span></span>'
+          + '<span class="spacer"></span>' + modeSwitch
+          + '<div class="vp" role="group" aria-label="裝置預覽"><button data-vp="desktop" class="on" title="桌機">' + OCIcon('monitor') + '</button><button data-vp="tablet" title="平板">' + OCIcon('tablet') + '</button><button data-vp="mobile" title="手機">' + OCIcon('phone') + '</button></div>'
+          + '<button class="btn btn-sm" id="pbPreview">預覽</button><button class="btn btn-accent btn-sm" id="pbPublish">發布</button></div>';
+      }
+      function wireTop() {
+        wrap.querySelector('#pbBack').onclick = function () { location.search = '?project=' + pid; };
+        wrap.querySelectorAll('[data-m]').forEach(function (b) { b.onclick = function () { mode = b.dataset.m; itab = 'content'; renderBuilder(); }; });
+        wrap.querySelectorAll('[data-vp]').forEach(function (b) { b.onclick = function () { vp = b.dataset.vp; var cv = document.getElementById('pbCanvas'); if (cv) cv.className = 'pb-canvas denoise ' + vp; paintCanvas(); wrap.querySelectorAll('[data-vp]').forEach(function (x) { x.classList.toggle('on', x === b); }); }; });
+        var pv = wrap.querySelector('#pbPreview'); if (pv) pv.onclick = function () { window.open('portal.html?page=' + id + '&preview=draft', '_blank'); };
+        var pb = wrap.querySelector('#pbPublish'); if (pb) pb.onclick = publishFlow;
+      }
+
+      function renderBuilder() {
+        // mobile: content edit only
+        var mobile = window.matchMedia && window.matchMedia('(max-width: 767px)').matches;
+        wrap.innerHTML = topBar()
+          + (mode === 'template' ? '<div class="pb-banner">' + OCIcon('palette') + ' 版型設計模式：你在編輯<b>企劃版型</b>，影響所有套用此版型的頁面。可鎖定區塊、決定成員能改什麼。</div>' : '')
+          + '<div class="pb-body"><div class="pb-left" id="pbLeft"></div><div class="pb-canvas-wrap"><div class="pb-canvas denoise ' + vp + '" id="pbCanvas"></div></div><div class="pb-right" id="pbRight"></div></div>'
+          + '<div class="pb-mobile-note">手機可改文字、圖片、主題與顯示/隱藏區塊並發布。複雜版面設計建議使用平板或桌機。</div>';
+        wireTop();
+        paintLeft(); paintCanvas(); paintRight();
+      }
+
+      function paintCanvas() {
+        var cv = document.getElementById('pbCanvas'); if (!cv) return;
+        cv.style.setProperty('--accent', tplTree.props.accent || p.c);
+        cv.innerHTML = OCPage.renderNode(tplTree, dataRef, { builder: true, vp: vp });
+        // denoise: add tiny lock icon to locked blocks (instead of stacked text)
+        cv.querySelectorAll('[data-bid]').forEach(function (el) {
+          var node = findNode(tplTree, el.dataset.bid);
+          if (node && node.lock && (node.lock.locked || node.lock.required)) { var t = document.createElement('span'); t.className = 'cv-locktiny'; t.innerHTML = OCIcon('lock'); el.appendChild(t); }
+          el.onclick = function (e) { e.stopPropagation(); sel = el.dataset.bid; paintSel(); paintRight(); paintLeft(); };
+        });
+        paintSel();
+      }
+      function paintSel() { document.querySelectorAll('#pbCanvas .cv-block').forEach(function (el) { el.classList.toggle('sel', el.dataset.bid === sel); }); }
+      function findNode(node, bid) { if (node._id === bid) return node; var k = node.children || []; for (var i = 0; i < k.length; i++) { var r = findNode(k[i], bid); if (r) return r; } return null; }
+
+      // ---- LEFT ----
+      function paintLeft() {
+        var left = document.getElementById('pbLeft');
+        var tabs = '<div class="pb-ltabs"><button data-lt="add"' + (ltab === 'add' ? ' class="on"' : '') + '>新增</button><button data-lt="layers"' + (ltab === 'layers' ? ' class="on"' : '') + '>圖層</button><button data-lt="data"' + (ltab === 'data' ? ' class="on"' : '') + '>資料</button></div>';
+        var pane = '<div class="pb-lpane">';
+        if (ltab === 'add') pane += addPane();
+        else if (ltab === 'layers') pane += layerTree(tplTree, 0);
+        else pane += dataPane();
+        pane += '</div>';
+        left.innerHTML = tabs + pane;
+        left.querySelectorAll('[data-lt]').forEach(function (b) { b.onclick = function () { ltab = b.dataset.lt; paintLeft(); }; });
+        left.querySelectorAll('[data-add]').forEach(function (b) { b.onclick = function () { OCUI.toast('已加入「' + b.getAttribute('data-label') + '」（自動綁定目前資料）', { demo: true }); }; });
+        left.querySelectorAll('[data-ly]').forEach(function (el) { el.onclick = function () { sel = el.dataset.ly; paintSel(); paintRight(); paintLeft(); }; });
+        left.querySelectorAll('[data-dleaf]').forEach(function (el) { el.onclick = function () { OCUI.toast('已拖入「' + el.getAttribute('data-label') + '」並建立區塊（Demo）', { demo: true }); }; });
+        left.querySelectorAll('[data-miss]').forEach(function (el) { el.onclick = function (e) { e.stopPropagation(); OCUI.toast('前往補資料（' + el.getAttribute('data-label') + '）', { demo: true }); }; });
+      }
+      function smart(icon, t, d, label) { return '<button class="pb-smartblk" data-add="1" data-label="' + label + '"><span class="ic">' + icon + '</span><div class="b"><div class="t">' + t + '</div><div class="d">' + d + '</div></div></button>'; }
+      function addPane() {
+        var h = '<details class="pb-cat" open><summary>常用區塊（智慧）</summary>'
+          + smart(OCIcon('image'), '角色主視覺', '大圖＋名稱', '角色主視覺') + smart(OCIcon('user'), '角色介紹', '檔案／簡介', '角色介紹') + smart(OCIcon('text'), '基本資料', '物種／身高…', '基本資料')
+          + smart(OCIcon('tag'), '企劃身份', '陣營／職位', '企劃身份') + smart(OCIcon('palette'), '色票', '角色配色', '色票') + smart(OCIcon('images'), '圖片牆', '圖庫', '圖片牆')
+          + smart(OCIcon('link'), '關係摘要', '角色關係', '關係摘要') + smart(OCIcon('book'), '世界觀條目', '設定', '世界觀條目') + smart(OCIcon('mail'), '聯絡／委託按鈕', 'CTA', '委託按鈕') + '</details>';
+        h += '<details class="pb-cat"><summary>基礎內容</summary>' + [['標題','heading'],['文字','text'],['圖片','image'],['按鈕','block'],['標籤','tag'],['分隔線','section']].map(function (x) { return smart(OCIcon(x[1]), x[0], '', x[0]); }).join('') + '</details>';
+        h += '<details class="pb-cat"><summary>版面配置</summary>' + [['columns', '單欄區段'], ['columns', '左右雙欄'], ['columns', '圖文並排'], ['gridsm', '卡片群組'], ['gridsm', '圖片網格'], ['block', '滿版主視覺']].map(function (x) { return smart(OCIcon(x[0]), x[1], '', x[1]); }).join('') + '</details>';
+        if (mode !== 'content') h += '<details class="pb-cat"><summary>進階版面（網頁原語）</summary>' + ['Section', 'Stack', 'Grid', 'Spacer'].map(function (x) { return smart(OCIcon('block'), x, '', x); }).join('') + '</details>';
+        return h;
+      }
+      function layerTree(node, depth) {
+        if (depth > 3) return '';
+        var hname = { page: '頁面', section: '區段', stack: '直排', grid: '網格', heading: '標題', text: '文字', character_profile: '角色介紹', project_fields: '企劃身份', gallery: '圖片牆', color_palette: '色票', link_button: '按鈕', project_logo: '企劃標誌', image: '圖片', divider: '分隔線', spacer: '間距' }[node.type] || node.type;
+        var broken = node.props && node.props.bind && !OCData.resolveBinding(node.props.bind, dataRef).ok;
+        var self = node._id ? '<div class="pb-layer' + (sel === node._id ? ' sel' : '') + '" data-ly="' + node._id + '">' + (node.lock && node.lock.locked ? '<span class="lk">' + OCIcon('lock') + '</span>' : '') + hname + (broken ? ' <span style="color:var(--avoid);font-size:10px">⚠失效</span>' : '') + '</div>' : '';
+        var kids = (node.children || []).map(function (k) { return layerTree(k, depth + 1); }).join('');
+        return self + (kids ? '<div class="pb-indent">' + kids + '</div>' : '');
+      }
+      function dataPane() {
+        function group(name, color, leaves) { return '<div class="pb-dgroup"><div class="gh"><span class="dot" style="background:' + color + '"></span>' + name + '</div>' + leaves.map(function (l) { return '<div class="pb-dleaf" data-dleaf="1" data-label="' + l[0] + '">' + l[0] + (l[1] ? '<span class="miss" data-miss="1" data-label="' + l[0] + '">缺，補資料</span>' : '<span class="adv">' + (l[2] || '') + '</span>') + '</div>'; }).join('') + '</div>'; }
+        var h = '';
+        if (c) h += group('角色本體', c.c, [['角色名稱', 0, 'Character.name'], ['一句話介紹', 0, 'Character.summary'], ['身高', 0, 'Character.height'], ['圖設定', 0], ['文設定', 0]]);
+        if (dataRef.linkId) h += group('目前企劃版本', p.c, [['陣營', 0, 'link.faction'], ['職位', 0, 'link.projectRole'], ['能力類型', 1, 'fieldValues'], ['企劃限定背景', 1]]);
+        h += group('圖片與素材', '#8A857C', [['頭像', 0, 'avatar'], ['立繪', 0], ['圖庫', 0, 'gallery'], ['色票', 0, 'palette']]);
+        h += group('關聯內容', '#6B5B95', [['角色關係', 0], ['世界觀', 0], ['故事', 0]]);
+        h += '<div style="font-size:11px;color:var(--text-faint);margin-top:8px">拖欄位到 Canvas 自動建立區塊。工程識別收在「進階資訊」（hover 顯示）。</div>';
+        return h;
+      }
+
+      // ---- RIGHT (Inspector) ----
+      function paintRight() {
+        var right = document.getElementById('pbRight');
+        var node = sel ? findNode(tplTree, sel) : null;
+        if (!node) { right.innerHTML = '<div class="pb-itabs"><button class="on">頁面設定</button></div><div class="pb-ipane">' + pageSettings() + '</div>'; return; }
+        var lock = node.lock || {};
+        var lockedForMember = mode !== 'template' && lock.locked && pg.templateId;
+        // tabs: content | appearance | mobile  (+ permission in template mode)
+        var tabDefs = [['content', '內容'], ['style', '外觀'], ['resp', '手機版']];
+        if (mode === 'template') tabDefs.push(['perm', '權限']);
+        var tabs = '<div class="pb-itabs">' + tabDefs.map(function (t) { return '<button data-it="' + t[0] + '"' + (itab === t[0] ? ' class="on"' : '') + '>' + t[1] + '</button>'; }).join('') + '</div>';
+        var pane = '<div class="pb-ipane">';
+        if (lockedForMember) pane += '<div class="pb-banner" style="border-radius:8px;border:1px solid var(--border-strong);background:var(--bg-tint);color:var(--text-dim)">' + OCIcon('lock') + ' 此區塊由主持人鎖定，你不能修改。</div>';
+        if (itab === 'content') pane += contentTab(node, lockedForMember);
+        else if (itab === 'style') pane += styleTab(node, lockedForMember);
+        else if (itab === 'resp') pane += respTab(node, lockedForMember);
+        else if (itab === 'perm') pane += permTab(node);
+        pane += '</div>';
+        right.innerHTML = tabs + pane;
+        right.querySelectorAll('[data-it]').forEach(function (b) { b.onclick = function () { itab = b.dataset.it; paintRight(); }; });
+        var ff = right.querySelector('#followTheme'); if (ff) ff.onclick = function () { ff.classList.toggle('on'); var ov = right.querySelector('.pb-override-fields'); if (ov) ov.classList.toggle('hidden', ff.classList.contains('on')); };
+        right.querySelectorAll('[data-editsrc]').forEach(function (b) { b.onclick = function () { location.href = 'editor.html?c=' + dataRef.characterId + '&project=' + pid; }; });
+        right.querySelectorAll('[data-lock]').forEach(function (t) { t.onclick = function () { t.classList.toggle('on'); OCUI.toast('已更新版型鎖定（Demo）', { demo: true }); }; });
+        right.querySelectorAll('[data-variant]').forEach(function (b) { b.onclick = function () { right.querySelectorAll('[data-variant]').forEach(function (x) { x.classList.toggle('on', x === b); }); OCUI.toast('已套用樣式：' + b.textContent, { demo: true }); }; });
+      }
+      function contentTab(node, locked) {
+        var dis = locked ? ' disabled' : '';
+        if (node.props.bind) {
+          var src = bindHuman(node.props.bind);
+          var canEditSrc = dataRef.characterId && node.props.bind.source === 'character';
+          return '<div class="pb-ifield"><label>顯示內容</label><label class="pb-radio"><input type="radio" name="ctsrc" checked' + dis + '> 使用' + (src.entity || '資料') + '</label><label class="pb-radio"><input type="radio" name="ctsrc"' + dis + '> 使用自訂文字</label></div>'
+            + '<div class="pb-ifield"><label>資料來源</label><div class="pb-bindcard">' + (c ? '<span class="av" style="background:' + c.c + '">' + c.name[0] + '</span>' : '') + '<span>' + src.label + '</span>' + (canEditSrc ? '<span class="ed" data-editsrc>編輯角色原始資料 →</span>' : '') + '</div></div>'
+            + '<div class="pb-ifield"><label>資料缺少時</label><label class="pb-radio"><input type="radio" name="ctmiss" checked' + dis + '> 隱藏這個區塊</label><label class="pb-radio"><input type="radio" name="ctmiss"' + dis + '> 顯示替代文字</label></div>'
+            + '<div style="font-size:11px;color:var(--text-faint)">在這裡改「外觀」不會改到角色本體；要改名字請按「編輯角色原始資料」。</div>';
+        }
+        if (node.type === 'heading' || node.type === 'text') return '<div class="pb-ifield"><label>文字</label><textarea class="input" rows="2"' + dis + '>' + OCPage.esc(node.props.text || '') + '</textarea></div>';
+        if (node.type === 'link_button') return '<div class="pb-ifield"><label>按鈕文字</label><input class="input" value="' + OCPage.esc(node.props.label || '') + '"' + dis + '></div><div class="pb-ifield"><label>連結</label><input class="input" value="' + OCPage.esc(node.props.href || '') + '"' + dis + '></div>';
+        return '<div style="font-size:12.5px;color:var(--text-faint)">此區塊內容由綁定資料自動顯示。在「資料」面板可更換來源。</div>';
+      }
+      function styleTab(node, locked) {
+        var variants = { heading: ['簡約標題', '古典標題', '怪談標題', '終端機標題'], text: ['正文', '引用', '設定註記', '警告'], image: ['無框', '相框', '滿版', '肖像'], character_profile: ['百科卡', '檔案卡', '卷軸', '終端機面板'] }[node.type] || ['預設', '緊湊', '寬鬆'];
+        var h = '<div class="pb-ifield"><label>樣式 Variant</label><div class="pb-variant">' + variants.map(function (v, i) { return '<button data-variant' + (i === 0 ? ' class="on"' : '') + (locked ? ' disabled' : '') + '>' + v + '</button>'; }).join('') + '</div></div>';
+        h += '<div class="pb-followrow"><span class="lbl">跟隨主題</span><span class="toggle on" id="followTheme"' + (locked ? ' style="pointer-events:none;opacity:.5"' : '') + '><i></i></span></div>';
+        h += '<div class="pb-override-fields hidden">' + ['字體', '字級', '文字色', '背景', '邊框', '圓角', '透明度', '陰影', '對齊', '間距'].map(function (f) { return '<div class="pb-ifield"><label>' + f + '</label><input class="input" placeholder="跟隨主題"' + (locked ? ' disabled' : '') + '></div>'; }).join('') + '<div style="font-size:11px;color:var(--accent-ink)">⚠ 自訂顏色時會檢查文字／背景對比。</div></div>';
+        h += '<div style="font-size:11px;color:var(--text-faint);margin-top:6px">關閉「跟隨主題」才會展開完整自訂；預設跟隨頁面主題，不會一次塞 20 個設定。</div>';
+        return h;
+      }
+      function respTab(node, locked) {
+        var dis = locked ? ' disabled' : '';
+        return '<div style="font-size:12px;color:var(--text-dim);margin-bottom:8px">目前預覽：' + ({ desktop: '桌機', tablet: '平板', mobile: '手機' }[vp]) + '</div>'
+          + '<label class="pb-radio"><input type="checkbox" checked' + dis + '> 手機顯示這個區塊</label>'
+          + '<div class="pb-ifield"><label>寬度</label><div class="filterbar"><button class="fbtn on"' + dis + '>全寬</button><button class="fbtn"' + dis + '>半寬</button></div></div>'
+          + '<div class="pb-ifield"><label>對齊</label><div class="filterbar"><button class="fbtn"' + dis + '>左</button><button class="fbtn on"' + dis + '>中</button><button class="fbtn"' + dis + '>右</button></div></div>'
+          + '<div style="font-size:11px;color:var(--text-faint)">手機版只給一般使用者需要的選項；欄數等進階設定在版型設計模式。</div>';
+      }
+      function permTab(node) {
+        var lock = node.lock || {};
+        function opt(k, label, on) { return '<div class="pb-lockopt"><span class="lbl">' + label + '</span><span class="toggle' + (on ? ' on' : '') + '" data-lock="' + k + '"><i></i></span></div>'; }
+        return '<div style="font-size:12px;color:var(--text-dim);margin-bottom:8px">設定成員套用此版型時，能對這個區塊做什麼。</div>'
+          + opt('locked', '主持人鎖定（成員不可改）', lock.locked) + opt('required', '必須保留（不可隱藏）', lock.required)
+          + opt('memberCanHide', '成員可隱藏', lock.memberCanHide) + opt('memberCanReorder', '成員可排序', lock.memberCanReorder) + opt('memberCanRestyle', '成員可改外觀', lock.memberCanRestyle);
+      }
+      function pageSettings() {
+        return '<div class="pb-ifield"><label>頁面名稱</label><input class="input" value="' + OCPage.esc(pg.name) + '"></div>'
+          + '<div class="pb-ifield"><label>主題</label><div class="pb-variant">' + ['簡約', '暗色怪談', '檔案館', '羊皮紙', '科幻終端'].map(function (t, i) { return '<button data-variant' + (i === 0 ? ' class="on"' : '') + '>' + t + '</button>'; }).join('') + '</div></div>'
+          + '<div class="pb-ifield"><label>版面寬度</label><select class="select"><option>標準 960</option><option>窄 720</option><option>寬 1200</option></select></div>'
+          + '<div class="pb-ifield"><label>頁面可見性</label><select class="select"><option>公開</option><option>限連結</option><option>成員</option><option>私人</option></select></div>'
+          + '<div style="font-size:11px;color:var(--text-faint);margin-top:6px">全站設定與「新增區塊」分開，未選區塊時顯示於此。</div>';
+      }
+
+      function bindHuman(b) {
+        if (!b) return { label: '', entity: '' };
+        if (b.source === 'character') { var fm = { name: '角色名稱', summary: '一句話介紹', palette: '色票' }; return { entity: '角色資料', label: (c ? c.name + ' → ' : '') + (fm[b.field] || b.field || '角色') }; }
+        if (b.source === 'link') return { entity: '企劃版本', label: '企劃身份（陣營／職位）' };
+        if (b.source === 'project') return { entity: '企劃資料', label: p.name + ' → ' + (b.field === 'name' ? '企劃名稱' : b.field || '企劃') };
+        if (b.source === 'worldEntry') return { entity: '世界觀條目', label: '世界觀 → ' + (b.field === 'name' ? '名稱' : b.field === 'summary' ? '摘要' : '內容') };
+        if (b.source === 'assetLink') return { entity: '圖片', label: '圖庫圖片' };
+        return { entity: '資料', label: b.source };
+      }
+      function publishFlow() {
+        var body = document.createElement('div');
+        body.innerHTML = '<div class="pub-flow"><div class="pub-step done"><span class="n">1</span>Draft Layout</div><div class="pub-step done"><span class="n">2</span>權限裁切</div><div class="pub-step done"><span class="n">3</span>Minimal Public Snapshot</div><div class="pub-step"><span class="n">4</span>Published Version</div></div><div style="font-size:12px;color:var(--text-faint);margin-top:10px">Public Renderer 只讀 Published Version。</div>';
+        OCUI.modal({ title: '發布公開頁', body: body, actions: [ { label: '取消' }, { label: '發布', kind: 'accent', onClick: function () { OCUI.toast('已發布 ✓（公開頁已更新）', { demo: true }); } } ] });
+      }
+    }
+
+    function shell() { var s = document.createElement('script'); s.src = '../assets/shell.js'; document.body.appendChild(s); }
+    renderList();
+  })();
+</script>
+</body>
+</html>

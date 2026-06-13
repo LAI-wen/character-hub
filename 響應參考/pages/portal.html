@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>公開頁 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/ds.css">
+<link rel="stylesheet" href="../assets/components.css">
+<link rel="stylesheet" href="../assets/pagebuilder.css">
+<style>
+  body { background: var(--bg-tint); margin: 0; }
+  .rnd-shell { min-height: 100vh; display: flex; flex-direction: column; }
+  .rnd-stage { flex: 1; display: flex; justify-content: center; padding: var(--s6) var(--s4); }
+  .rnd-page { background: var(--surface); box-shadow: var(--sh-2); width: 100%; transition: max-width .2s; }
+  .rnd-page.desktop { max-width: 960px; } .rnd-page.tablet { max-width: 720px; } .rnd-page.mobile { max-width: 380px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="../assets/data.js"></script>
+<script src="../assets/components.js"></script>
+<script src="../assets/pagerender.js"></script>
+<script>
+  (function () {
+    // PUBLIC RENDERER — no sidebar, no management controls. Reads the
+    // Published Version (or Draft when ?preview=draft). Public-cropped data.
+    var root = document.getElementById('root');
+    var params = new URLSearchParams(location.search);
+    var slug = params.get('slug');
+    var pageId = params.get('page');
+    var previewDraft = params.get('preview') === 'draft';
+    var vp = 'desktop';
+
+    var pg = slug ? OCData.publicPageBySlug(slug) : (pageId ? OCData.publicPage(pageId) : null);
+    if (!pg) { root.innerHTML = '<div style="padding:60px;text-align:center;color:var(--text-faint)">找不到這個公開頁。</div>'; return; }
+
+    var pdata = OCData.pagePublicData(pg.id);
+    // gate: published+public unless preview
+    if (!previewDraft) {
+      if (pg.status !== 'published') { root.innerHTML = state('這個頁面尚未發布。', '擁有者還沒有發布這個公開頁。'); return; }
+      if (!pdata.renderable) { root.innerHTML = state('這個頁面目前不公開。', '頁面或其資料被設為非公開。'); return; }
+    }
+
+    // resolve layout: template tree or page's own (demo: reuse template if any)
+    var tree = pg.templateId ? OCData.pageTemplate(pg.templateId).tree
+      : { type: 'page', props: { maxWidth: 880, accent: (OCData.project(pg.projectId) || {}).c || '#3B5E6B' }, children: [
+          { type: 'section', props: { pad: 'lg' }, children: [ { type: 'heading', props: { bind: pg.dataRef.characterId ? { source: 'character', field: 'name' } : { source: 'project', field: 'name' }, size: 'xl' } }, { type: 'character_profile', props: pg.dataRef.characterId ? {} : { _skip: 1 } } ] } ] };
+    var theme = pg.templateId ? (OCData.pageTemplate(pg.templateId).theme || null) : null;
+    // for worldEntry pages, bind the template's generic blocks to THIS entry (one template, many entries)
+    if (pg.purpose === 'worldEntry' && pg.dataRef.worldEntryId) {
+      tree = JSON.parse(JSON.stringify(tree));
+      (function bindWorld(node) {
+        if (node.type === 'heading' && node.props && node.props.variant === 'scroll') node.props = { bind: { source: 'worldEntry', field: 'name' }, size: 'xl', variant: 'scroll' };
+        if (node.type === 'text' && node.props && node.props.variant === 'quote') node.props = { bind: { source: 'worldEntry', field: 'summary' }, variant: 'quote' };
+        if (node.type === 'text' && node.props && node.props.variant === 'body') node.props = { bind: { source: 'worldEntry', field: 'content' }, variant: 'body' };
+        (node.children || []).forEach(bindWorld);
+      })(tree);
+    }
+
+    function render() {
+      var bar = previewDraft
+        ? '<div class="rnd-preview-bar"><b>Draft 預覽</b><span>這是未發布的草稿，公開訪客看不到。</span><span class="spacer"></span><div class="rnd-vp"><button data-v="desktop" class="on" title="桌機">' + OCIcon('monitor') + '</button><button data-v="tablet" title="平板">' + OCIcon('tablet') + '</button><button data-v="mobile" title="手機">' + OCIcon('phone') + '</button></div><button id="closeP">關閉</button></div>'
+        : '';
+      root.innerHTML = bar + '<div class="rnd-shell"><div class="rnd-stage"><div class="rnd-page ' + vp + '" id="rndPage"></div></div></div>';
+      var page = document.getElementById('rndPage');
+      page.style.setProperty('--accent', (theme && theme.primary) || tree.props.accent || '#3B5E6B');
+      page.style.maxWidth = ((theme && theme.maxWidth) || tree.props.maxWidth || 880) + 'px';
+      if (theme) { page.style.background = theme.bg; page.style.color = theme.text; page.style.setProperty('--text', theme.text); }
+      // public crop note: if a bound entity is private, blocks show broken/cropped — but
+      // we never leak counts; the renderer simply omits non-public data.
+      page.innerHTML = OCPage.renderNode(tree, pg.dataRef || {}, { builder: false, vp: vp });
+      root.querySelectorAll('[data-v]').forEach(function (b) { b.onclick = function () { vp = b.dataset.v; root.querySelectorAll('[data-v]').forEach(function (x) { x.classList.toggle('on', x === b); }); render(); }; });
+      var cp = root.querySelector('#closeP'); if (cp) cp.onclick = function () { window.close(); location.href = 'public-pages.html?project=' + (pg.projectId || 'tokoyo'); };
+    }
+    function state(t, b) { return '<div style="max-width:420px;margin:80px auto;text-align:center"><div style="font-size:16px;font-weight:600">' + t + '</div><p style="font-size:13.5px;color:var(--text-dim);margin-top:8px">' + b + '</p></div>'; }
+    render();
+  })();
+</script>
+</body>
+</html>

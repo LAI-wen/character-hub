@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Public Page Scope / Ownership 校正 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/ds.css">
+<link rel="stylesheet" href="assets/components.css">
+<style>
+  body { background: var(--bg); }
+  .wrap { max-width: 1020px; margin: 0 auto; padding: var(--s12) var(--s8) var(--s16); }
+  .hero { border-bottom: 1px solid var(--border-strong); padding-bottom: var(--s8); margin-bottom: var(--s10); }
+  .hero .eyebrow { margin-bottom: 12px; }
+  .hero h1 { font-family: var(--font-serif); font-size: 38px; font-weight: 900; margin: 0; letter-spacing: -.025em; line-height: 1.07; }
+  .hero .lead { color: var(--text-dim); font-size: 15.5px; margin: var(--s4) 0 0; max-width: 70ch; line-height: 1.65; text-wrap: pretty; }
+  .hero .chips { display: flex; gap: var(--s2); margin-top: var(--s5); flex-wrap: wrap; }
+  section { margin-top: var(--s12); }
+  .sh { display: flex; align-items: baseline; gap: var(--s3); margin-bottom: var(--s4); }
+  .sh .ix { font-family: var(--font-mono); font-size: 13px; color: var(--text-faint); }
+  .sh h2 { font-family: var(--font-serif); font-size: 23px; font-weight: 800; margin: 0; }
+  .sh .en { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); }
+  .sh .rule { flex: 1; height: 1px; background: var(--border); align-self: center; }
+  p.note { font-size: 14px; color: var(--text-dim); line-height: 1.65; max-width: 76ch; margin: 0 0 var(--s4); text-wrap: pretty; }
+  p.note b { color: var(--text); }
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); overflow: hidden; margin-top: var(--s2); font-size: 13px; }
+  thead th { text-align: left; font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-faint); padding: 9px 11px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
+  tbody td { padding: 9px 11px; border-bottom: 1px solid var(--border); vertical-align: top; line-height: 1.5; }
+  tbody tr:last-child td { border-bottom: 0; }
+  td .f, code { font-family: var(--font-mono); font-size: 11.5px; } code { background: var(--bg-tint); padding: 1px 5px; border-radius: 5px; color: var(--accent-ink); }
+  .st { display: inline-block; font-family: var(--font-mono); font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: var(--r-pill); white-space: nowrap; }
+  .st.user { background: var(--accent-soft); color: var(--accent-ink); } .st.proj { background: #E8EEF6; color: #355C86; } .st.ctx { background: var(--must-soft); color: #1F6B43; }
+  .pages { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--s3); }
+  .pcard { display: flex; flex-direction: column; gap: 3px; padding: var(--s4) var(--s5); border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--sh-1); text-decoration: none; color: inherit; transition: box-shadow .15s, transform .15s; }
+  .pcard:hover { box-shadow: var(--sh-2); transform: translateY(-2px); }
+  .pcard .n { font-family: var(--font-serif); font-size: 16px; font-weight: 700; }
+  .pcard .d { font-size: 12.5px; color: var(--text-dim); margin-top: 4px; line-height: 1.5; }
+  .scen { display: flex; align-items: flex-start; gap: 10px; font-size: 13.5px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .scen:last-child { border-bottom: none; }
+  .scen .n { font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); width: 20px; flex: none; padding-top: 2px; }
+  .scen .ck { color: #1F6B43; flex: none; font-weight: 700; }
+  ul.lst { margin: 0; padding-left: 1.2em; font-size: 13.5px; color: var(--text-dim); line-height: 1.85; } ul.lst b { color: var(--text); }
+  .foot { margin-top: var(--s16); padding-top: var(--s6); border-top: 1px solid var(--border-strong); }
+  .foot .q { font-family: var(--font-serif); font-size: 19px; font-weight: 700; margin: 0 0 var(--s2); }
+  .foot p { font-size: 14px; color: var(--text-dim); line-height: 1.7; }
+  @media (max-width: 760px) { .hero h1 { font-size: 28px; } .pages { grid-template-columns: 1fr; } .wrap { padding: var(--s10) var(--s4); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">CharacterHub · Public Page Scope / Ownership 校正</div>
+    <h1>個人公開頁 vs<br>企劃公開頁</h1>
+    <p class="lead">公開頁不再只屬於企劃。新增 <b>我的公開頁</b>（Account scope），並把 PublicPage 的擁有權拆成 <b>User-owned / Project-owned / User-owned Project-context</b> 三種。不新增第二套資料模型、不接 API——以既有欄位<b>衍生</b>分類。</p>
+    <div class="chips">
+      <span class="badge approved"><span class="d" style="background:var(--must)"></span>我的公開頁已加入 Account 導覽</span>
+      <span class="badge">pageOwnerType / sourceType</span>
+      <span class="demo-only">Demo interaction only</span>
+    </div>
+  </div>
+
+  <section>
+    <div class="sh"><span class="ix">01</span><h2>三種公開頁</h2><span class="en">Three ownership cases</span><span class="rule"></span></div>
+    <table><thead><tr><th>類型</th><th>由誰管理</th><th>例子</th><th>Scope</th></tr></thead><tbody>
+      <tr><td><span class="st user">User-owned</span></td><td>使用者本人</td><td>個人角色頁、委託資訊、自訂頁</td><td>Account · 我的公開頁</td></tr>
+      <tr><td><span class="st proj">Project-owned</span></td><td>企劃（依 action permission）</td><td>企劃入口頁、世界觀條目頁、官方名冊</td><td>Project · 公開展示</td></tr>
+      <tr><td><span class="st ctx">User-owned · Project-context</span></td><td>角色擁有者（版型由企劃）</td><td>「宵霧在常夜國中的角色頁」</td><td>Account（屬使用者）· 企劃可管版型/收錄</td></tr>
+    </tbody></table>
+    <p class="note" style="margin-top:var(--s3)"><b>Project-context 頁的權限分離：</b>主持人可管理企劃版型、鎖定必要 Block、決定是否列入官方名冊、撤銷企劃資料公開授權、管理企劃內可見性；但<b>不能</b>修改 Character 本體、接管成員自訂文字、永久刪除成員個人頁、查看未授權的私人欄位。若企劃要官方角色頁，<b>另建 Project-owned Official Character Page</b>，不與成員個人頁混為一筆。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">02</span><h2>PublicPage 擁有權欄位</h2><span class="en">Ownership fields (derived)</span><span class="rule"></span></div>
+    <p class="note">交接概念。原型以既有欄位<b>衍生</b> <code>pageOwnerType / sourceType / pageOwnerId</code>（無資料膨脹）；正式 schema 應顯式存這些欄位，並把四種角色分開：</p>
+    <table><thead><tr><th>概念</th><th>說明</th></tr></thead><tbody>
+      <tr><td class="f">Page Owner</td><td><code>pageOwnerType: user|project</code> + <code>pageOwnerId</code>。決定頁面歸誰、出現在哪個 scope。</td></tr>
+      <tr><td class="f">Source Entity Owner</td><td>頁面資料來源（Character / Link / Project / WorldEntry…）的擁有者——<b>可能不是 Page Owner</b>。</td></tr>
+      <tr><td class="f">Template Owner</td><td>版型擁有者。Project-context 頁＝企劃；個人頁＝使用者。</td></tr>
+      <tr><td class="f">Publisher</td><td>實際發布者（需 <code>publicPage:publish</code>）。能編 Draft ≠ 能發布。</td></tr>
+    </tbody></table>
+    <p class="note" style="margin-top:var(--s3)"><code>sourceType: character | projectCharacterLink | project | worldEntry | story | commission | custom</code>，搭配 <code>sourceId? / projectId? / createdByUserId / templateVersionId? / visibility / currentPublishedVersionId?</code>。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">03</span><h2>Route / Scope（route-specific）</h2><span class="en">Resolver by route + query</span><span class="rule"></span></div>
+    <p class="note">Scope Resolver 依<b>路由定義＋query 驗證</b>判定，<b>不是只看參數名稱</b>。「有 project 但無 link＝invalid」<b>只適用 character/editor</b>。</p>
+    <table><thead><tr><th>路由</th><th>正式 Route</th><th>Scope</th></tr></thead><tbody>
+      <tr><td><code>public-pages.html</code></td><td><code>/app/public-pages</code></td><td><span class="st user">account</span> 我的公開頁</td></tr>
+      <tr><td><code>public-pages.html?project=:pid</code></td><td><code>/app/projects/:pid/public-pages</code></td><td><span class="st proj">project</span> 企劃公開頁</td></tr>
+      <tr><td><code>public-pages.html?mode=builder&page=:id</code></td><td><code>/app/public-pages/:id/edit</code></td><td>builder · BuilderShell</td></tr>
+      <tr><td><code>portal.html?page=:id</code></td><td><code>/p/:slug</code></td><td>public · 無 Sidebar</td></tr>
+      <tr><td><code>worldview.html?project=:pid</code></td><td>—</td><td><span class="st proj">project</span>（有效，非僅篩選）</td></tr>
+      <tr><td><code>commissions.html?project=:pid</code></td><td>—</td><td><span class="st user">account</span>（project 只是頁內篩選）</td></tr>
+      <tr><td><code>character/editor.html?project=:pid</code> 無 link</td><td>—</td><td>Invalid Project Character Context</td></tr>
+    </tbody></table>
+    <p class="note" style="margin-top:var(--s3)"><b>Builder 返回位置</b>依 page ownership：User-owned → 我的公開頁；Project-owned → 企劃公開頁。不永遠回固定企劃頁。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">04</span><h2>清單關係</h2><span class="en">List separation</span><span class="rule"></span></div>
+    <div class="pages">
+      <a class="pcard" href="pages/public-pages.html"><span class="n">我的公開頁（Account）</span><span class="d">宵霧角色頁、望角色頁（連結常夜國·使用企劃版型）、委託資訊頁——個人擁有。Sidebar 維持 Account。</span></a>
+      <a class="pcard" href="pages/public-pages.html?project=tokoyo"><span class="n">企劃公開頁（Project）</span><span class="d">企劃頁＋世界觀條目頁＝Project-owned；成員角色頁僅顯示「官方收錄狀態／版型版本／資料公開狀態／Broken binding」，Host 不擁有該頁。</span></a>
+    </div>
+    <p class="note" style="margin-top:var(--s4)"><b>對 Member-owned page，企劃端只能管理：</b>官方收錄狀態、版型版本、企劃資料公開狀態、Broken／Missing Binding、是否需成員更新——<b>不可讓 Host 看起來擁有該個人頁</b>。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">05</span><h2>有效公開條件鏈</h2><span class="en">Visibility chain</span><span class="rule"></span></div>
+    <p class="note">Project-context 頁要公開顯示，需<b>同時</b>通過：</p>
+    <ul class="lst">
+      <li>Page Access <b>且</b> Page Owner 授權 <b>且</b> Character 可見 <b>且</b> ProjectCharacterLink 可見 <b>且</b> Project 仍允許公開 <b>且</b> Template／Block visibility <b>且</b> Asset 可見。</li>
+      <li>若 <b>Link removed</b> / 企劃改 private / 企劃撤銷資料授權 → <b>立即停止顯示企劃限定資料</b>，不得用舊 Published Snapshot 洩漏；可保留 Character-only 頁，或轉未發布並提示修復。</li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">06</span><h2>10 個 QA 情境</h2><span class="en">Scenarios</span><span class="rule"></span></div>
+    <div id="scens"></div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">07</span><h2>已修正 / 未做</h2><span class="en">Done · out of scope</span><span class="rule"></span></div>
+    <ul class="lst">
+      <li><b>已做：</b>我的公開頁加入 Account 導覽；公開頁列表依 scope 分流（account / project / builder）；ownership 衍生分類；Phase 0 報告文字校正（public-pages 依 query 分流、character 無 link＝Invalid Context）。</li>
+      <li><b>未做（依指示）：</b>不重做 PB0 Builder、不新增第二套資料模型、不接正式 API。Project-owned Official Character Page、逐項公開條件鏈的執行為交接概念，待本地實作。</li>
+    </ul>
+  </section>
+
+  <div class="foot">
+    <p class="q">校正完成 · 可進 Design QA Phase 1A</p>
+    <p>公開頁 ownership／IA 已補齊三種情境與 route-specific scope。確認後即可開始 Design QA Phase 1A（實際畫面與流程驗收）。</p>
+  </div>
+</div>
+
+<script>
+  var SCENS = [
+    '建立完全不屬於企劃的個人角色頁 → 出現在我的公開頁（Account）',
+    '從「我的公開頁」管理個人頁 → Sidebar 維持 Account Scope',
+    '從企劃管理進入 Project-owned Portal → Sidebar 為 Project Scope',
+    '同一角色建立個人頁與企劃版本頁 → 兩者不混淆（個人頁在我的公開頁，官方頁在企劃）',
+    'Member 使用企劃版型，但仍擁有自己的頁面（pageOwnerType=user）',
+    'Host 可鎖定版型 Block，但不能修改 Character 本體',
+    'Host 將 Member Page 從官方名冊移除 → 不刪除 Member 的個人頁',
+    'ProjectCharacterLink removed → 企劃限定資料立即停止公開（Character-only 仍可留）',
+    'User-owned / Project-owned 的 Builder 返回位置正確',
+    '沒有任何企劃的使用者仍能建立角色頁、委託頁與自訂頁',
+  ];
+  document.getElementById('scens').innerHTML = SCENS.map(function (s, i) {
+    return '<div class="scen"><span class="n">' + (i + 1) + '</span><span class="ck">✓</span><span>' + s + '</span></div>';
+  }).join('');
+</script>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#2F8F5B"/>
+    <rect x="24" y="28" width="22" height="44" rx="3" fill="#fff"/><rect x="54" y="28" width="22" height="44" rx="3" fill="#fff" opacity=".7"/>
+  </svg>
+</template>
+</body>
+</html>

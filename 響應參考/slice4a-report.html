@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Slice 4A 驗收 · 故事 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/ds.css">
+<link rel="stylesheet" href="assets/components.css">
+<style>
+  body { background: var(--bg); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: var(--s12) var(--s8) var(--s16); }
+  .hero { border-bottom: 1px solid var(--border-strong); padding-bottom: var(--s8); margin-bottom: var(--s10); }
+  .hero .eyebrow { margin-bottom: 12px; }
+  .hero h1 { font-family: var(--font-serif); font-size: 40px; font-weight: 900; margin: 0; letter-spacing: -.025em; line-height: 1.06; }
+  .hero .lead { color: var(--text-dim); font-size: 16px; margin: var(--s4) 0 0; max-width: 64ch; line-height: 1.65; text-wrap: pretty; }
+  .hero .chips { display: flex; gap: var(--s2); margin-top: var(--s5); flex-wrap: wrap; }
+  section { margin-top: var(--s12); }
+  .sh { display: flex; align-items: baseline; gap: var(--s4); margin-bottom: var(--s5); }
+  .sh .ix { font-family: var(--font-mono); font-size: 13px; color: var(--text-faint); }
+  .sh h2 { font-family: var(--font-serif); font-size: 24px; font-weight: 800; margin: 0; }
+  .sh .en { font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); }
+  .sh .rule { flex: 1; height: 1px; background: var(--border); align-self: center; }
+  p.note { font-size: 14.5px; color: var(--text-dim); line-height: 1.7; max-width: 74ch; text-wrap: pretty; }
+  p.note b { color: var(--text); }
+  .pages { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: var(--s3); }
+  .pcard { display: flex; flex-direction: column; gap: 3px; padding: var(--s4) var(--s5); border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--sh-1); text-decoration: none; color: inherit; transition: box-shadow .15s, transform .15s; }
+  .pcard:hover { box-shadow: var(--sh-2); transform: translateY(-2px); }
+  .pcard .n { font-family: var(--font-serif); font-size: 16px; font-weight: 700; }
+  .pcard .d { font-size: 12.5px; color: var(--text-dim); margin-top: 4px; line-height: 1.5; }
+  .pcard .sc { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--accent-ink); margin-top: 6px; }
+  .shots { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s4); }
+  .shot { border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--sh-1); overflow: hidden; }
+  .shot img { width: 100%; display: block; border-bottom: 1px solid var(--border); }
+  .shot .cap { padding: var(--s3) var(--s4); font-size: 12.5px; color: var(--text-dim); }
+  .shot .cap b { color: var(--text); }
+  .split { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--s4); }
+  .col { border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); padding: var(--s5); }
+  .col h3 { margin: 0 0 var(--s2); font-size: 14px; font-weight: 700; }
+  .col ul { margin: 0; padding-left: 1.1em; font-size: 12.5px; color: var(--text-dim); line-height: 1.8; }
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); overflow: hidden; margin-top: var(--s2); }
+  thead th { text-align: left; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); padding: var(--s3) var(--s4); border-bottom: 1px solid var(--border); background: var(--surface-2); }
+  tbody td { padding: var(--s3) var(--s4); border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: top; line-height: 1.5; }
+  tbody tr:last-child td { border-bottom: 0; }
+  td .f { font-family: var(--font-mono); font-size: 12px; font-weight: 600; }
+  .gap-card { border: 1px solid #ECDFA8; background: var(--accent-soft); border-radius: var(--r-card); padding: var(--s4) var(--s5); margin-bottom: var(--s3); }
+  .gap-card .gt { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--accent-ink); }
+  .gap-card .gd { font-size: 13px; color: var(--text-dim); margin-top: 5px; line-height: 1.6; }
+  .gap-card .gd b { color: var(--text); }
+  .gap-card.ok { border-color: #CDE8D8; background: var(--must-soft); } .gap-card.ok .gt { color: #1F6B43; }
+  .demo-list { display: flex; flex-direction: column; gap: 8px; }
+  .demo-row { display: flex; align-items: center; gap: 10px; font-size: 13.5px; padding: 9px 13px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+  .open-issues { border: 1px solid #F0CFCB; background: var(--avoid-soft); border-radius: var(--r-card); padding: var(--s4) var(--s5); }
+  .open-issues ul { margin: 0; padding-left: 1.1em; font-size: 13.5px; color: var(--text-dim); line-height: 1.8; }
+  .foot { margin-top: var(--s16); padding-top: var(--s6); border-top: 1px solid var(--border-strong); }
+  .foot .q { font-family: var(--font-serif); font-size: 19px; font-weight: 700; margin: 0 0 var(--s2); }
+  .foot p { font-size: 14px; color: var(--text-dim); line-height: 1.7; }
+  @media (max-width: 860px) { .hero h1 { font-size: 30px; } .shots, .split { grid-template-columns: 1fr; } .wrap { padding: var(--s10) var(--s4); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">CharacterHub · Slice 4A · Story</div>
+    <h1>Slice 4A 驗收</h1>
+    <p class="lead">故事頁完成。同一批故事資料支援<b>章節檢視</b>與<b>時間軸檢視</b>兩種呈現；StoryEvent 與世界觀 Event 明確區分，可經 EntityLink 互相關聯；動作權限、公開裁切、四＋態空狀態齊備。</p>
+    <div class="chips">
+      <span class="badge approved"><span class="d" style="background:var(--must)"></span>story.html</span>
+      <span class="badge">章節 ↔ 時間軸</span>
+      <span class="demo-only">所有儲存為 Demo only</span>
+    </div>
+  </div>
+
+  <section>
+    <div class="sh"><span class="ix">01</span><h2>可點擊頁面</h2><span class="en">Clickable</span><span class="rule"></span></div>
+    <div class="pages">
+      <a class="pcard" href="pages/story.html?project=tokoyo"><span class="n">故事 · 常夜國</span><span class="d">多故事；章節大綱＋內容；時間軸檢視；EntityLink 面板。</span><span class="sc">story.html</span></a>
+      <a class="pcard" href="pages/story.html?project=hoshi"><span class="n">Story 無章節</span><span class="d">星海序章：故事存在但尚無章節的空狀態。</span><span class="sc">?project=hoshi</span></a>
+      <a class="pcard" href="pages/story.html?project=commset"><span class="n">模組未啟用</span><span class="d">委託角色集未啟用故事模組 → plug 空狀態。</span><span class="sc">?project=commset</span></a>
+      <a class="pcard" href="pages/story.html?project=school"><span class="n">已啟用但無故事</span><span class="d">校園 AU 啟用故事但尚無內容（如適用）。</span><span class="sc">?project=school</span></a>
+    </div>
+    <p class="note" style="margin-top:var(--s4)">切側欄左下「視角」可看 主持／參與／公開預覽 差異。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">02</span><h2>畫面</h2><span class="en">Screens</span><span class="rule"></span></div>
+    <div class="shots">
+      <div class="shot"><img src="screenshots/s4a-chapters.png" alt="章節檢視"><div class="cap"><b>章節檢視</b>：故事選擇器、章節大綱（編號／狀態／排序控制）、章節內容；右側關聯面板。</div></div>
+      <div class="shot"><img src="screenshots/s4a-timeline.png" alt="時間軸檢視"><div class="cap"><b>時間軸檢視</b>：timeLabel 分組、文字順序 #編號、同一時間點多事件標註、角色篩選、EntityLink chips。</div></div>
+      <div class="shot"><img src="screenshots/s4a-preview.png" alt="公開預覽"><div class="cap"><b>公開預覽</b>：橫幅；只顯示公開故事／章節／事件；無新增／編輯／排序。</div></div>
+      <div class="shot"><div class="cap" style="padding:var(--s5)"><b>切換方式</b><br><span style="color:var(--text-dim)">頁首「章節／時間軸」Segmented 切換，兩者讀同一批 Story/Chapter/StoryEvent；時間軸另有文字順序與清單，不只靠垂直線位置。</span></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">03</span><h2>資料分區</h2><span class="en">Story · Chapter · StoryEvent</span><span class="rule"></span></div>
+    <div class="split">
+      <div class="col"><h3>Story</h3><ul><li>projectId · title · summary</li><li>status（draft/completed/archived）</li><li>visibility · coverAssetId?</li></ul></div>
+      <div class="col"><h3>Chapter</h3><ul><li>storyId · title · summary</li><li>content · sortOrder</li><li>status</li></ul></div>
+      <div class="col"><h3>StoryEvent</h3><ul><li>projectId · storyId? · chapterId?</li><li>title · description</li><li>timeLabel（模糊時間文字）</li><li>sortKey（排序，非真實日期）</li><li>visibility</li></ul></div>
+    </div>
+    <div class="gap-card" style="margin-top:var(--s4);border-color:#CBDDF0;background:#E8EEF6"><div class="gt" style="color:#355C86">StoryEvent ≠ WorldEntry Event</div><div class="gd"><b>StoryEvent</b>＝故事中的劇情節點／敘事事件；<b>WorldEntry Event</b>＝世界觀中的歷史／設定事實。兩者可用 EntityLink 互相關聯，但不是同一筆資料。</div></div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">04</span><h2>EntityLink 與公開裁切</h2><span class="en">Links</span><span class="rule"></span></div>
+    <p class="note">Story／Chapter／StoryEvent 可關聯 Character／WorldEntry／其他 StoryEvent／Asset。右側面板顯示名稱、頭像、類型與關係標籤，點角色 chip 進角色詳情。<b>公開預覽同時檢查關聯本身與目標實體可見性</b>——私人角色／條目的關聯整筆隱藏（不洩漏名稱頭像）；私人 StoryEvent（如「某個夢」）與「僅成員」事件（月蝕停戰）在預覽中不顯示。已驗證：st1 事件 4→3、私人故事在預覽消失。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">05</span><h2>動作權限</h2><span class="en">Action permissions</span><span class="rule"></span></div>
+    <p class="note">按鈕依<b>動作權限概念</b>顯示，非 fixture 角色名：</p>
+    <table>
+      <thead><tr><th>動作</th><th>Owner/Host</th><th>Member（本原型政策）</th><th>Visitor 預覽</th></tr></thead>
+      <tbody>
+        <tr><td class="f">story:create / update / archive</td><td>✓</td><td>✕</td><td>✕</td></tr>
+        <tr><td class="f">chapter:create / update</td><td>✓</td><td>✓</td><td>✕</td></tr>
+        <tr><td class="f">chapter:reorder / archive</td><td>✓</td><td>✕</td><td>✕</td></tr>
+        <tr><td class="f">storyEvent:create / update</td><td>✓</td><td>✓</td><td>✕</td></tr>
+        <tr><td class="f">storyEvent:delete</td><td>✓</td><td>✕</td><td>✕</td></tr>
+      </tbody>
+    </table>
+    <p class="note" style="margin-top:var(--s3)">Owner/Host/Member 僅為 fixture 身分；正式 UI 依 viewerPermissions 的動作權限判斷，不寫死。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">06</span><h2>狀態設計</h2><span class="en">States</span><span class="rule"></span></div>
+    <div class="demo-list">
+      <div class="demo-row"><span class="demo-only">1</span>Story 模組未啟用（plug 圖示，commset）</div>
+      <div class="demo-row"><span class="demo-only">2</span>已啟用但沒有 Story（CTA 新增故事）</div>
+      <div class="demo-row"><span class="demo-only">3</span>Story 存在但沒有 Chapter（大綱空狀態 + CTA）</div>
+      <div class="demo-row"><span class="demo-only">4</span>Chapter 沒有內容（「點編輯開始撰寫」）</div>
+      <div class="demo-row"><span class="demo-only">5</span>載入失敗（可重試）</div>
+      <div class="demo-row"><span class="demo-only">6</span>無權限（Forbidden）</div>
+      <div class="demo-row"><span class="demo-only">7</span>Story archived（唯讀橫幅）</div>
+      <div class="demo-row"><span class="demo-only">8</span>Visitor Preview 沒有公開內容</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">07</span><h2>響應式</h2><span class="en">Responsive</span><span class="rule"></span></div>
+    <p class="note">桌機三欄（故事選擇＋章節大綱／中間內容或時間軸／右側關聯）。≤1199px 收成兩欄（隱右側關聯）；≤767px 單欄：故事列表 → 章節大綱 → 章節詳情，時間軸改事件清單＋篩選。複雜拖曳建議桌機，但<b>章節有上移／下移按鈕與鍵盤排序</b>（方向鍵）。請在實機 360／390／768／1024／1440px 確認。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">08</span><h2>修改檔案</h2><span class="en">Files</span><span class="rule"></span></div>
+    <table>
+      <thead><tr><th style="width:28%">檔案</th><th>變更</th></tr></thead>
+      <tbody>
+        <tr><td class="f">assets/data.js</td><td>Story／Chapter／StoryEvent fixtures＋helper（storiesOf/chaptersOf/eventsOf/linksOfSource…）；ACTION_GRANTS 補 story/chapter/storyEvent 動作；StoryEvent↔Character/WorldEntry 的 EntityLink。</td></tr>
+        <tr><td class="f">assets/story.css</td><td>故事三欄、章節大綱、排序控制、時間軸、關聯面板、響應式。</td></tr>
+        <tr><td class="f">pages/story.html</td><td>章節／時間軸雙檢視、故事選擇器、四＋態空狀態、動作權限、公開裁切、鍵盤排序。</td></tr>
+        <tr><td class="f">index.html</td><td>故事標記為已重設計，加 Slice 4A 報告連結。</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">09</span><h2>資料契約狀態</h2><span class="en">Contract status</span><span class="rule"></span></div>
+    <div class="gap-card"><div class="gt">DOMAIN CONTRACT READY · Story / Chapter / StoryEvent</div><div class="gd">UI 與欄位概念已確定（見 §03）。timeLabel＝創作者看到的模糊時間文字、sortKey＝排序（非真實日期）；同一 sortKey 以 <b>sortOrder</b> 為第二排序。<b>注意：與 WorldEntry／Relationship 不同，Story 沒有現成本地 API。</b></div></div>
+    <div class="gap-card" style="border-color:#F0CFCB;background:var(--avoid-soft)"><div class="gt" style="color:#9E332B">API NOT IMPLEMENTED · Story</div><div class="gd">本地正式 Story API、D1 CRUD、Repository 與 roundtrip <b>尚未完成</b>。本輪僅 Demo 互動。</div></div>
+    <div class="gap-card"><div class="gt">CONTRACT · status ≠ visibility</div><div class="gd"><b>status</b>: draft / completed / archived；<b>visibility</b>: private / members / public。completed ≠ published，public 也不代表 completed——兩軸獨立。</div></div>
+    <div class="gap-card"><div class="gt">CONTRACT · 公開 effectiveVisibility</div><div class="gd">公開顯示 StoryEvent 需同時滿足：<b>Story 可見 ∧ Chapter 可見 ∧ StoryEvent 可見 ∧ EntityLink 可見 ∧ target 可見</b>。任何祖先或目標為私人時，不洩漏內容／名稱／頭像／數量。</div></div>
+    <div class="gap-card"><div class="gt">DATA GAP · StoryEvent 前置／後續</div><div class="gd">先後關聯走 <b>EntityLink</b>（relationType: precedes / follows / causes / depends_on），不內嵌 id 陣列；正式實作需防先後循環。</div></div>
+    <div class="gap-card"><div class="gt">DATA GAP · coverAssetId / Asset 關聯</div><div class="gd">Story 封面與事件配圖需 Asset／AssetLink（Slice 4B Gallery）。</div></div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">10</span><h2>Demo-only 操作</h2><span class="en">Demo interaction only</span><span class="rule"></span></div>
+    <div class="demo-list">
+      <div class="demo-row"><span class="demo-only">demo</span>新增故事／章節／事件、編輯、封存（含確認）</div>
+      <div class="demo-row"><span class="demo-only">demo</span>章節拖曳排序、上移／下移按鈕、鍵盤方向鍵排序（提示為 Demo）</div>
+      <div class="demo-row"><span class="demo-only">demo</span>故事切換、章節／時間軸切換、角色篩選＝真實 UI-only 狀態</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="ix">11</span><h2>尚未完成的 UX</h2><span class="en">Open issues</span><span class="rule"></span></div>
+    <div class="open-issues">
+      <ul>
+        <li>章節拖曳排序為視覺示意，未真正寫回 sortOrder（待 persistence）。</li>
+        <li>StoryEvent 前置／後續事件鏈尚未在 UI 呈現。</li>
+        <li>章節內容編輯器為 Demo（無富文字）。</li>
+        <li>時間範圍／世界觀條目篩選僅角色篩選已做，其餘待補。</li>
+        <li>故事封面、事件配圖待 Gallery（Slice 4B）。</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="foot">
+    <p class="q">Slice 4A 完成，先停（不進 Gallery）。等你驗收。</p>
+    <p>維持單一 OCData、Demo interaction only，未建立 Repository／API／Auth／第二套 Store。</p>
+  </div>
+</div>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#B5654A"/>
+    <text x="50" y="64" font-family="monospace" font-size="36" font-weight="700" fill="#fff" text-anchor="middle">4A</text>
+  </svg>
+</template>
+</body>
+</html>

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>身高比較 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/ds.css">
+<link rel="stylesheet" href="../assets/shell.css">
+<script src="../assets/data.js"></script>
+<style>
+  .topbar { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 30; }
+  .topbar .inner { max-width: 1200px; margin: 0 auto; padding: 11px var(--s8); display: flex; align-items: center; gap: var(--s6); }
+  .brand { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 15px; }
+  .brand .mk { width: 24px; height: 24px; border-radius: 8px; background: var(--text); color: #fff; display: grid; place-items: center; font-family: var(--font-serif); font-size: 15px; }
+  .nav { display: flex; gap: var(--s2); }
+  .nav a { font-size: 14px; font-weight: 500; color: var(--text-dim); padding: 7px 12px; border-radius: var(--r-btn); cursor: pointer; }
+  .nav a.on { background: var(--bg-tint); color: var(--text); font-weight: 600; }
+  .topbar .spacer { flex: 1; }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg,#8FA3B0,#6B4A1E); }
+
+  .head { max-width: 1200px; margin: 0 auto; padding: var(--s12) var(--s8) var(--s6); display: flex; align-items: flex-end; gap: var(--s4); }
+  .head .eyebrow { margin-bottom: 12px; }
+  .head h1 { font-family: var(--font-serif); font-size: 40px; margin: 0; font-weight: 800; }
+  .head p { color: var(--text-dim); margin: 10px 0 0; font-size: 15px; }
+  .head .spacer { flex: 1; }
+
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 var(--s8) var(--s16); display: grid; grid-template-columns: 290px 1fr; gap: var(--s8); align-items: start; }
+
+  /* controls */
+  .controls { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); box-shadow: var(--sh-1); padding: var(--s4); position: sticky; top: 78px; }
+  .controls .ct-h { font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); margin: 4px 4px 12px; }
+  .crow { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 10px; transition: background .12s; }
+  .crow:hover { background: var(--bg-tint); }
+  .crow .tick { width: 22px; height: 22px; border-radius: 6px; border: 1.5px solid var(--border-strong); display: grid; place-items: center; cursor: pointer; color: #fff; font-size: 13px; flex: none; }
+  .crow.on .tick { border-color: transparent; }
+  .crow .dot { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+  .crow .nm { font-weight: 600; font-size: 14px; flex: 1; } .crow .nm .sp { color: var(--text-faint); font-weight: 400; font-size: 11px; margin-left: 4px; }
+  .crow .hgt { display: flex; align-items: center; gap: 2px; }
+  .crow input.h { width: 46px; font-family: var(--font-mono); font-size: 13px; text-align: right; border: 1px solid var(--border); border-radius: 6px; padding: 4px 6px; background: var(--surface); }
+  .crow input.h:focus { outline: none; border-color: var(--accent); }
+  .crow .cm { font-size: 11px; color: var(--text-faint); }
+  .crow.off { opacity: .5; } .crow.off:hover { opacity: 1; }
+  .controls .ct-foot { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); display: flex; gap: 8px; }
+
+  /* chart */
+  .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); box-shadow: var(--sh-1); padding: var(--s8) var(--s8) var(--s6); }
+  .chart { position: relative; height: 500px; margin-left: 36px; border-bottom: 2px solid var(--text); }
+  .gridline { position: absolute; left: 0; right: 0; height: 1px; background: var(--border); }
+  .gridline .gl-lab { position: absolute; left: -36px; top: -8px; font-family: var(--font-mono); font-size: 10px; color: var(--text-faint); width: 30px; text-align: right; }
+  .figs { position: absolute; inset: 0; display: flex; align-items: flex-end; justify-content: center; gap: 40px; padding: 0 20px; }
+  .fig { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; position: relative; }
+  .fig .topmark { position: absolute; top: 0; transform: translateY(-100%); width: 100%; }
+  .fig .htxt { font-family: var(--font-mono); font-size: 12px; font-weight: 500; text-align: center; margin-bottom: 4px; color: var(--text-dim); }
+  .fig .sil { display: flex; flex-direction: column; align-items: center; width: 60px; }
+  .fig .avatar { width: 48px; height: 48px; border-radius: 50%; border: 3px solid; display: grid; place-items: center; font-family: var(--font-serif); font-weight: 700; font-size: 19px; overflow: hidden; position: relative; z-index: 1; transition: transform .25s ease, box-shadow .25s ease; }
+  .fig .avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+  .fig:hover .avatar { transform: scale(1.1); box-shadow: 0 0 0 6px var(--acs); }
+  .fig .body { width: 100%; border-radius: 26px 26px 4px 4px; border: 2px solid; border-bottom: none; margin-top: 3px; flex: 1; }
+  .fig .name { font-family: var(--font-serif); font-weight: 700; font-size: 16px; margin-top: 8px; }
+  .fig .nrom { font-family: var(--font-mono); font-size: 8.5px; letter-spacing: .1em; color: var(--text-faint); }
+  .chart-foot { display: flex; align-items: center; gap: var(--s4); margin-top: var(--s6); padding-top: var(--s4); border-top: 1px solid var(--border); font-size: 12.5px; color: var(--text-faint); }
+  .chart-foot .spacer { flex: 1; }
+  .empty { display: grid; place-items: center; height: 100%; color: var(--text-faint); font-size: 14px; }
+
+  .scopebar { max-width: 1200px; margin: 0 auto; padding: 0 var(--s8) var(--s5); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .scope-lb { font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); }
+  .scope-chips { display: flex; gap: 7px; flex-wrap: wrap; }
+  .scope-chip { font-size: 13px; font-weight: 600; padding: 6px 13px; border-radius: var(--r-pill); border: 1px solid var(--border); background: var(--surface); color: var(--text-dim); cursor: pointer; white-space: nowrap; transition: all .14s; }
+  .scope-chip:hover { border-color: var(--border-strong); }
+  .scope-chip.on { background: var(--text); color: #fff; border-color: var(--text); }
+
+  @media (max-width: 900px) {
+    .topbar .inner, .head, .scopebar, .wrap { padding-left: var(--s4); padding-right: var(--s4); }
+    .topbar .inner { flex-wrap: wrap; row-gap: 0; }
+    .nav { display: flex; order: 9; width: 100%; overflow-x: auto; gap: 4px; margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--border); -webkit-overflow-scrolling: touch; }
+    .nav a { white-space: nowrap; flex: none; }
+    .wrap { grid-template-columns: 1fr; }
+    .controls { position: static; }
+    .head h1 { font-size: 30px; }
+    /* chart: let figures scroll horizontally instead of overflowing the page */
+    .chart-card { padding: var(--s6) var(--s4) var(--s5); }
+    .figs { gap: 16px; padding: 0 16px; overflow-x: auto; overflow-y: visible; justify-content: safe center; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
+    .fig .sil { width: 50px; }
+    .fig .avatar { width: 40px; height: 40px; font-size: 16px; }
+    .fig .name { font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="inner">
+    <a class="brand" href="dashboard.html"><span class="mk">霧</span>CharacterHub</a>
+    <nav class="nav">
+      <a href="dashboard.html">我的角色</a>
+      <a href="commissions.html">委託</a>
+      <a href="relationships.html">關係圖</a>
+      <a class="on">身高比較</a>
+      <a href="worldview.html">世界觀</a>
+      <a href="settings.html">設定</a>
+    </nav>
+    <div class="spacer"></div>
+    <button class="btn btn-ghost btn-sm js-soon" style="white-space:nowrap">＠yoi-studio</button>
+    <div class="avatar"></div>
+  </div>
+</div>
+
+<div class="head">
+  <div>
+    <div class="eyebrow">Height comparison · 等比例站位</div>
+    <h1>身高比較</h1>
+    <p>勾選 2–8 位角色、可直接改身高，自動生成等比例剪影。方便貼進委託訊息。</p>
+  </div>
+  <div class="spacer"></div>
+  <button class="btn btn-accent" id="exportBtn">↓ 輸出為圖片</button>
+</div>
+
+<div class="scopebar">
+  <span class="scope-lb">企劃</span>
+  <div class="scope-chips" id="scopeChips"></div>
+</div>
+
+<div class="wrap">
+  <div class="controls" style="font-weight: 400; text-align: left">
+    <div class="ct-h">納入比較 · Characters</div>
+    <div id="rows"></div>
+    <div class="ct-foot">
+      <button class="btn btn-sm" id="allBtn" style="flex:1;justify-content:center">全選</button>
+      <button class="btn btn-sm" id="noneBtn" style="flex:1;justify-content:center">清除</button>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart" id="chart"></div>
+    <div class="chart-foot">
+      <span id="countTxt"></span>
+      <span class="spacer"></span>
+      <span id="scaleTxt">基準刻度 0–190 cm · 以實際身高等比例縮放</span>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/app.js"></script>
+<script>
+  window.__autoInit = false;
+  document.querySelectorAll('.js-soon').forEach(el => el.addEventListener('click', e => { e.preventDefault(); toast('功能開發中 · Coming soon'); }));
+  // identity from the shared source (assets/data.js); this page owns each
+  // character's height (cm), in-page arc scope, and default on/off.
+  const LAYOUT = [
+    {id:'yoi',    h:168, proj:'tokoyo', on:true},
+    {id:'hiru',   h:182, proj:'day',    on:true},
+    {id:'tomori', h:152, proj:'tokoyo', on:true},
+    {id:'nozomi', h:163, proj:'tokoyo', on:false},
+    {id:'aka',    h:175, proj:'day',    on:false},
+    {id:'hai',    h:158, proj:'draft',  on:false},
+  ];
+  const CAST = LAYOUT.map(o => {
+    const idn = (window.OCData && OCData.identity(o.id)) || {};
+    return Object.assign({ name:idn.name, rom:idn.rom, sp:idn.sp, c:idn.c }, o);
+  });
+  const MAXCM = 190;
+  const rows = document.getElementById('rows');
+  const chart = document.getElementById('chart');
+  let scope = '*';
+  function inScope(id){ return scope==='*' || (CAST.find(c=>c.id===id)||{}).proj===scope; }
+
+  function hexA(hex, a){ const n=parseInt(hex.slice(1),16); return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`; }
+
+  function renderControls() {
+    rows.innerHTML = CAST.filter(c=>inScope(c.id)).map(c => `
+      <div class="crow ${c.on?'on':'off'}" data-id="${c.id}">
+        <div class="tick" style="background:${c.on?c.c:'transparent'}">${c.on?'✓':''}</div>
+        <span class="dot" style="background:${c.c}"></span>
+        <span class="nm">${c.name}<span class="sp">${c.sp}</span></span>
+        <span class="hgt"><input class="h" type="number" value="${c.h}" min="80" max="250"><span class="cm">cm</span></span>
+      </div>`).join('');
+    rows.querySelectorAll('.crow').forEach(row => {
+      const c = CAST.find(x=>x.id===row.dataset.id);
+      row.querySelector('.tick').addEventListener('click', ()=>{ c.on=!c.on; renderAll(); });
+      row.querySelector('.dot').addEventListener('click', ()=>{ c.on=!c.on; renderAll(); });
+      row.querySelector('.nm').addEventListener('click', ()=>{ c.on=!c.on; renderAll(); });
+      row.querySelector('.h').addEventListener('input', e=>{ c.h = Math.max(80, Math.min(250, +e.target.value||0)); renderChart(); });
+    });
+  }
+
+  function renderChart() {
+    const on = CAST.filter(c=>c.on && inScope(c.id));
+    const H = chart.clientHeight || 500;
+    // axis grows with the tallest selected character so nobody overflows the chart
+    const maxH = on.length ? Math.max(...on.map(c=>c.h)) : 0;
+    const axisMax = Math.max(MAXCM, Math.ceil(maxH * 1.08 / 10) * 10);
+    // gridlines every 50 cm up to the axis
+    let grid = '';
+    for (let cm = 50; cm < axisMax; cm += 50) {
+      grid += `<div class="gridline" style="bottom:${cm/axisMax*100}%"><span class="gl-lab">${cm}</span></div>`;
+    }
+    const scaleTxt = document.getElementById('scaleTxt');
+    if (scaleTxt) scaleTxt.textContent = `基準刻度 0–${axisMax} cm · 以實際身高等比例縮放`;
+    if (!on.length) { chart.innerHTML = grid + '<div class="empty">勾選至少一位角色開始比較</div>'; document.getElementById('countTxt').textContent=''; return; }
+    const figs = on.map(c => {
+      const totalH = c.h/axisMax*H;
+      const headD = 48;
+      const bodyH = Math.max(8, totalH - headD - 3);
+      return `<div class="fig">
+        <div class="sil" style="height:${totalH}px">
+          <div class="htxt">${c.h}</div>
+          <div class="avatar" style="--acs:${hexA(c.c,.28)};background:${hexA(c.c,.16)};color:${c.c};border-color:${c.c}">${c.name[0]}</div>
+          <div class="body" style="height:${bodyH}px;background:${hexA(c.c,.3)};border-color:${c.c}"></div>
+        </div>
+        <div class="name">${c.name}</div>
+        <div class="nrom">${c.rom} · ${c.h}cm</div>
+      </div>`;
+    }).join('');
+    chart.innerHTML = grid + `<div class="figs">${figs}</div>`;
+    const tallest = on.reduce((a,b)=>a.h>=b.h?a:b);
+    document.getElementById('countTxt').innerHTML = `${on.length} 位角色 · 最高 <b style="color:var(--text-dim)">${tallest.name} ${tallest.h}cm</b>`;
+  }
+
+  function renderAll(){ renderControls(); renderChart(); }
+
+  document.getElementById('allBtn').addEventListener('click', ()=>{ CAST.forEach(c=>{ if(inScope(c.id)) c.on=true; }); renderAll(); });
+  document.getElementById('noneBtn').addEventListener('click', ()=>{ CAST.forEach(c=>{ if(inScope(c.id)) c.on=false; }); renderAll(); });
+  document.getElementById('exportBtn').addEventListener('click', ()=> toast('✓ 已輸出比較圖（PNG）'));
+  window.addEventListener('resize', renderChart);
+
+  // ---- project scope (企劃分組，與角色頁一致) ----
+  const PROJECTS = [{id:'tokoyo',name:'常夜物語'},{id:'day',name:'晝廷篇'},{id:'draft',name:'草稿匣'}];
+  const scopeChips = document.getElementById('scopeChips');
+  scopeChips.innerHTML = [{id:'*',name:'全部'}].concat(PROJECTS).map(p=>`<button class="scope-chip${p.id==='*'?' on':''}" data-p="${p.id}">${p.name}</button>`).join('');
+  scopeChips.querySelectorAll('.scope-chip').forEach(c=>c.onclick=()=>{
+    scope = c.dataset.p;
+    scopeChips.querySelectorAll('.scope-chip').forEach(x=>x.classList.toggle('on', x===c));
+    renderAll();
+  });
+
+  renderAll();
+</script>
+<script src="../assets/shell.js"></script>
+</body>
+</html>

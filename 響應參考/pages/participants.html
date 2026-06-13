@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>參與者 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/ds.css">
+<link rel="stylesheet" href="../assets/shell.css">
+<link rel="stylesheet" href="../assets/components.css">
+<style>
+  .pt-cols { display: grid; grid-template-columns: 320px 1fr 340px; gap: var(--s4); align-items: start; }
+  .pt-pane { border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--sh-1); overflow: hidden; }
+  .pt-pane > .ph { padding: var(--s3) var(--s4); border-bottom: 1px solid var(--border); font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint); display: flex; align-items: center; gap: 8px; }
+  .pt-pane > .ph .ct { margin-left: auto; }
+  .mlist { display: flex; flex-direction: column; }
+  .mrow { display: flex; align-items: center; gap: 10px; padding: 11px var(--s4); border-bottom: 1px solid var(--border); cursor: pointer; text-align: left; font: inherit; background: none; border-left: 3px solid transparent; width: 100%; }
+  .mrow:hover { background: var(--surface-2); }
+  .mrow.sel { background: var(--accent-soft); border-left-color: var(--accent); }
+  .mrow .av { width: 38px; height: 38px; border-radius: 50%; flex: none; display: grid; place-items: center; font-family: var(--font-serif); font-size: 15px; font-weight: 700; color: #fff; }
+  .mrow .id { flex: 1; min-width: 0; }
+  .mrow .nm { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+  .mrow .hd { font-family: var(--font-mono); font-size: 10px; color: var(--text-faint); }
+  .mrow .meta { display: flex; align-items: center; gap: 6px; margin-top: 3px; flex-wrap: wrap; }
+  .grp-h { padding: 9px var(--s4) 5px; font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint); background: var(--surface-2); }
+  .inv-row { display: flex; align-items: center; gap: 10px; padding: 10px var(--s4); border-bottom: 1px solid var(--border); font-size: 13px; }
+  .inv-row .id { flex: 1; min-width: 0; }
+  .inv-row .em { font-weight: 600; }
+  .inv-row .sub { font-size: 11px; color: var(--text-faint); margin-top: 2px; }
+
+  /* member detail */
+  .md-top { display: flex; gap: var(--s3); align-items: center; padding: var(--s5); border-bottom: 1px solid var(--border); }
+  .md-top .av { width: 52px; height: 52px; border-radius: 50%; flex: none; display: grid; place-items: center; font-family: var(--font-serif); font-size: 22px; font-weight: 700; color: #fff; }
+  .md-top .nm { font-family: var(--font-serif); font-size: 20px; font-weight: 800; }
+  .md-top .hd { font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); }
+  .md-stats { display: flex; gap: var(--s5); padding: var(--s4) var(--s5); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .md-stat b { font-family: var(--font-serif); font-size: 18px; font-weight: 800; display: block; line-height: 1; }
+  .md-stat span { font-size: 11px; color: var(--text-faint); }
+  .md-sec { padding: var(--s4) var(--s5); border-bottom: 1px solid var(--border); }
+  .md-sec h3 { font-size: 12px; font-family: var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); margin: 0 0 var(--s3); }
+  .own-note { display: flex; gap: 9px; align-items: flex-start; font-size: 12.5px; color: var(--text-dim); line-height: 1.55; padding: 9px 11px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 9px; margin-bottom: 8px; }
+  .own-note .ocic { color: var(--accent); margin-top: 1px; }
+  .own-note b { color: var(--text); }
+  .md-actions { padding: var(--s4) var(--s5); display: flex; flex-wrap: wrap; gap: var(--s2); }
+  .danger-zone { margin: 0 var(--s5) var(--s5); border: 1px solid #F0CFCB; background: var(--avoid-soft); border-radius: var(--r-card); padding: var(--s4); }
+  .danger-zone h3 { font-size: 12px; color: #9E332B; margin: 0 0 var(--s2); font-family: var(--font-mono); letter-spacing: .06em; text-transform: uppercase; }
+  .danger-zone .btn { border-color: #D98A82; color: #9E332B; }
+
+  /* permission panel */
+  .perm-pane .ph .btn { margin-left: auto; }
+  .pgrp { border-bottom: 1px solid var(--border); }
+  .pgrp summary { list-style: none; cursor: pointer; padding: 11px var(--s4); display: flex; align-items: center; gap: 9px; }
+  .pgrp summary::-webkit-details-marker { display: none; }
+  .pgrp summary .cv { color: var(--text-faint); transition: transform .15s; font-size: 10px; }
+  .pgrp[open] summary .cv { transform: rotate(90deg); }
+  .pgrp .gname { font-size: 13.5px; font-weight: 700; flex: 1; }
+  .pgrp .gsum { font-size: 11px; color: var(--text-faint); font-family: var(--font-mono); }
+  .pgrp .pbody { padding: 0 var(--s4) var(--s3) 32px; }
+  .prow { display: flex; align-items: center; gap: 9px; padding: 7px 0; border-top: 1px dashed var(--border); }
+  .prow:first-child { border-top: none; }
+  .prow .pn { flex: 1; min-width: 0; }
+  .prow .pl { font-size: 12.5px; font-weight: 600; }
+  .prow .pd { font-size: 10.5px; color: var(--text-faint); margin-top: 1px; }
+  .src { font-family: var(--font-mono); font-size: 9px; padding: 2px 6px; border-radius: var(--r-pill); white-space: nowrap; }
+  .src.preset { background: var(--bg-tint); color: var(--text-dim); }
+  .src.allow { background: var(--must-soft); color: #1F6B43; }
+  .src.deny { background: var(--avoid-soft); color: #9E332B; }
+  .src.ownerFixed { background: #EDE7F4; color: #5B4A86; }
+  .sw { width: 38px; height: 22px; border-radius: 11px; background: var(--border-strong); position: relative; cursor: pointer; flex: none; border: none; transition: background .15s; }
+  .sw.on { background: var(--must); }
+  .sw::after { content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .15s; }
+  .sw.on::after { transform: translateX(16px); }
+  .sw.locked { opacity: .5; cursor: not-allowed; }
+  .perm-foot { padding: var(--s4); display: flex; gap: var(--s2); flex-wrap: wrap; border-top: 1px solid var(--border); }
+  .help-banner { font-size: 12px; color: var(--text-dim); line-height: 1.55; padding: 10px var(--s4); background: var(--surface-2); border-bottom: 1px solid var(--border); }
+
+  @media (max-width: 1100px) { .pt-cols { grid-template-columns: 300px 1fr; } .perm-pane { grid-column: 1 / -1; } }
+  @media (max-width: 760px) { .pt-cols { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="page" id="root"></div>
+
+<script src="../assets/data.js"></script>
+<script src="../assets/components.js"></script>
+<script>
+  (function () {
+    var root = document.getElementById('root');
+    var pid = new URLSearchParams(location.search).get('project') || localStorage.getItem('ch:proj') || 'tokoyo';
+    if (!OCData.project(pid)) pid = OCData.projects[0].id;
+    var p = OCData.project(pid);
+    var role = OCData.getRole();
+    var isPreview = role === 'visitor';
+    var Q = '?project=' + pid;
+
+    // header always
+    root.innerHTML = OCUI.contextHeader({ scope: 'project', crumbs: [p.name, '參與者'] }) + '<div id="main"></div>';
+    var main = document.getElementById('main');
+
+    // Forbidden: public preview can't see participants management
+    if (isPreview) {
+      main.appendChild(OCUI.forbiddenState({ title: '公開預覽看不到參與者管理。', body: '參與者與權限是企劃內部資料，只有成員看得到。切換到「主持」或「參與」視角即可檢視。' }));
+      loadShell(); return;
+    }
+
+    var members = OCData.members(pid);
+    var invites = OCData.invitations(pid);
+    var myCan = function (a) { return OCData.canAction(a, pid); };
+    var selId = members[0] ? members[0].id : null;
+
+    function render() {
+      var pendingInv = invites.filter(function (i) { return i.status === 'pending'; }).length;
+      var head = '<div class="pageh"><div class="ht"><h1>參與者 <span class="en">Participants</span></h1>'
+        + '<p class="sub">「' + p.name + '」的成員與權限。<b>角色預設只給初始權限</b>，實際操作依 action permission 判斷，並仍受內容 ownership 限制。</p></div>'
+        + '<div class="acts">' + (myCan('member:invite') ? '<button class="btn btn-accent" id="inviteBtn">＋ 邀請成員</button>' : '') + '</div></div>';
+
+      if (!members.length) {
+        main.innerHTML = head;
+        main.appendChild(OCUI.emptyState({ title: '這個企劃還沒有其他參與者。', body: '邀請夥伴一起共創，或保持個人企劃。', ctaLabel: myCan('member:invite') ? '＋ 邀請成員' : null, onCta: openInvite }));
+        return;
+      }
+
+      var stat = '<div class="toolbar"><span class="badge">' + members.length + ' 位成員</span>'
+        + (pendingInv ? '<span class="badge pending">' + pendingInv + ' 個待接受邀請</span>' : '')
+        + '<div class="searchf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="q" type="search" placeholder="搜尋成員…"></div>'
+        + '<div class="spacer"></div><span class="demo-only">Demo interaction only</span></div>';
+
+      main.innerHTML = head + stat + '<div class="pt-cols">'
+        + '<div class="pt-pane" id="listPane"></div>'
+        + '<div class="pt-pane" id="detailPane"></div>'
+        + '<div class="pt-pane perm-pane" id="permPane"></div>'
+        + '</div>';
+
+      var ib = document.getElementById('inviteBtn'); if (ib) ib.onclick = openInvite;
+      var q = document.getElementById('q'); if (q) q.oninput = function () { paintList(this.value.trim()); };
+      paintList(''); paintDetail(); paintPerm();
+    }
+
+    function paintList(query) {
+      var pane = document.getElementById('listPane'); if (!pane) return;
+      var ms = members.filter(function (m) { return !query || (m.name + ' ' + m.handle + ' ' + m.rolePresetLabel).toLowerCase().indexOf(query.toLowerCase()) >= 0; });
+      var rows = '<div class="ph">成員 <span class="ct">' + members.length + '</span></div><div class="mlist">';
+      rows += ms.map(function (m) {
+        var roleBadge = '<span class="badge role-' + (m.rolePreset === 'member' ? 'member' : 'owner') + '">' + m.rolePresetLabel + '</span>';
+        var ov = m.overrideCount ? '<span class="badge" title="有自訂權限">自訂 ' + m.overrideCount + '</span>' : '';
+        return '<button class="mrow' + (m.id === selId ? ' sel' : '') + '" data-m="' + m.id + '"><span class="av" style="background:' + m.c + '">' + m.name[0] + '</span>'
+          + '<span class="id"><span class="nm">' + m.name + '</span><span class="hd">' + m.handle + '</span>'
+          + '<span class="meta">' + roleBadge + ov + '<span class="hd">' + m.charCount + ' 角色</span></span></span></button>';
+      }).join('') + '</div>';
+
+      // invitations
+      if (invites.length) {
+        rows += '<div class="grp-h">邀請 · Invitations</div>';
+        rows += invites.map(function (i) {
+          var st = { pending: ['pending', '待接受'], expired: ['draft', '已過期'], revoked: ['draft', '已撤銷'], accepted: ['approved', '已接受'], declined: ['draft', '已婉拒'] }[i.status] || ['draft', i.status];
+          var acts = '';
+          if (i.status === 'pending' && myCan('invitation:revoke')) acts = '<button class="btn btn-sm" data-resend="' + i.id + '">重寄</button><button class="btn btn-sm" data-revoke="' + i.id + '">撤銷</button>';
+          else if (i.status === 'expired' && myCan('member:invite')) acts = '<button class="btn btn-sm" data-resend="' + i.id + '">重新邀請</button>';
+          return '<div class="inv-row"><span class="id"><span class="em">' + i.emailOrHandle + '</span><span class="sub">' + OCData.rolePresetLabel(i.invitedRolePreset) + ' · 邀請者 ' + OCData.user(i.invitedBy).name + '</span></span>'
+            + '<span class="badge ' + st[0] + '">' + st[1] + '</span>' + (acts ? '<span style="display:flex;gap:4px">' + acts + '</span>' : '') + '</div>';
+        }).join('');
+      }
+      pane.innerHTML = rows;
+      pane.querySelectorAll('[data-m]').forEach(function (b) { b.onclick = function () { selId = b.dataset.m; paintList(query); paintDetail(); paintPerm(); }; });
+      pane.querySelectorAll('[data-revoke]').forEach(function (b) { b.onclick = function () { OCUI.confirm({ title: '撤銷邀請？', message: '撤銷後此邀請連結立即失效，即使外洩也無法被接受。', confirmLabel: '撤銷邀請', danger: true, onConfirm: function () { OCUI.toast('已撤銷邀請（連結失效）', { demo: true }); } }); }; });
+      pane.querySelectorAll('[data-resend]').forEach(function (b) { b.onclick = function () { OCUI.toast('已重新寄送邀請', { demo: true }); }; });
+    }
+
+    function paintDetail() {
+      var pane = document.getElementById('detailPane'); if (!pane) return;
+      var m = members.filter(function (x) { return x.id === selId; })[0];
+      if (!m) { pane.innerHTML = '<div class="ph">成員詳情</div><div style="padding:var(--s8);text-align:center;color:var(--text-faint);font-size:13px">選擇一位成員</div>'; return; }
+      var inviter = m.invitedBy ? OCData.user(m.invitedBy).name : '—';
+      var html = '<div class="ph">成員詳情 · Member</div>'
+        + '<div class="md-top"><span class="av" style="background:' + m.c + '">' + m.name[0] + '</span><div><div class="nm">' + m.name + '</div><div class="hd">' + m.handle + ' · ' + m.rolePresetLabel + '</div></div></div>'
+        + '<div class="md-stats"><div class="md-stat"><b>' + m.charCount + '</b><span>企劃角色</span></div><div class="md-stat"><b>' + m.joinedAt + '</b><span>加入時間</span></div><div class="md-stat"><b>' + inviter + '</b><span>邀請者</span></div><div class="md-stat"><b>' + (m.overrideCount || '—') + '</b><span>自訂權限</span></div></div>';
+
+      // ownership clarity
+      html += '<div class="md-sec"><h3>Ownership 邊界</h3>'
+        + '<div class="own-note">' + OCIcon('lock') + '<div>權限通過後仍受<b>內容 ownership</b> 限制：主持人可管理 <b>ProjectCharacterLink</b>（陣營／職位／審核），但<b>不可修改 ' + m.name + ' 的角色本體</b>（名稱／外觀／圖文設定）、不可永久刪除其擁有的 Asset、看不到其未分享的私人靈感。</div></div>'
+        + '<div style="font-size:12px;color:var(--text-dim);line-height:1.6">企劃擁有者＝' + OCData.user(memberOwnerId()).name + ' · 角色擁有者／素材擁有者／頁面擁有者各自獨立，不因企劃身分而轉移。</div></div>';
+
+      // public page collaboration
+      var mem = OCData.membership(m.id);
+      var ppCan = OCData.effectivePerms(mem);
+      function pp(code, label) { var e = ppCan[code]; return '<div style="display:flex;gap:8px;align-items:center;font-size:12.5px;padding:3px 0"><span class="src ' + (e.effect === 'allow' ? 'allow' : 'deny') + '">' + (e.effect === 'allow' ? '可' : '否') + '</span>' + label + '</div>'; }
+      html += '<div class="md-sec"><h3>公開頁協作</h3>' + pp('publicPage:update', '編輯公開頁草稿') + pp('publicPage:publish', '發布公開頁') + pp('pageTemplate:update', '設計企劃版型') + pp('pageOverride:update_own', '調整自己頁面的 Override')
+        + '<div style="font-size:11px;color:var(--text-faint);margin-top:6px;line-height:1.5">編輯草稿、發布、版型、Override 是不同權限——能編輯不代表能發布。</div></div>';
+
+      // actions
+      var acts = '';
+      if (myCan('member:update_role') && !m.isOwner) acts += '<button class="btn" id="changeRole">變更角色</button>';
+      acts += '<button class="btn" id="viewChars">查看其角色</button>';
+      html += '<div class="md-actions">' + acts + '</div>';
+
+      // danger zone
+      var dz = '';
+      var soleOwner = m.isOwner && OCData.ownerCount(pid) === 1;
+      if (m.userId === OCData.viewer.id) {
+        if (soleOwner) dz += '<div style="font-size:12.5px;color:#9E332B;line-height:1.6">你是唯一的企劃擁有者，<b>不能直接離開</b>。請先移交擁有權或封存企劃。</div>';
+        else dz += '<button class="btn" id="leaveBtn">離開企劃</button>';
+      } else {
+        if (myCan('member:remove') && !m.isOwner) dz += '<button class="btn" id="removeBtn">移除成員</button>';
+        if (myCan('project:transfer_ownership') && !m.isOwner) dz += '<button class="btn" id="transferBtn">移交企劃擁有權</button>';
+        if (m.isOwner) dz += '<div style="font-size:12px;color:var(--text-dim)">企劃擁有者不可被一般主持人移除。</div>';
+      }
+      if (dz) html += '<div class="danger-zone"><h3>危險操作</h3><div style="display:flex;gap:8px;flex-wrap:wrap">' + dz + '</div></div>';
+
+      pane.innerHTML = html;
+      wire('changeRole', function () { changeRole(m); });
+      wire('viewChars', function () { location.href = 'roster.html' + Q; });
+      wire('removeBtn', function () { removeMember(m); });
+      wire('transferBtn', function () { transferOwnership(m); });
+      wire('leaveBtn', function () { OCUI.confirm({ title: '離開企劃？', message: '你將失去對「' + p.name + '」的存取。你建立的角色本體仍屬於你。', confirmLabel: '離開企劃', danger: true, onConfirm: function () { OCUI.toast('已離開企劃（Demo）', { demo: true }); } }); });
+    }
+
+    function memberOwnerId() { var o = members.filter(function (m) { return m.isOwner; })[0]; return o ? o.userId : 'me'; }
+
+    // permission panel
+    var permEdits = {}; // code -> 'allow'|'deny' pending
+    function paintPerm() {
+      var pane = document.getElementById('permPane'); if (!pane) return;
+      var m = members.filter(function (x) { return x.id === selId; })[0];
+      if (!m) { pane.innerHTML = '<div class="ph">權限</div>'; return; }
+      var mem = OCData.membership(m.id);
+      var eff = OCData.effectivePerms(mem);
+      var canEditPerms = myCan('member:update_permissions') && !m.isOwner;
+
+      var html = '<div class="ph">權限 · ' + m.rolePresetLabel + (canEditPerms ? '' : '（唯讀）') + '</div>';
+      html += '<div class="help-banner">每組顯示摘要，展開看細項。標示來源：<span class="src preset">預設</span> <span class="src allow">額外允許</span> <span class="src deny">明確禁止</span> <span class="src ownerFixed">擁有者固定</span></div>';
+
+      OCData.permGroups.forEach(function (g) {
+        var rows = g[2];
+        var allowN = rows.filter(function (r) { var e = pendingEff(eff, r[0]); return e.effect === 'allow'; }).length;
+        var summ = allowN + '/' + rows.length;
+        html += '<details class="pgrp"' + (g[0] === 'mem' || g[0] === 'danger' ? ' open' : '') + '><summary><span class="cv">▸</span><span class="gname">' + g[1] + '</span><span class="gsum">' + summ + '</span></summary><div class="pbody">';
+        rows.forEach(function (r) {
+          var code = r[0]; var e = pendingEff(eff, code);
+          var on = e.effect === 'allow';
+          var locked = !canEditPerms || e.source === 'ownerFixed' || m.rolePreset === 'owner';
+          var srcBadge = '<span class="src ' + (e.source === 'preset' ? 'preset' : e.source === 'ownerFixed' ? 'ownerFixed' : on ? 'allow' : 'deny') + '">'
+            + ({ preset: '預設', allow: '額外允許', deny: '明確禁止', ownerFixed: '擁有者固定', none: '未授權' }[e.source] || '預設') + '</span>';
+          html += '<div class="prow"><span class="pn"><span class="pl">' + r[1] + '</span>' + (r[2] ? '<span class="pd">' + r[2] + '</span>' : '') + '</span>' + srcBadge
+            + '<button class="sw' + (on ? ' on' : '') + (locked ? ' locked' : '') + '" data-perm="' + code + '" role="switch" aria-checked="' + on + '" aria-label="' + r[1] + '"' + (locked ? ' disabled' : '') + '></button></div>';
+        });
+        html += '</div></details>';
+      });
+      var dirty = Object.keys(permEdits).length;
+      html += '<div class="perm-foot">' + (canEditPerms
+        ? '<button class="btn btn-accent" id="savePerm"' + (dirty ? '' : ' disabled') + '>儲存權限' + (dirty ? '（' + dirty + '）' : '') + '</button><button class="btn" id="resetPerm">恢復角色預設</button>'
+        : '<span style="font-size:12px;color:var(--text-faint)">你沒有調整此成員權限的權限。</span>') + '</div>';
+      pane.innerHTML = html;
+
+      pane.querySelectorAll('[data-perm]').forEach(function (b) {
+        if (b.classList.contains('locked')) return;
+        b.onclick = function () {
+          var code = b.dataset.perm; var cur = pendingEff(eff, code).effect === 'allow';
+          permEdits[code] = cur ? 'deny' : 'allow';
+          paintPerm();
+        };
+      });
+      wire('savePerm', function () {
+        if (Math.random() < 0.0) {} // (failure demo via button below)
+        OCUI.toast('已儲存權限變更（' + Object.keys(permEdits).length + ' 項）· Demo', { demo: true });
+        permEdits = {}; paintPerm();
+      });
+      wire('resetPerm', function () { OCUI.confirm({ title: '恢復角色預設？', message: '清除此成員的所有個別權限調整，回到「' + m.rolePresetLabel + '」的預設權限。', confirmLabel: '恢復預設', onConfirm: function () { permEdits = {}; OCUI.toast('已恢復角色預設 · Demo', { demo: true }); paintPerm(); } }); });
+    }
+    function pendingEff(eff, code) {
+      if (permEdits[code]) return { effect: permEdits[code], source: permEdits[code] === 'allow' ? 'allow' : 'deny' };
+      return eff[code] || { effect: 'deny', source: 'none' };
+    }
+
+    // ---- flows ----
+    function openInvite() {
+      var body = '<div class="field" style="margin-bottom:var(--s3)"><label>Email 或 @Handle</label><input class="input" id="invTo" placeholder="@handle 或 name@example.com"></div>'
+        + '<div class="field" style="margin-bottom:var(--s3)"><label>角色預設</label><select class="select" id="invRole"><option value="member">參與者</option><option value="cohost">共同主持</option><option value="host">主持人</option></select></div>'
+        + '<div id="invPrev" style="font-size:12px;color:var(--text-dim);background:var(--surface-2);border:1px solid var(--border);border-radius:9px;padding:10px 12px;line-height:1.6"></div>';
+      var dlg = OCUI.modal({ title: '邀請成員', body: body, actions: [{ label: '取消' }, { label: '寄出邀請', kind: 'accent', onClick: function () { return doInvite(dlg); } }] });
+      var to = dlg.box.querySelector('#invTo'), rl = dlg.box.querySelector('#invRole'), pv = dlg.box.querySelector('#invPrev');
+      function prev() {
+        var v = (to.value || '').trim();
+        var preset = rl.value;
+        var perms = (OCData.permGroups.reduce(function (acc, g) { return acc.concat(g[2]); }, [])).filter(function (r) { return OCData.effectivePerms({ id: '_', rolePreset: preset }).__ ? false : false; });
+        var sample = { member: '查看內容、管理自己的角色與投稿、調整自己頁面', cohost: '協助內容與審核、編輯公開頁草稿', host: '管理內容、審核、公開頁、依政策管理成員' }[preset];
+        var warn = '';
+        if (v && OCData.isMember(pid, v)) warn = '<div style="color:#9E332B;margin-top:6px">' + OCIcon('warn') + ' 對方已是成員。</div>';
+        else if (v && OCData.hasPendingInvite(pid, v)) warn = '<div style="color:var(--accent-ink);margin-top:6px">已有待接受的邀請，將改為重寄。</div>';
+        pv.innerHTML = '<b>可取得權限：</b>' + sample + '。發出後對方需<b>接受邀請</b>才會成為正式成員。' + warn;
+      }
+      to.oninput = prev; rl.onchange = prev; prev();
+    }
+    function doInvite(dlg) {
+      var to = dlg.box.querySelector('#invTo').value.trim();
+      if (!to) { OCUI.toast('請輸入 Email 或 Handle'); return true; }
+      if (OCData.isMember(pid, to)) { OCUI.toast('對方已是成員，無法重複邀請', { demo: true }); return true; }
+      OCUI.toast('已寄出邀請給 ' + to + '（接受前不會建立正式成員）· Demo', { demo: true });
+    }
+
+    function changeRole(m) {
+      var body = '<div class="field"><label>角色預設</label><select class="select" id="rl">'
+        + ['member', 'cohost', 'host'].map(function (r) { return '<option value="' + r + '"' + (m.rolePreset === r ? ' selected' : '') + '>' + OCData.rolePresetLabel(r) + '</option>'; }).join('') + '</select></div>'
+        + '<div style="font-size:12px;color:var(--text-dim);margin-top:8px;line-height:1.6">變更角色會重設為新預設的權限；已設定的個別調整會保留並標示。企劃擁有權的移交是另一個流程。</div>';
+      OCUI.modal({ title: '變更 ' + m.name + ' 的角色', body: body, actions: [{ label: '取消' }, { label: '套用', kind: 'accent', onClick: function () { OCUI.toast('已變更角色 · Demo', { demo: true }); } }] });
+    }
+
+    function removeMember(m) {
+      var body = '<div style="font-size:13.5px;line-height:1.7">移除 <b>' + m.name + '</b> 會影響其在此企劃的內容。<b>不會刪除</b>角色本體或原始 Asset。</div>'
+        + '<div style="font-size:12.5px;color:var(--text-dim);background:var(--surface-2);border:1px solid var(--border);border-radius:9px;padding:10px 12px;margin:10px 0;line-height:1.7">影響：其 ' + m.charCount + ' 個 ProjectCharacterLink · 投稿 · 公開頁 Override · 企劃內 AssetLink · 未完成申請</div>'
+        + '<div class="field"><label>內容處理方式</label><select class="select" id="rm"><option value="keep">保留內容並標示原作者</option><option value="archive">封存該成員的企劃內容</option><option value="transfer">轉交部分管理權給我</option></select></div>';
+      OCUI.modal({ title: '移除成員', body: body, actions: [{ label: '取消' }, { label: '移除成員', kind: 'danger', onClick: function () { OCUI.toast('已移除 ' + m.name + '（內容依選擇處理，角色本體保留）· Demo', { demo: true }); } }] });
+    }
+
+    function transferOwnership(m) {
+      var body = '<div style="font-size:13.5px;line-height:1.7">將「' + p.name + '」的<b>企劃擁有權</b>移交給 <b>' + m.name + '</b>。</div>'
+        + '<div style="font-size:12.5px;color:#9E332B;background:var(--avoid-soft);border:1px solid #F0CFCB;border-radius:9px;padding:10px 12px;margin:10px 0;line-height:1.7">' + OCIcon('warn') + ' 此操作不可逆。成功後你會降為主持人，' + m.name + ' 取得完整擁有者權限（含再次移交、封存企劃）。</div>'
+        + '<div class="field"><label>輸入 ' + p.name + ' 以確認</label><input class="input" id="confirmName" placeholder="' + p.name + '"></div>';
+      var dlg = OCUI.modal({ title: '移交企劃擁有權', body: body, actions: [{ label: '取消' }, { label: '確認移交', kind: 'danger', onClick: function () {
+        if (dlg.box.querySelector('#confirmName').value.trim() !== p.name) { OCUI.toast('名稱不符，未移交'); return true; }
+        OCUI.toast('已移交擁有權給 ' + m.name + '（你降為主持人）· Demo', { demo: true });
+      } }] });
+    }
+
+    function wire(id, fn) { var e = document.getElementById(id); if (e) e.onclick = fn; }
+
+    function loadShell() {} // placeholder (shell loaded at end)
+    render();
+  })();
+</script>
+<script src="../assets/shell.js"></script>
+</body>
+</html>

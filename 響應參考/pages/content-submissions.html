@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>作品投稿 · CharacterHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@600;700;900&family=Shippori+Mincho+B1:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/ds.css">
+<link rel="stylesheet" href="../assets/shell.css">
+<link rel="stylesheet" href="../assets/components.css">
+<link rel="stylesheet" href="../assets/application.css">
+<style>
+  /* content-submission-specific bits on top of the shared review shell */
+  .cs-typetabs { display: flex; gap: 6px; margin-bottom: var(--s3); }
+  .cs-typetab { font-size: 12.5px; font-weight: 600; padding: 5px 12px; border-radius: var(--r-pill); border: 1px solid var(--border); background: var(--surface); color: var(--text-dim); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .cs-typetab.on { background: var(--text); color: #fff; border-color: var(--text); }
+  .cs-typetab .ocic { width: 14px; height: 14px; }
+  .cs-thumb { width: 100%; aspect-ratio: 4 / 3; border-radius: var(--r-img); display: grid; place-items: center; color: #fff; font-family: var(--font-serif); font-size: 30px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
+  .cs-asrow { display: flex; gap: var(--s3); align-items: center; }
+  .cs-asrow .cs-thumb { width: 92px; flex: none; aspect-ratio: 1; font-size: 22px; }
+  .cs-proc { font-size: 11.5px; color: var(--accent-ink); display: inline-flex; align-items: center; gap: 5px; }
+  .cs-proc .ocic { width: 13px; height: 13px; }
+  .cs-srcwarn { border: 1px solid #F0CFCB; background: var(--avoid-soft); color: #9E332B; border-radius: 10px; padding: 9px 12px; font-size: 12.5px; display: flex; gap: 8px; align-items: flex-start; margin-bottom: var(--s3); }
+  .cs-dest { border: 1px dashed var(--border-strong); border-radius: 10px; padding: 11px 13px; background: var(--surface-2); }
+  .cs-dest .dh { font-family: var(--font-mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 6px; }
+  .cs-link-row { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 5px 0; }
+  .cs-link-row .ocic { width: 14px; height: 14px; color: var(--text-faint); flex: none; }
+  .cs-link-row .role { margin-left: auto; font-family: var(--font-mono); font-size: 10px; color: var(--text-faint); }
+  .cs-attrib { display: flex; flex-direction: column; gap: 5px; font-size: 12px; color: var(--text-dim); margin-top: var(--s3); padding-top: var(--s3); border-top: 1px solid var(--border); }
+  .cs-attrib .r { display: flex; gap: 8px; } .cs-attrib .r .k { color: var(--text-faint); width: 64px; flex: none; }
+  .cs-textbody { font-size: 13.5px; line-height: 1.85; color: #2C2A27; white-space: pre-wrap; max-height: 280px; overflow: auto; padding: var(--s3); background: var(--surface-2); border-radius: 10px; border: 1px solid var(--border); }
+  .cs-pubsettings { border: 1px solid #ECDFA8; background: var(--accent-soft); border-radius: 10px; padding: 11px 13px; margin-top: var(--s3); }
+  .cs-pubsettings .ph2 { font-size: 12px; font-weight: 700; color: var(--accent-ink); display: flex; align-items: center; gap: 6px; margin-bottom: 7px; }
+  .cs-pubsettings .note { font-size: 11px; color: var(--text-dim); margin-top: 7px; }
+</style>
+</head>
+<body>
+<div class="page" id="root"></div>
+
+<script src="../assets/data.js"></script>
+<script src="../assets/components.js"></script>
+<script>
+  (function () {
+    var root = document.getElementById('root');
+    var pid = new URLSearchParams(location.search).get('project') || localStorage.getItem('ch:proj') || 'tokoyo';
+    if (!OCData.project(pid)) pid = OCData.projects[0].id;
+    var p = OCData.project(pid);
+    var ROLE = OCData.getRole(pid);
+    var isPreview = ROLE === 'visitor';
+    var A = function (act) { return OCData.canAction(act, pid) && !isPreview; };
+    var canReview = A('submission:review');
+    var failApprove = new URLSearchParams(location.search).get('failapprove') === '1';
+
+    var loadError = false;
+    var tab = canReview ? 'review' : 'mine';
+    var typeF = 'all';        // all | asset | text
+    var selMine = null, selReview = null;
+    var ICON_S = { draft: OCIcon('edit'), submitted: OCIcon('clock'), changes_requested: OCIcon('edit'), approved: OCIcon('check'), rejected: OCIcon('x'), withdrawn: OCIcon('ban') };
+
+    function gate() {
+      if (isPreview) return 'forbidden';
+      if (!p.submissionsEnabled) return 'disabled';
+      return null;
+    }
+    function ctx() { root.innerHTML = OCUI.contextHeader({ scope: 'project', crumbs: [p.name, '作品投稿'] }); }
+    function stBadge(s) { return '<span class="ap-st ' + s + '"><span class="g">' + (ICON_S[s] || '') + '</span>' + OCData.subStatusLabel(s) + '</span>'; }
+    function typeIcon(t) { return OCIcon(t === 'asset' ? 'image' : 'book'); }
+
+    function render() {
+      ctx();
+      var g = gate();
+      if (g === 'forbidden') { root.appendChild(OCUI.forbiddenState({ title: '沒有檢視權限。', body: '作品投稿與審核僅企劃成員可見。公開訪客請改用公開頁。' })); return; }
+      if (g === 'disabled') { root.appendChild(OCUI.emptyState({ title: '這個企劃未開放作品投稿。', body: '主持人可在企劃設定開啟 submissionsEnabled。', icon: 'plug' })); return; }
+      if (loadError) { root.appendChild(OCUI.errorState({ title: '載入失敗。', code: 'LOAD_ERROR', onRetry: function () { loadError = false; boot(); } })); return; }
+
+      var head = document.createElement('div'); head.className = 'pageh';
+      head.innerHTML = '<div class="ht"><h1>作品投稿 <span class="en">Submissions</span></h1><p class="sub"><b>圖片與文章</b>投稿到「' + p.name + '」並由主持人審核。通過後分別建立<b>圖庫關聯</b>或<b>故事內容</b>——與「角色申請」是不同流程，結果不會進角色名冊。</p></div>';
+      root.appendChild(head);
+
+      var tabs = document.createElement('div'); tabs.className = 'ap-tabs';
+      var pend = OCData.submissionPendingCount(pid);
+      tabs.innerHTML = '<button class="ap-tab' + (tab === 'mine' ? ' on' : '') + '" data-t="mine">我的投稿</button>'
+        + (canReview ? '<button class="ap-tab' + (tab === 'review' ? ' on' : '') + '" data-t="review">主持人審核' + (pend ? '<span class="ct">' + pend + '</span>' : '') + '</button>' : '');
+      root.appendChild(tabs);
+      tabs.querySelectorAll('[data-t]').forEach(function (b) { b.onclick = function () { tab = b.dataset.t; selMine = null; selReview = null; render(); }; });
+
+      if (tab === 'mine') buildMine(); else buildReview();
+    }
+
+    function typeTabs(onPick) {
+      var wrap = document.createElement('div'); wrap.className = 'cs-typetabs';
+      [['all', '全部', null], ['asset', '圖片', 'image'], ['text', '文章', 'book']].forEach(function (t) {
+        var b = document.createElement('button'); b.className = 'cs-typetab' + (typeF === t[0] ? ' on' : '');
+        b.innerHTML = (t[2] ? OCIcon(t[2]) : '') + t[1];
+        b.onclick = function () { typeF = t[0]; onPick(); };
+        wrap.appendChild(b);
+      });
+      return wrap;
+    }
+
+    // ============ SUBMITTER ============
+    function buildMine() {
+      var cols = document.createElement('div'); cols.className = 'ap-cols';
+      cols.innerHTML = '<div id="left"></div><div id="center"></div><div class="ap-side" id="right"></div>';
+      root.appendChild(cols);
+      paintMineList();
+      var mine = filteredMine();
+      if (!selMine) selMine = mine[0] ? mine[0].id : '__new';
+      buildMineDetail();
+    }
+    function filteredMine() { return OCData.mySubmissions(pid).filter(function (s) { return typeF === 'all' || s.submissionType === typeF; }); }
+    function paintMineList() {
+      var left = document.getElementById('left');
+      var mine = filteredMine();
+      left.innerHTML = '';
+      left.appendChild(typeTabs(function () { selMine = null; paintMineList(); var m = filteredMine(); selMine = m[0] ? m[0].id : '__new'; buildMineDetail(); }));
+      var box = document.createElement('div'); box.className = 'ap-list';
+      var h = '<div class="lh">我的投稿 · ' + mine.length + '</div><div class="items" id="mItems">';
+      if (!mine.length) h += '<div style="padding:var(--s4);font-size:12.5px;color:var(--text-faint)">還沒有投稿。</div>';
+      mine.forEach(function (s) {
+        var title = s.submissionType === 'asset' ? (OCData.submissionAsset(s.payload.assetId) || {}).title : s.payload.title;
+        h += '<div class="ap-item' + (selMine === s.id ? ' sel' : '') + '" data-s="' + s.id + '" tabindex="0"><span class="av" style="background:' + (s.submissionType === 'asset' ? ((OCData.submissionAsset(s.payload.assetId) || {}).c || '#888') : '#5E7E55') + '">' + typeIcon(s.submissionType) + '</span><div class="b"><div class="nm">' + (title || '未命名') + '</div><div class="meta">' + OCData.subTypeLabel(s.submissionType) + ' · ' + (s.submittedAt || '草稿') + '</div></div>' + stBadge(s.status) + '</div>';
+      });
+      h += '</div><div style="padding:var(--s3)"><button class="btn btn-accent btn-sm" id="newSub" style="width:100%;justify-content:center">＋ 新投稿</button></div>';
+      box.innerHTML = h; left.appendChild(box);
+      box.querySelectorAll('[data-s]').forEach(function (it) { it.onclick = function () { selMine = it.dataset.s; buildMineDetail(); paintSelMine(); }; it.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); it.click(); } }; });
+      var nb = document.getElementById('newSub'); if (nb) nb.onclick = function () { selMine = '__new'; buildMineDetail(); };
+    }
+    function paintSelMine() { document.querySelectorAll('#mItems .ap-item').forEach(function (it) { it.classList.toggle('sel', it.dataset.s === selMine); }); }
+
+    function buildMineDetail() {
+      var center = document.getElementById('center'), right = document.getElementById('right');
+      if (!center) return;
+      if (selMine === '__new') return buildNewPicker(center, right);
+      var s = OCData.submission(selMine);
+      if (!s) { center.innerHTML = ''; center.appendChild(OCUI.emptyState({ title: '選擇一個投稿，或建立新投稿。', body: '' })); if (right) right.innerHTML = ''; return; }
+      if (s.submissionType === 'asset') buildAssetDetail(center, right, s, false);
+      else buildTextDetail(center, right, s, false);
+    }
+
+    function buildNewPicker(center, right) {
+      center.innerHTML = '<div class="ap-main"><div class="mh"><div class="top"><h2>新投稿</h2></div><div class="sub">選擇投稿類型。圖片使用既有的素材（不改 Asset 擁有者）；文章可建立或附加到故事內容。</div></div><div class="ap-body">'
+        + '<div class="ap-pick">'
+        + '<button class="ap-pickcard" data-new="asset"><span class="av" style="background:#3B5E6B">' + OCIcon('image') + '</span><div><div class="nm">圖片投稿</div><div class="sp">建立圖庫／角色／關係相簿關聯</div></div></button>'
+        + '<button class="ap-pickcard" data-new="text"><span class="av" style="background:#5E7E55">' + OCIcon('book') + '</span><div><div class="nm">文章投稿</div><div class="sp">建立或附加故事／章節／事件</div></div></button>'
+        + '</div></div></div>';
+      if (right) right.innerHTML = '';
+      center.querySelectorAll('[data-new]').forEach(function (b) { b.onclick = function () { OCUI.toast('已建立' + OCData.subTypeLabel(b.dataset.new) + '投稿草稿（Demo）', { demo: true }); }; });
+    }
+
+    // ----- ASSET submission detail (applicant or read for review=false) -----
+    function buildAssetDetail(center, right, s, review) {
+      var a = OCData.submissionAsset(s.payload.assetId) || {};
+      var srcState = OCData.submissionSourceState(s);
+      var ro = review || ['submitted', 'approved', 'rejected', 'withdrawn'].indexOf(s.status) >= 0;
+      var pl = s.payload;
+      var html = '<div class="ap-main"><div class="mh"><div class="top"><h2>' + (a.title || '圖片投稿') + '</h2>' + stBadge(s.status) + '</div><div class="sub">圖片投稿 · ' + (review ? '投稿者 ' + OCData.ownerSummary(s.submitterUserId).label : '投稿到 ' + p.name) + '</div></div><div class="ap-body">';
+      if (!review && s.status === 'changes_requested') html += '<div class="ap-msg"><div class="lbl">主持人要求修改</div>' + s.reviewMessage + '</div>';
+      if (!review && s.status === 'rejected') html += '<div class="ap-msg rej"><div class="lbl">已拒絕</div>' + s.reviewMessage + '</div>';
+      // source-asset state warnings
+      if (srcState === 'processing') html += '<div class="cs-srcwarn">' + OCIcon('clock') + '<div>素材處理中，<b>處理完成前無法提交／通過</b>。</div></div>';
+      if (srcState === 'archived') html += '<div class="cs-srcwarn">' + OCIcon('archive') + '<div>來源素材已封存或改為私密，<b>來源失效</b>。請更換素材或還原。</div></div>';
+      if (srcState === 'missing') html += '<div class="cs-srcwarn">' + OCIcon('warn') + '<div>找不到來源素材。</div></div>';
+      html += '<div id="errSum"></div>';
+      // asset preview
+      html += '<div class="ap-sec"><div class="cs-asrow"><div class="cs-thumb" style="background:' + (a.c || '#888') + '">' + (a.title || '?')[0] + '</div><div style="flex:1"><div style="font-weight:700;font-size:14px">' + (a.title || '') + '</div>'
+        + '<div class="cs-proc" style="margin-top:4px">' + (srcState === 'ok' ? OCIcon('check') + ' 素材完成' : OCIcon('clock') + ' ' + OCData.assetStatusLabel(a.processingStatus)) + '</div>'
+        + '<div class="cs-attrib"><div class="r"><span class="k">作者</span><span>' + (a.creatorName || '—') + '</span></div><div class="r"><span class="k">擁有者</span><span>' + OCData.ownerSummary(a.ownerUserId).label + '</span></div><div class="r"><span class="k">授權</span><span>' + (a.license || '—') + '</span></div></div></div></div></div>';
+      // caption + proposed links
+      html += '<div class="ap-sec"><div class="ap-sec-h">說明</div><div style="font-size:13.5px;color:var(--text-dim)">' + (pl.caption || '（無說明）') + '</div></div>';
+      html += '<div class="ap-sec"><div class="ap-sec-h">將建立的關聯 · AssetLink</div><div class="cs-dest"><div class="dh">通過後出現在</div>'
+        + (pl.proposedLinks || []).map(function (l) { return '<div class="cs-link-row">' + OCIcon('link') + OCData.resolveSubTarget(l.targetType, l.targetId) + '<span class="role">' + OCData.assetRoleLabel(l.role) + '</span></div>'; }).join('')
+        + '<div class="note" style="font-size:11px;color:var(--text-faint);margin-top:7px">' + OCIcon('lock') + ' 通過<b>不轉移 Asset 擁有權</b>，也不會永久刪除投稿者素材。</div></div></div>';
+      html += '</div>';
+      // footer (submitter actions)
+      if (!review) html += mineFoot(s, srcState);
+      html += '</div>';
+      center.innerHTML = html;
+      wireMineFoot(center, s, srcState, true);
+      if (right && !review) buildSideTimeline(right, s);
+    }
+
+    // ----- TEXT submission detail -----
+    function buildTextDetail(center, right, s, review) {
+      var pl = s.payload;
+      var dest = OCData.textDestPreview(s);
+      var srcState = OCData.submissionSourceState(s);
+      var html = '<div class="ap-main"><div class="mh"><div class="top"><h2>' + (pl.title || '文章投稿') + '</h2>' + stBadge(s.status) + '</div><div class="sub">文章投稿 · ' + (review ? '投稿者 ' + OCData.ownerSummary(s.submitterUserId).label : '投稿到 ' + p.name) + '</div></div><div class="ap-body">';
+      if (!review && s.status === 'changes_requested') html += '<div class="ap-msg"><div class="lbl">主持人要求修改</div>' + s.reviewMessage + '</div>';
+      if (!review && s.status === 'rejected') html += '<div class="ap-msg rej"><div class="lbl">已拒絕</div>' + s.reviewMessage + '</div>';
+      if (srcState === 'dest_missing') html += '<div class="cs-srcwarn">' + OCIcon('warn') + '<div>投稿目標（章節／故事）已不存在，<b>目的地失效</b>。請改選目標。</div></div>';
+      html += '<div id="errSum"></div>';
+      if (pl.summary) html += '<div class="ap-sec"><div class="ap-sec-h">摘要</div><div style="font-size:13.5px;color:var(--text-dim)">' + pl.summary + '</div></div>';
+      html += '<div class="ap-sec"><div class="ap-sec-h">內容</div><div class="cs-textbody">' + (pl.content || '') + '</div></div>';
+      html += '<div class="ap-sec"><div class="ap-sec-h">發布目標 · Destination</div><div class="cs-dest"><div class="dh">' + OCData.destIntentLabel(pl.destinationIntent) + '</div>'
+        + '<div class="cs-link-row">' + OCIcon('book') + (dest.name || '（新內容）') + (dest.exists ? '' : ' <span style="color:var(--avoid)">· 目標不存在</span>') + '</div>'
+        + '<div class="cs-link-row">' + OCIcon('eye') + '可見性：' + OCData.pageVisLabel(pl.visibility) + '</div></div></div>';
+      html += '</div>';
+      if (!review) html += mineFoot(s, srcState);
+      html += '</div>';
+      center.innerHTML = html;
+      wireMineFoot(center, s, srcState, false);
+      if (right && !review) buildSideTimeline(right, s);
+    }
+
+    function mineFoot(s, srcState) {
+      var blocked = srcState !== 'ok';
+      if (s.status === 'draft') return '<div class="ap-foot"><button class="btn" id="saveDraft">儲存草稿</button><span class="spacer"></span><button class="btn" id="del">刪除草稿</button><button class="btn btn-accent" id="submit"' + (blocked ? ' disabled title="來源／目標需正常才能提交"' : '') + '>提交投稿</button></div>';
+      if (s.status === 'changes_requested') return '<div class="ap-foot"><span class="spacer"></span><button class="btn" id="withdraw">撤回</button><button class="btn btn-accent" id="resubmit"' + (blocked ? ' disabled' : '') + '>修改後重新提交</button></div>';
+      if (s.status === 'submitted') return '<div class="ap-foot"><span style="font-size:12.5px;color:var(--text-dim)">審核中。</span><span class="spacer"></span><button class="btn" id="withdraw">撤回投稿</button></div>';
+      if (s.status === 'approved') return '<div class="ap-foot"><span style="font-size:12.5px;color:#1F6B43">已通過 · 去向：' + OCData.destTargetTypeLabel(s.destinationType) + '</span></div>';
+      if (s.status === 'rejected') return '<div class="ap-foot"><span style="font-size:12.5px;color:var(--text-dim)">已拒絕。</span></div>';
+      return '';
+    }
+    function wireMineFoot(center, s, srcState, isAsset) {
+      var sd = center.querySelector('#saveDraft'); if (sd) sd.onclick = function () { OCUI.toast('已儲存草稿（Demo）', { demo: true }); };
+      var sb = center.querySelector('#submit'); if (sb) sb.onclick = function () {
+        if (srcState !== 'ok') { OCUI.toast(isAsset ? '素材尚未就緒，無法提交' : '目標失效，無法提交', { demo: true }); return; }
+        var errs = validateSubmit(center, s, isAsset);
+        if (!errs) OCUI.toast('已提交投稿，等待主持人審核（Demo）', { demo: true });
+      };
+      var rs = center.querySelector('#resubmit'); if (rs) rs.onclick = function () { OCUI.toast('已重新提交（Demo）', { demo: true }); };
+      var wd = center.querySelector('#withdraw'); if (wd) wd.onclick = function () { OCUI.confirm({ title: '撤回投稿？', message: '撤回後投稿會結束，可重新投稿。', confirmLabel: '撤回', danger: true, onConfirm: function () { OCUI.toast('已撤回投稿', { demo: true }); } }); };
+      var dl = center.querySelector('#del'); if (dl) dl.onclick = function () { OCUI.confirm({ title: '刪除草稿？', message: '草稿將被刪除（已提交的紀錄不受影響）。', confirmLabel: '刪除', danger: true, onConfirm: function () { OCUI.toast('已刪除草稿', { demo: true }); } }); };
+    }
+    function validateSubmit(center, s, isAsset) {
+      var sum = center.querySelector('#errSum'); var errs = [];
+      if (isAsset) { if (!s.payload.attributionConfirmation) errs.push('需確認授權／來源'); if (!(s.payload.proposedLinks || []).length) errs.push('至少選一個發布位置'); }
+      else { if (!s.payload.content) errs.push('內容不可為空'); if (!s.payload.destinationIntent) errs.push('需選擇發布目標'); }
+      if (errs.length) { sum.innerHTML = '<div class="err-summary" role="alert" aria-live="assertive"><div class="t">有 ' + errs.length + ' 項需修正</div>' + errs.map(function (e) { return '<div>• ' + e + '</div>'; }).join('') + '</div>'; return errs; }
+      sum.innerHTML = ''; return null;
+    }
+    function buildSideTimeline(right, s) {
+      var tl = [ ['建立草稿', s.status !== 'draft' || true, ''], ['提交', !!s.submittedAt, s.submittedAt || ''], ['審核', !!s.reviewedAt, s.reviewedAt || ''], ['結果', s.status === 'approved' || s.status === 'rejected', OCData.subStatusLabel(s.status)] ];
+      right.innerHTML = '<div class="ap-panel"><div class="ph">投稿資訊</div><div class="ap-kv" style="border:none"><span class="k">類型</span><span>' + OCData.subTypeLabel(s.submissionType) + '</span></div><div class="ap-kv"><span class="k">版本</span><span>rev ' + s.revision + '</span></div></div>'
+        + '<div class="ap-panel"><div class="ph">投稿進度</div><div class="ap-timeline">' + tl.map(function (t) { return '<div class="ap-tl' + (t[1] ? ' done' : '') + '"><span class="dot"></span><div><div>' + t[0] + '</div>' + (t[2] ? '<div class="when">' + t[2] + '</div>' : '') + '</div></div>'; }).join('') + '</div></div>';
+    }
+
+    // ============ HOST REVIEW ============
+    function buildReview() {
+      var cols = document.createElement('div'); cols.className = 'ap-cols';
+      cols.innerHTML = '<div id="left"></div><div id="center"></div><div class="ap-side" id="right"></div>';
+      root.appendChild(cols);
+      paintReviewList();
+      var q = filteredQueue();
+      if (!selReview && q.length) selReview = (q.filter(function (s) { return s.status === 'submitted'; })[0] || q[0]).id;
+      buildReviewDetail();
+    }
+    function filteredQueue() { return OCData.submissionReviewQueue(pid).filter(function (s) { return typeF === 'all' || s.submissionType === typeF; }); }
+    function paintReviewList() {
+      var left = document.getElementById('left'); left.innerHTML = '';
+      left.appendChild(typeTabs(function () { selReview = null; paintReviewList(); var q = filteredQueue(); selReview = q[0] ? q[0].id : null; buildReviewDetail(); }));
+      var q = filteredQueue();
+      var pend = q.filter(function (s) { return s.status === 'submitted'; }).length;
+      var box = document.createElement('div'); box.className = 'ap-list';
+      var h = '<div class="lh">審核佇列 · 待審 ' + pend + '</div><div class="items" id="rItems">';
+      if (!q.length) h += '<div style="padding:var(--s4);font-size:12.5px;color:var(--text-faint)">沒有待審投稿。</div>';
+      q.forEach(function (s) {
+        var title = s.submissionType === 'asset' ? (OCData.submissionAsset(s.payload.assetId) || {}).title : s.payload.title;
+        h += '<div class="ap-item' + (selReview === s.id ? ' sel' : '') + '" data-r="' + s.id + '" tabindex="0"><span class="av" style="background:' + (s.submissionType === 'asset' ? ((OCData.submissionAsset(s.payload.assetId) || {}).c || '#888') : '#5E7E55') + '">' + typeIcon(s.submissionType) + '</span><div class="b"><div class="nm">' + (title || '未命名') + '</div><div class="meta">' + OCData.ownerSummary(s.submitterUserId).label + ' · ' + (s.submittedAt || '') + '</div></div>' + stBadge(s.status) + '</div>';
+      });
+      h += '</div>'; box.innerHTML = h; left.appendChild(box);
+      box.querySelectorAll('[data-r]').forEach(function (it) { it.onclick = function () { selReview = it.dataset.r; buildReviewDetail(); box.querySelectorAll('.ap-item').forEach(function (x) { x.classList.toggle('sel', x.dataset.r === selReview); }); }; it.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); it.click(); } }; });
+    }
+
+    function buildReviewDetail() {
+      var center = document.getElementById('center'), right = document.getElementById('right');
+      if (!center) return;
+      var s = selReview ? OCData.submission(selReview) : null;
+      if (!s) { center.innerHTML = ''; center.appendChild(OCUI.emptyState({ title: '選擇一個投稿來審核。', body: '' })); if (right) right.innerHTML = ''; return; }
+      if (s.submissionType === 'asset') buildAssetDetail(center, right, s, true);
+      else buildTextDetail(center, right, s, true);
+      // review actions + preview live in the right panel + footer
+      var pending = s.status === 'submitted';
+      var body = center.querySelector('.ap-body');
+      if (pending) {
+        var foot = document.createElement('div'); foot.className = 'ap-foot';
+        foot.innerHTML = '<button class="btn btn-accent" id="approveBtn">通過</button><button class="btn" id="changesBtn">要求修改</button><span class="spacer"></span><button class="btn" id="rejectBtn" style="border-color:var(--avoid);color:var(--avoid)">拒絕</button>';
+        center.querySelector('.ap-main').appendChild(foot);
+        foot.querySelector('#approveBtn').onclick = function () { approveFlow(s); };
+        foot.querySelector('#changesBtn').onclick = function () { reasonModal('要求修改', '請說明需要修改什麼', function () { OCUI.toast('已要求修改，投稿者會收到通知', { demo: true }); }); };
+        foot.querySelector('#rejectBtn').onclick = function () { reasonModal('拒絕投稿', '請說明拒絕原因', function () { OCUI.toast('已拒絕投稿（不建立任何內容）', { demo: true }); }, true); };
+      } else {
+        var foot2 = document.createElement('div'); foot2.className = 'ap-foot';
+        foot2.innerHTML = '<span style="font-size:12.5px;color:var(--text-dim)">' + (s.status === 'approved' ? '已通過 · 去向：' + OCData.destTargetTypeLabel(s.destinationType) : s.status === 'rejected' ? '已拒絕：' + s.reviewMessage : OCData.subStatusLabel(s.status)) + '</span>';
+        center.querySelector('.ap-main').appendChild(foot2);
+      }
+      if (right) buildReviewSide(right, s, pending);
+    }
+
+    function buildReviewSide(right, s, pending) {
+      var html = '';
+      // type-specific approval preview
+      if (s.submissionType === 'asset') {
+        var a = OCData.submissionAsset(s.payload.assetId) || {};
+        html += '<div class="ap-panel ap-linkprev"><div class="ph">通過後將建立 · AssetLink</div>'
+          + (s.payload.proposedLinks || []).map(function (l) { return '<div class="ap-kv" style="border:none"><span class="k">' + OCData.destTargetTypeLabel(l.targetType) + '</span><span>' + OCData.resolveSubTarget(l.targetType, l.targetId) + '</span></div>'; }).join('')
+          + '<div class="cs-attrib" style="border-top:1px solid var(--border)"><div class="r"><span class="k">作者</span><span>' + (a.creatorName || '—') + '</span></div><div class="r"><span class="k">投稿者</span><span>' + OCData.ownerSummary(s.submitterUserId).label + '</span></div><div class="r"><span class="k">授權</span><span>' + (a.license || '—') + '</span></div></div>'
+          + '<div style="font-size:11px;color:#1F6B43;margin-top:8px">原子流程：通過 → 建立 AssetLink → 寫入 destination。不轉移 Asset 擁有權。</div></div>';
+      } else {
+        var dest = OCData.textDestPreview(s);
+        html += '<div class="ap-panel ap-linkprev"><div class="ph">通過後將' + dest.verb + '</div>'
+          + '<div class="ap-kv" style="border:none"><span class="k">標題</span><span>' + (s.payload.title || '') + '</span></div>'
+          + '<div class="ap-kv"><span class="k">目標</span><span>' + (dest.name || '新內容') + '</span></div>'
+          + '<div class="ap-kv"><span class="k">可見性</span><span>' + OCData.pageVisLabel(s.payload.visibility) + '</span></div>'
+          + '<div class="ap-kv"><span class="k">作者署名</span><span>' + OCData.ownerSummary(s.submitterUserId).label + '</span></div>'
+          + '<div style="font-size:11px;color:#1F6B43;margin-top:8px">原子流程：通過 → 建立／更新 Story 內容 → 寫入 destination。保留投稿者署名。</div></div>';
+      }
+      // reviewer publish settings (separate from submitter's original)
+      if (pending) {
+        html += '<div class="cs-pubsettings"><div class="ph2">' + OCIcon('gear') + ' 發布設定（審核者）</div>'
+          + '<div style="font-size:12px;color:var(--text-dim)">可調整<b>發布目的地／分類／可見性</b>，這些屬於發布設定、<b>不修改投稿者原稿</b>，且會記錄稽核。</div>'
+          + (s.submissionType === 'text' ? '<div class="ap-field" style="margin-top:8px"><label>分類到故事</label><select class="select"><option>守燈人記</option><option>望的旅途</option><option>（不指定）</option></select></div>' : '<div class="ap-field" style="margin-top:8px"><label>圖庫分類</label><select class="select"><option>角色立繪</option><option>賀圖</option><option>場景</option></select></div>')
+          + '<div class="note">需另有目的地寫入權限（如 assetLink:create／story:create）才能完成。</div></div>';
+      }
+      // review record
+      html += '<div class="ap-panel"><div class="ph">審核紀錄</div>' + (s.reviewMessage ? '<div style="font-size:12.5px;color:var(--text-dim);line-height:1.6">' + s.reviewMessage + '<div class="when" style="font-size:11px;color:var(--text-faint);margin-top:4px">' + (s.reviewedAt || '') + ' · ' + (s.reviewedBy || '') + '</div></div>' : '<div style="font-size:12.5px;color:var(--text-faint)">尚無紀錄</div>') + '</div>';
+      right.innerHTML = html;
+    }
+
+    function reasonModal(title, label, onOk, danger) {
+      var f = document.createElement('div');
+      f.innerHTML = '<div class="ap-field"><label>' + label + '<span class="reqd">必填</span></label><textarea class="input" id="rsn" rows="3"></textarea><div class="errmsg" style="display:none">請填寫原因</div></div>';
+      OCUI.modal({ title: title, body: f, actions: [ { label: '取消' }, { label: title, kind: danger ? 'danger' : 'primary', onClick: function () { var v = f.querySelector('#rsn').value.trim(); if (!v) { f.querySelector('.errmsg').style.display = 'block'; f.querySelector('#rsn').focus(); return true; } onOk(v); } } ] });
+    }
+
+    function approveFlow(s) {
+      var isAsset = s.submissionType === 'asset';
+      var body = document.createElement('div');
+      var steps = isAsset
+        ? '① 投稿 → approved<br>② 建立 AssetLink（' + (s.payload.proposedLinks || []).length + ' 筆）<br>③ 寫入 destinationType／destinationId'
+        : '① 投稿 → approved<br>② ' + OCData.textDestPreview(s).verb + '<br>③ 寫入 destinationType／destinationId';
+      body.innerHTML = '<p style="margin:0 0 var(--s2)">通過會<b>原子地</b>：</p><div style="font-size:13px;color:var(--text-dim);line-height:1.9">' + steps + '</div>'
+        + '<div style="font-size:11.5px;color:var(--text-faint);margin-top:8px">' + (isAsset ? '不轉移 Asset 擁有權；不刪除投稿者素材。' : '保留投稿者作者署名。') + ' 任一步失敗整體回復。</div>';
+      OCUI.modal({ title: '通過投稿', body: body, actions: [ { label: '取消' }, { label: isAsset ? '通過並建立關聯' : '通過並建立內容', kind: 'accent', onClick: function () {
+        if (failApprove) OCUI.toast('建立' + (isAsset ? '關聯' : '內容') + '失敗，投稿維持審核中（未部分完成）· Demo', { demo: true });
+        else OCUI.toast(isAsset ? '已通過 並建立 AssetLink（去向已寫入）' : '已通過 並建立故事內容（去向已寫入）', { demo: true });
+      } } ] });
+    }
+
+    function boot() {
+      ctx();
+      var sk = document.createElement('div'); sk.appendChild(OCUI.skeletonCards(4)); root.appendChild(sk);
+      setTimeout(function () { render(); }, 300);
+    }
+    boot();
+  })();
+</script>
+<script src="../assets/shell.js"></script>
+</body>
+</html>

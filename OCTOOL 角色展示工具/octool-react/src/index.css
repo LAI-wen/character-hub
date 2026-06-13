@@ -1,0 +1,55 @@
+/* OCTOOL base resets — everything else is inline-styled, like the original. */
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+body {
+  font-family: 'Nunito Sans', system-ui, sans-serif;
+}
+::placeholder {
+  color: var(--text-2, #a99a86);
+  opacity: 0.6;
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border, #d8c9b3);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+/* horizontal scroll strips on narrow screens (ported from .octstrip) */
+@media (max-width: 900px) {
+  .octstrip {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .octstrip::-webkit-scrollbar {
+    display: none;
+  }
+  .octstrip > * {
+    flex: 0 0 auto !important;
+  }
+  .octstrip button {
+    min-height: 42px;
+  }
+}
+
+@keyframes oct-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
