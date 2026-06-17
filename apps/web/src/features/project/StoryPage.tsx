@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { Link } from "react-router-dom"
 import { useProjectContext } from "@/routes/layouts/ProjectLayout"
 import { ContextHeader } from "@/components/ContextHeader"
 import { apiClient } from "@/lib/api/client"
@@ -408,10 +409,13 @@ export function StoryPage() {
           )}
 
           {view === "timeline" && (
-            <div>
-              <div className="tl-filter">
-                <span style={{ fontSize: 13, color: "var(--text-dim)" }}>時間軸功能即將推出。章節與事件的時序管理。</span>
-              </div>
+            <div style={{ padding: "var(--s6) var(--s4)", textAlign: "center" }}>
+              <p style={{ fontSize: 14, color: "var(--text-dim)", marginBottom: "var(--s4)" }}>
+                時間軸由獨立頁面管理，支援事件拖拉排序。
+              </p>
+              <Link to={`/p/${project.id}/timeline`} className="btn btn-accent">
+                開啟時間軸 →
+              </Link>
             </div>
           )}
 
