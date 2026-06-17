@@ -430,11 +430,11 @@ export function PublicPagesPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("card")
   const [slugEdit, setSlugEdit] = useState<{ type: "character" | "project"; id: string; slug: string; prefix: string } | null>(null)
 
-  const { data: charData } = useQuery({
+  const { data: charData, status: charStatus } = useQuery({
     queryKey: ["characters"],
     queryFn: () => apiClient<CharacterListResponse>("/api/app/characters"),
   })
-  const { data: projData } = useQuery({
+  const { data: projData, status: projStatus } = useQuery({
     queryKey: ["projects"],
     queryFn: () => apiClient<ProjectListResponse>("/api/app/projects"),
   })
@@ -471,12 +471,18 @@ export function PublicPagesPage() {
         sub="管理所有角色與企劃的可見性、連結與隱私設定。"
       />
 
-      {isEmpty ? (
+      {(charStatus === "pending" || projStatus === "pending") && (
+        <p style={{ color: "var(--text-faint)", fontSize: 14 }}>載入中…</p>
+      )}
+      {(charStatus === "error" || projStatus === "error") && (
+        <p style={{ color: "var(--avoid)" }}>無法載入公開頁資料，請稍後再試</p>
+      )}
+      {charStatus === "success" && projStatus === "success" && isEmpty ? (
         <div className="block" style={{ textAlign: "center", padding: "var(--s7) var(--s5)" }}>
           <p style={{ color: "var(--text-faint)", marginBottom: "var(--s3)" }}>還沒有角色或企劃。</p>
           <Link to="/characters/new" className="btn btn-accent">＋ 建立第一個角色</Link>
         </div>
-      ) : (
+      ) : charStatus === "success" && projStatus === "success" ? (
         <>
           {/* Toolbar */}
           <div style={{ display: "flex", alignItems: "center", gap: "var(--s3)", marginBottom: "var(--s5)", flexWrap: "wrap" }}>
@@ -591,7 +597,7 @@ export function PublicPagesPage() {
             </div>
           )}
         </>
-      )}
+      ) : null}
 
       {/* Slug edit modal */}
       {slugEdit && (
