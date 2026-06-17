@@ -62,7 +62,8 @@
       "appearance": "外観",
       "data": "データ",
       "projdef": "プロジェクト設定",
-      "account": "アカウント"
+      "account": "アカウント",
+      "invites": "招待コード"
     },
     "profile": {
       "title": "プロフィール",
@@ -97,6 +98,22 @@
       "limit": "上限",
       "imageCount": "{{count}} 枚の画像",
       "goToGallery": "ギャラリーへ"
+    },
+    "invites": {
+      "title": "招待コード",
+      "desc": "友達に共有するための招待コードを生成します。各コードは一度しか使用できません。",
+      "generate": "コードを生成",
+      "generating": "生成中…",
+      "copy": "コピー",
+      "copied": "コピーしました",
+      "unused": "未使用",
+      "used": "使用済み",
+      "usedOn": "{{date}} に使用",
+      "empty": "招待コードがまだありません。上のボタンをクリックして生成してください。",
+      "shareHint": "このコードを誰かと共有してください — 登録時に入力します。",
+      "remaining": "残り {{count}} コード",
+      "adminUnlimited": "管理者アカウント — 無制限",
+      "limitReached": "上限に達しました（{{limit}} コード）"
     },
     "account": {
       "title": "アカウント",

@@ -633,7 +633,7 @@ function CommissionPanel() {
     if (cp.cap) setCap(cp.cap)
     if (cp.usage) setUsage(cp.usage)
     if (cp.autoReply !== undefined) setAutoReply(cp.autoReply)
-    if (cp.perms) setPerms(DEFAULT_PERMS.map(p => ({ ...p, allow: cp.perms![p.key] ?? p.allow })))
+    if (cp.perms) setPerms(DEFAULT_PERMS.map(p => ({ ...p, allow: cp.perms?.[p.key] ?? p.allow })))
   }, [cp])
 
   const saveField = useCallback((patch: Partial<CommissionPrefs>) => {
