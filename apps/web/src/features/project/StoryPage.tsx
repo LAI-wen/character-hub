@@ -300,6 +300,7 @@ export function StoryPage() {
   const reorderChaptersMutation = useMutation({
     mutationFn: (ids: string[]) =>
       apiClient(`/api/app/projects/${pid}/stories/${curStoryId}/chapters/reorder`, { method: "PUT", json: { ids } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["project", pid, "story", curStoryId] }),
   })
 
   const patchStoryMutation = useMutation({
