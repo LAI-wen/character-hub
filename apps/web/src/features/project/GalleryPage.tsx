@@ -6,6 +6,7 @@ import { apiClient } from "@/lib/api/client"
 import { compressImage } from "@/lib/compressImage"
 import type { AssetListResponse, Asset } from "@oc-tools/contracts"
 import { Icon } from "@/components/Icon"
+import { LoadingSpinner } from "@/components/LoadingSpinner"
 import { fmtDate } from "@/lib/formatDate"
 
 // ── Detail Drawer ────────────────────────────────────────────────────────────
@@ -205,7 +206,6 @@ export function GalleryPage() {
       if (drawerAsset?.id === deleteId) setDrawerAsset(null)
       setDeleteId(null)
     },
-    onError: () => alert("刪除失敗，請稍後再試"),
   })
 
   // derive type filter options

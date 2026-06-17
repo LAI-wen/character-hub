@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom"
 import { apiClient } from "@/lib/api/client"
 import { charColor } from "@/lib/charColor"
 import { TemplateCanvas, buildDefaultTemplate } from "@/components/TemplateCanvas"
+import { LoadingSpinner } from "@/components/LoadingSpinner"
 import type {
   CanvasCharacter, CanvasSection, CanvasSwatch, CanvasAlbum, CanvasAnnotation,
   CanvasTemplate, CanvasDesign,
@@ -32,7 +33,7 @@ function splitLines(val: string) {
 // ── Sticky topbar ──────────────────────────────────────────────────────────────
 
 type PublicTab = "general" | "commission"
-const TAB_LABELS: Record<PublicTab, string> = { general: "一般", commission: "委託" }
+const TAB_LABELS: Record<PublicTab, string> = { general: "角色 Profile", commission: "委託 Commission" }
 
 function TopBar({
   character,

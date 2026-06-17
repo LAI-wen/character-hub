@@ -1,4 +1,4 @@
-import { LoadingSpinner, PageLoading } from "@/components/LoadingSpinner"
+import { PageLoading } from "@/components/LoadingSpinner"
 import { useEffect } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Link, useParams, useNavigate } from "react-router-dom"
@@ -23,7 +23,6 @@ export function WorldEntryDetailPage() {
       qc.invalidateQueries({ queryKey: ["project", projectId, "world-entries"] })
       navigate(`/p/${projectId}/worldview`)
     },
-    onError: () => alert('刪除失敗，請稍後再試'),
   })
 
   const { data, status } = useQuery({

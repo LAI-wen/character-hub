@@ -4,6 +4,7 @@ import { Link, useParams, useSearchParams } from "react-router-dom"
 import { apiClient } from "@/lib/api/client"
 import { PageHeader } from "@/components/PageHeader"
 import { ContextHeader } from "@/components/ContextHeader"
+import { LoadingSpinner } from "@/components/LoadingSpinner"
 import { useProjectContext } from "@/routes/layouts/ProjectLayout"
 import { CreateRelationshipModal } from "./CreateRelationshipModal"
 import { typeColor } from "@/lib/worldviewTypes"
@@ -485,7 +486,6 @@ export function RelationshipsPage() {
       qc.invalidateQueries({ queryKey: ["project", projectId, "relationships"] })
       if (selRelId === relId) setSelRelId(null)
     },
-    onError: () => alert("刪除失敗，請稍後再試"),
   })
 
   // Layout save mutation (don't invalidate — positions already in localPositions)

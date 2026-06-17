@@ -49,7 +49,6 @@ export function CharacterNewPage() {
       const linkId = data.projectLink?.id
       navigate(linkId ? `/p/${projectId}/roster/${linkId}` : `/p/${projectId}/roster`)
     },
-    onError: () => alert('建立角色失敗，請稍後再試'),
   })
 
   // ── Existing character selection ──────────────────────────────────
@@ -85,7 +84,6 @@ export function CharacterNewPage() {
       const linkId = data.projectLink?.id
       navigate(linkId ? `/p/${projectId}/roster/${linkId}` : `/p/${projectId}/roster`)
     },
-    onError: () => alert('加入角色失敗，請稍後再試'),
   })
 
   return (

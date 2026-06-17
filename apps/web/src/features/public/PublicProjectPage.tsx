@@ -6,6 +6,7 @@ import { charColor } from "@/lib/charColor"
 import { typeLabel, typeColor } from "@/lib/worldviewTypes"
 import { useAuth } from "@/lib/auth/context"
 import type { Project, Character, WorldEntry } from "@oc-tools/contracts"
+import { LoadingSpinner } from "@/components/LoadingSpinner"
 
 type PublicProjectResponse = {
   project: Project

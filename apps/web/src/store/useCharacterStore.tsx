@@ -14,7 +14,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api/client'
 import { compressImage } from '@/lib/compressImage'
 import { showConfirm } from '@/components/ConfirmModal'
-import { BUILTIN_FORMS, loadForms, saveForms, schemaFromSections, sectionsFromSchema } from '@/data/formTemplates'
+import { BUILTIN_FORMS, loadForms, saveForms, sectionsFromSchema } from '@/data/formTemplates'
 import type { FormTemplate } from '@/data/formTemplates'
 import {
   DEF_DESIGN,

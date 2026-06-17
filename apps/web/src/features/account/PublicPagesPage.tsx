@@ -155,7 +155,6 @@ function VisPopover({
       qc.invalidateQueries({ queryKey: type === "character" ? ["characters"] : ["projects"] })
       onClose()
     },
-    onError: () => alert('更新可見性失敗，請稍後再試'),
   })
 
   return (

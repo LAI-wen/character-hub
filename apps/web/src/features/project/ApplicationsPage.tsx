@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useParams, Link } from "react-router-dom"
 import { ContextHeader } from "@/components/ContextHeader"
+import { LoadingSpinner } from "@/components/LoadingSpinner"
 import { useProjectContext } from "@/routes/layouts/ProjectLayout"
 import { useAuth } from "@/lib/auth/context"
 import { apiClient } from "@/lib/api/client"
@@ -89,7 +90,6 @@ export function ApplicationsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["project", projectId, "characters"] })
     },
-    onError: () => alert('操作失敗，請稍後再試'),
   })
 
   function handleApprove(linkId: string) {

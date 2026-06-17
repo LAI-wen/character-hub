@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { apiClient } from "@/lib/api/client"
 import { ContextHeader } from "@/components/ContextHeader"
 import { PageHeader } from "@/components/PageHeader"
+import { LoadingSpinner } from "@/components/LoadingSpinner"
 import type { ProjectListResponse, ProjectResponse } from "@oc-tools/contracts"
 
 const VIS_LABELS: Record<string, string> = {
@@ -47,7 +48,6 @@ export function MyProjectsPage() {
       setName(""); setDesc(""); setColor(THEME_COLORS[0])
       navigate(`/p/${res.project.id}/overview`)
     },
-    onError: () => alert('建立企劃失敗，請稍後再試'),
   })
 
   const deleteMutation = useMutation({
@@ -56,7 +56,6 @@ export function MyProjectsPage() {
       qc.invalidateQueries({ queryKey: ["projects"] })
       setDeleteId(null)
     },
-    onError: () => alert('刪除失敗，請稍後再試'),
   })
 
   return (

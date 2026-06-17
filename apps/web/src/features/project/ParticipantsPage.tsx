@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useParams } from "react-router-dom"
 import { ContextHeader } from "@/components/ContextHeader"
 import { PageHeader } from "@/components/PageHeader"
+import { LoadingSpinner } from "@/components/LoadingSpinner"
 import { useProjectContext } from "@/routes/layouts/ProjectLayout"
 import { useAuth } from "@/lib/auth/context"
 import { apiClient } from "@/lib/api/client"
@@ -294,7 +295,6 @@ function PermPane({ member, projectId }: { member: Member | null; projectId: str
       qc.invalidateQueries({ queryKey: ['project', projectId, 'members'] })
       setOverrides({})
     },
-    onError: () => alert('儲存失敗，請稍後再試'),
   })
 
   if (!member) {

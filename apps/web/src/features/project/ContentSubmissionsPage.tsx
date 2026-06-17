@@ -91,7 +91,6 @@ export function ContentSubmissionsPage() {
       setNewContent("")
       setNewMessage("")
     },
-    onError: () => alert('提交失敗，請稍後再試'),
   })
 
   const patchMutation = useMutation({
@@ -103,7 +102,6 @@ export function ContentSubmissionsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["project", projectId, "submissions"] })
     },
-    onError: () => alert('操作失敗，請稍後再試'),
   })
 
   function handleCreate() {

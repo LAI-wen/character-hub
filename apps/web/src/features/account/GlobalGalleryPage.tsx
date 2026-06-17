@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/PageHeader"
 import { apiClient } from "@/lib/api/client"
 import type { AssetListResponse, Asset } from "@oc-tools/contracts"
 import { Icon } from "@/components/Icon"
+import { LoadingSpinner } from "@/components/LoadingSpinner"
 
 function fmtBytes(b: number) {
   if (b < 1024) return `${b} B`

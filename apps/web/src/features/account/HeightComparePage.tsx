@@ -4,6 +4,7 @@ import { apiClient } from "@/lib/api/client"
 import { charColor } from "@/lib/charColor"
 import { ContextHeader } from "@/components/ContextHeader"
 import { PageHeader } from "@/components/PageHeader"
+import { LoadingSpinner } from "@/components/LoadingSpinner"
 import type { CharacterListResponse, ProjectListResponse } from "@oc-tools/contracts"
 
 const AXIS_MAX_DEFAULT = 200
@@ -67,7 +68,6 @@ export function HeightComparePage() {
     mutationFn: ({ id, heightCm }: { id: string; heightCm: number }) =>
       apiClient(`/api/app/characters/${id}`, { method: "PATCH", body: { heightCm } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["characters"] }),
-    onError: () => alert('儲存身高失敗，請稍後再試'),
   })
 
   const entries = useMemo<CharEntry[]>(() => {

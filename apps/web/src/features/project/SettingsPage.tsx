@@ -64,7 +64,6 @@ export function SettingsPage() {
       setSaved(true)
       setTimeout(() => setSaved(false), 2500)
     },
-    onError: () => alert('儲存設定失敗，請稍後再試'),
   })
 
   function toggleFeature(id: string) {

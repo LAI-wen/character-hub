@@ -275,7 +275,6 @@ export function StoryPage() {
       setCreateTitle("")
       setCreateDesc("")
     },
-    onError: () => alert('建立故事失敗，請稍後再試'),
   })
 
   const createChapterMutation = useMutation({
@@ -290,20 +289,17 @@ export function StoryPage() {
       setAddChOpen(false)
       setAddChTitle("")
     },
-    onError: () => alert('建立分章失敗，請稍後再試'),
   })
 
   const patchChapterMutation = useMutation({
     mutationFn: ({ id, ...body }: { id: string; title?: string; content?: string }) =>
       apiClient(`/api/app/projects/${pid}/stories/${curStoryId}/chapters/${id}`, { method: "PATCH", json: body }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["project", pid, "story", curStoryId] }),
-    onError: () => alert('儲存章節失敗，請稍後再試'),
   })
 
   const reorderChaptersMutation = useMutation({
     mutationFn: (ids: string[]) =>
       apiClient(`/api/app/projects/${pid}/stories/${curStoryId}/chapters/reorder`, { method: "PUT", json: { ids } }),
-    onError: () => alert('排序更新失敗，請稍後再試'),
   })
 
   const patchStoryMutation = useMutation({
@@ -313,7 +309,6 @@ export function StoryPage() {
       qc.invalidateQueries({ queryKey: ["project", pid, "stories"] })
       setEditStoryOpen(false)
     },
-    onError: () => alert('故事設定儲存失敗，請稍後再試'),
   })
 
   const deleteChapterMutation = useMutation({
@@ -321,9 +316,8 @@ export function StoryPage() {
       apiClient(`/api/app/projects/${pid}/stories/${curStoryId}/chapters/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["project", pid, "story", curStoryId] })
-      setCurChapterId(null)
+      setSelectedChapterId(null)
     },
-    onError: () => alert('刪除章節失敗，請稍後再試'),
   })
 
   async function handleDeleteChapter(id: string, title: string) {

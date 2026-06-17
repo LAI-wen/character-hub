@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/PageHeader"
 import { useProjectContext } from "@/routes/layouts/ProjectLayout"
 import type { StoryEventListResponse, StoryEvent } from "@oc-tools/contracts"
 import { Icon } from "@/components/Icon"
+import { LoadingSpinner } from "@/components/LoadingSpinner"
 
 // ── Event item ────────────────────────────────────────────────────────────────
 
@@ -200,7 +201,6 @@ export function TimelinePage() {
       qc.invalidateQueries({ queryKey: ["project", projectId, "story-events"] })
       setDeleteId(null)
     },
-    onError: () => alert("刪除失敗，請稍後再試"),
   })
 
   const events = data?.events ?? []

@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams } from "react-router-dom"
 import { apiClient } from "@/lib/api/client"
 import { PageHeader } from "@/components/PageHeader"
 import { ContextHeader } from "@/components/ContextHeader"
+import { LoadingSpinner } from "@/components/LoadingSpinner"
 import { useProjectContext } from "@/routes/layouts/ProjectLayout"
 import { charColor } from "@/lib/charColor"
 import type {

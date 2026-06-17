@@ -1,4 +1,4 @@
-import { LoadingSpinner, PageLoading } from "@/components/LoadingSpinner"
+import { PageLoading } from "@/components/LoadingSpinner"
 import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -76,7 +76,6 @@ export function WorldEntryEditPage() {
       queryClient.invalidateQueries({ queryKey: ["project", projectId, "world-entry", entryId] })
       navigate(`/p/${projectId}/worldview/${entryId}`)
     },
-    onError: () => alert('儲存失敗，請稍後再試'),
   })
 
   if (status === "pending") {
