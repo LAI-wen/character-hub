@@ -1410,7 +1410,8 @@ appApiRouter.post('/apply', async (c) => {
 appApiRouter.get('/projects/:projectId/characters', async (c) => {
   const db = getDb(c);
   await getVisibleProject(c, c.req.param('projectId'), 'project:view');
-  const rows = await all<ProjectCharacterLinkRow & CharacterRow>(
+  type RosterRow = ProjectCharacterLinkRow & CharacterRow & { c_created_at: string; c_updated_at: string; c_archived_at: string | null };
+  const rows = await all<RosterRow>(
     db,
     `SELECT pcl.*,
             c.id AS character_id, c.owner_user_id, c.slug, c.name, c.romaji, c.nickname,
@@ -1434,8 +1435,8 @@ appApiRouter.get('/projects/:projectId/characters', async (c) => {
       theme_color: row.theme_color, visibility: row.visibility, height_cm: row.height_cm,
       tags_json: row.tags_json, general_profile_json: row.general_profile_json,
       artist_profile_json: row.artist_profile_json, writer_profile_json: row.writer_profile_json,
-      created_at: (row as any).c_created_at, updated_at: (row as any).c_updated_at,
-      archived_at: (row as any).c_archived_at,
+      created_at: row.c_created_at, updated_at: row.c_updated_at,
+      archived_at: row.c_archived_at,
     };
     return { projectLink: mapProjectLink(row), character: mapCharacter(charRow) };
   });

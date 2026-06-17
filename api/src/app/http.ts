@@ -1,4 +1,5 @@
 import type { Context } from 'hono';
+import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import type { z } from 'zod';
 
 export type ErrorFields = Record<string, string | string[]>;
@@ -27,7 +28,7 @@ export function errorBody(code: string, message: string, fields?: ErrorFields) {
 }
 
 export function errorResponse(c: Context, status: number, code: string, message: string, fields?: ErrorFields) {
-  return c.json(errorBody(code, message, fields), status as any);
+  return c.json(errorBody(code, message, fields), status as ContentfulStatusCode);
 }
 
 export function notImplemented(c: Context, repositoryMethod: string) {
