@@ -1,7 +1,7 @@
 import { QueryClient } from "@tanstack/react-query"
 import { AppApiError } from "@/lib/api/errors"
 
-function showErrorToast(msg: string) {
+export function showToast(msg: string) {
   if (typeof window === "undefined") return
   const toast = document.createElement("div")
   toast.textContent = msg
@@ -22,10 +22,10 @@ function defaultMutationError(error: unknown) {
     if (error.status === 401) return
     const msg = error.detail || error.code
     console.error("[mutation]", error.status, msg)
-    showErrorToast(`操作失敗：${msg}`)
+    showToast(`操作失敗：${msg}`)
   } else if (error instanceof Error) {
     console.error("[mutation]", error.message)
-    showErrorToast("操作失敗，請稍後再試")
+    showToast("操作失敗，請稍後再試")
   }
 }
 

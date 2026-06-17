@@ -12,6 +12,7 @@ import {
 } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api/client'
+import { showToast } from '@/lib/query/client'
 import { compressImage } from '@/lib/compressImage'
 import { showConfirm } from '@/components/ConfirmModal'
 import { BUILTIN_FORMS, loadForms, saveForms, sectionsFromSchema } from '@/data/formTemplates'
@@ -696,13 +697,13 @@ export function CharacterStoreProvider({
           try {
             const obj = JSON.parse(String(fr.result))
             if (!obj || typeof obj !== 'object' || Array.isArray(obj)) {
-              alert('檔案格式不正確：不是有效的角色備份'); return
+              showToast('檔案格式不正確：不是有效的角色備份'); return
             }
             if (typeof obj.name !== 'string') {
-              alert('檔案格式不正確：缺少必要欄位 name'); return
+              showToast('檔案格式不正確：缺少必要欄位 name'); return
             }
             if (!Array.isArray(obj.sections)) {
-              alert('檔案格式不正確：缺少 sections 欄位'); return
+              showToast('檔案格式不正確：缺少 sections 欄位'); return
             }
             const safeUrl = (v: unknown) => (typeof v === 'string' && /^https?:\/\//.test(v)) ? v : ''
             const c: Character = {
@@ -713,7 +714,7 @@ export function CharacterStoreProvider({
             }
             setChar(() => c)
             patchUi({ selBlock: null })
-          } catch { alert('檔案讀取失敗：JSON 格式錯誤') }
+          } catch { showToast('檔案讀取失敗：JSON 格式錯誤') }
         }
         fr.readAsText(f)
       }
@@ -727,7 +728,7 @@ export function CharacterStoreProvider({
     removeFormTemplate: (id) => persistForms(formTemplates.filter((t) => t.id !== id)),
     exportFormTemplate: () => {
       const user = formTemplates.filter((t) => !t.builtin)
-      if (!user.length) { alert('還沒有自訂格式。'); return }
+      if (!user.length) { showToast('還沒有自訂格式。'); return }
       const blob = new Blob([JSON.stringify(user, null, 2)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a'); a.href = url; a.download = 'form-templates.json'; a.click()
@@ -744,7 +745,7 @@ export function CharacterStoreProvider({
             if (!Array.isArray(arr)) throw new Error()
             const imported: FormTemplate[] = arr.map((t: unknown) => ({ id: uid('f'), name: (t as FormTemplate).name || '匯入格式', sections: (t as FormTemplate).sections || [] }))
             persistForms([...formTemplates, ...imported])
-          } catch { alert('格式檔案讀取失敗。') }
+          } catch { showToast('格式檔案讀取失敗。') }
         }
         fr.readAsText(f)
       }

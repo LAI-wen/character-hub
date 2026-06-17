@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { apiClient } from "@/lib/api/client"
+import { showToast } from "@/lib/query/client"
 import { ContextHeader } from "@/components/ContextHeader"
 import { PageHeader } from "@/components/PageHeader"
 import { useAuth } from "@/lib/auth/context"
@@ -153,7 +154,7 @@ function StoragePanel() {
                 onClick={async () => {
                   if (!await showConfirm("這會清除所有本地儲存的草稿、主題、面板狀態。此操作無法復原。", { title: "清除本地資料？", confirmLabel: "確認清除" })) return
                   localStorage.clear()
-                  alert("本地資料已清除")
+                  showToast("本地資料已清除")
                 }}
               >
                 清除本地

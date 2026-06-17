@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { showConfirm } from '@/components/ConfirmModal'
 import { BUILTIN_FORMS, type FormTemplate, loadForms, saveForms, schemaFromSections, sectionsFromSchema } from '@/data/formTemplates'
+import { showToast } from '@/lib/query/client'
 import { uid } from '@/lib/uid'
 
 type Section = { id: string; title: string; group: string; fields: { id: string; label: string; type: string; value: string }[] }
@@ -41,7 +42,7 @@ export function CharBackupModal({ charName: _charName, sections, onExport, onImp
 
   const exportTemplate = () => {
     const user = formTemplates.filter((t) => !t.builtin)
-    if (!user.length) { alert('還沒有自訂格式。'); return }
+    if (!user.length) { showToast('還沒有自訂格式。'); return }
     const blob = new Blob([JSON.stringify(user, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -63,7 +64,7 @@ export function CharBackupModal({ charName: _charName, sections, onExport, onImp
             id: uid(), name: (t as FormTemplate).name || '匯入格式', sections: (t as FormTemplate).sections || [],
           }))
           persist([...formTemplates, ...imported])
-        } catch { alert('格式檔案讀取失敗。') }
+        } catch { showToast('格式檔案讀取失敗。') }
       }
       fr.readAsText(f)
     }
