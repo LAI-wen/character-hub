@@ -168,7 +168,7 @@ export function CharacterNewPage() {
                 <label>公開設定</label>
                 <select className="inp" {...register("visibility")}>
                   <option value="private">私人</option>
-                  <option value="unlisted">不公開連結</option>
+                  <option value="unlisted">限連結 — 有連結的人</option>
                   <option value="public">公開</option>
                 </select>
               </div>

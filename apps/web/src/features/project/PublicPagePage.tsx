@@ -158,7 +158,7 @@ export function PublicPagePage() {
                     fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: "var(--r-pill)",
                     background: "var(--surface-2)", border: "1px solid var(--border-strong)", color: "var(--text-faint)",
                   }}>
-                    {project.visibility === "public" ? "公開" : project.visibility === "unlisted" ? "未列出" : "私人"}
+                    {project.visibility === "public" ? "公開" : project.visibility === "unlisted" ? "限連結" : "私人"}
                   </span>
                 </div>
                 <div className="url">{publicUrl}</div>
