@@ -87,7 +87,7 @@ export function SettingsPage() {
     })
   }
 
-  const canEdit = !viewerRole || viewerRole === "owner" || viewerRole === "admin"
+  const canEdit = !viewerRole || viewerRole === "owner"
 
   return (
     <div className="page narrow">
