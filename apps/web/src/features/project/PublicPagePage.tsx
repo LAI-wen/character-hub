@@ -40,7 +40,7 @@ export function PublicPagePage() {
     mutationFn: (body: { status?: string; draftJson?: Record<string, unknown>; settings?: Record<string, unknown>; theme?: Record<string, unknown> }) =>
       apiClient(`/api/app/projects/${projectId}/public-page`, {
         method: "PATCH",
-        body: JSON.stringify(body),
+        body,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["project", projectId, "public-page"] })

@@ -91,7 +91,7 @@ export function TemplateBuilderPage() {
     mutationFn: (body: { canvasTemplates: SavedTpl[] }) =>
       apiClient(`/api/app/projects/${projectId}/template`, {
         method: "PUT",
-        body: JSON.stringify({ fields: tplData?.fields ?? [], ...body, canvasDesign: {} }),
+        body: { fields: tplData?.fields ?? [], ...body, canvasDesign: {} },
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["project", projectId, "template"] })

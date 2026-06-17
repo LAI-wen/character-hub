@@ -85,7 +85,7 @@ export function ApplicationsPage() {
     mutationFn: ({ linkId, status, reviewMessage }: { linkId: string; status: string; reviewMessage?: string }) =>
       apiClient(`/api/app/projects/${projectId}/characters/${linkId}`, {
         method: "PATCH",
-        body: JSON.stringify({ status, reviewMessage }),
+        body: { status, reviewMessage },
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["project", projectId, "characters"] })

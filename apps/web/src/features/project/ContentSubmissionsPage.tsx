@@ -82,7 +82,7 @@ export function ContentSubmissionsPage() {
     mutationFn: (body: Record<string, unknown>) =>
       apiClient(`/api/app/projects/${projectId}/submissions/content`, {
         method: "POST",
-        body: JSON.stringify(body),
+        body,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["project", projectId, "submissions"] })
@@ -97,7 +97,7 @@ export function ContentSubmissionsPage() {
     mutationFn: ({ id, status, reviewMessage }: { id: string; status: string; reviewMessage?: string }) =>
       apiClient(`/api/app/projects/${projectId}/submissions/content/${id}`, {
         method: "PATCH",
-        body: JSON.stringify({ status, reviewMessage }),
+        body: { status, reviewMessage },
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["project", projectId, "submissions"] })
