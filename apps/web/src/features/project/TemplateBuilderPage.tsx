@@ -20,12 +20,12 @@ import {
   uid, DEF_DESIGN, BLOCK_TYPES, INFO_TYPES, TYPE_LABEL,
   makeBlock, mapTree, removeTree, detachFrom, insertRelId,
   findParentArr, cloneBlk, newTemplate, PRESET_CARDS,
+  type DeviceKey,
 } from "./templateBuilder/blocks"
 import { BlockInspector, type InspectorCtx } from "./templateBuilder/BlockInspector"
 import { BlockListPanel, type ListCtx } from "./templateBuilder/BlockListPanel"
 import { GlobalDesignPanel, type DesignCtx } from "./templateBuilder/GlobalDesignPanel"
 
-type DeviceKey = "desktop" | "tablet" | "phone"
 type SavedTpl = { id: string; name: string; template: CanvasTemplate }
 
 const seg = (active: boolean) => ({

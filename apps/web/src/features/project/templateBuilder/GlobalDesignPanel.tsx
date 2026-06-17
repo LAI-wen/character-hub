@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { Icon } from '@/components/Icon'
 import { AssetPickerModal } from '@/components/AssetPickerModal'
-import { FONT_OPTS } from './blocks'
+import { FONT_OPTS, type DeviceKey } from './blocks'
 import type { CanvasCharacter, CanvasDesign, CanvasTemplate } from '@/components/TemplateCanvas'
 
 export type DesignCtx = {
@@ -12,8 +12,6 @@ export type DesignCtx = {
   addLibColor: (hex: string) => void
   removeLibColor: (hex: string) => void
 }
-
-type DeviceKey = 'desktop' | 'tablet' | 'phone'
 
 const labelStyle = { fontSize: 12, fontWeight: 700, color: 'var(--text-2)', marginBottom: 6 } as const
 const selectStyle = {

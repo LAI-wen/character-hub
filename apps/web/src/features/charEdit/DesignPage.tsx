@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useCharacterStore } from '@/store/useCharacterStore'
 import { TemplateCanvas } from '@/components/TemplateCanvas'
 import { Icon } from '@/components/Icon'
-import { BLOCK_TYPES, INFO_TYPES, PRESET_CARDS, TYPE_LABEL, findParentArr } from '@/features/project/templateBuilder/blocks'
+import { BLOCK_TYPES, INFO_TYPES, PRESET_CARDS, TYPE_LABEL, findParentArr, type DeviceKey } from '@/features/project/templateBuilder/blocks'
 import { BlockInspector } from '@/features/project/templateBuilder/BlockInspector'
 import { BlockListPanel } from '@/features/project/templateBuilder/BlockListPanel'
 import { GlobalDesignPanel } from '@/features/project/templateBuilder/GlobalDesignPanel'
@@ -20,8 +20,6 @@ const seg = (active: boolean) => ({
   background: active ? 'var(--accent)' : 'transparent',
   color: active ? '#fff' : 'var(--text-2)',
 })
-
-type DeviceKey = 'desktop' | 'tablet' | 'phone'
 
 const DEVICES: { key: DeviceKey; label: string; icon: string }[] = [
   { key: 'desktop', label: '電腦', icon: 'monitor' },

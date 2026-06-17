@@ -6,6 +6,8 @@ type Template = CanvasTemplate
 type Design = CanvasDesign
 type MinChar = { sections?: { id: string }[]; albums?: { id: string }[] }
 
+export type DeviceKey = 'desktop' | 'tablet' | 'phone'
+
 export const uid = (p = 'x'): string => _uid(p)
 
 export const DEF_DESIGN: Design = {
