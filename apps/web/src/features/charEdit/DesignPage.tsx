@@ -188,7 +188,11 @@ export function DesignPage() {
     />
   )
 
-  const addPanel = (
+  const addPanel = !activeTemplate ? (
+    <p style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.6, margin: 0 }}>
+      請先從上方<b>「＋ 模板」</b>新增一個模板，再加入積木。
+    </p>
+  ) : (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {(['info', 'layout'] as const).map(grp => {
         const open = addGroup === grp

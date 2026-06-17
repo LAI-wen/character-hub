@@ -62,7 +62,7 @@ export function CharacterNewPage() {
               {errors.name && <span className="ed-err">{errors.name.message}</span>}
             </div>
             <div className="ed-field">
-              <label>種族 / 身分</label>
+              <label>種族 / 物種</label>
               <input className="inp" placeholder="人類、精靈、人工智能…" {...register("species")} />
             </div>
             <div className="ed-field">
@@ -70,7 +70,7 @@ export function CharacterNewPage() {
               <select className="inp" {...register("visibility")}>
                 <option value="private">私人 — 只有你</option>
                 <option value="unlisted">限連結 — 有連結的人</option>
-                <option value="public">公開</option>
+                <option value="public">公開 — 任何人可見</option>
               </select>
             </div>
           </div>
