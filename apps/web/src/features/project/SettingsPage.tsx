@@ -79,8 +79,9 @@ export function SettingsPage() {
   function handleSave() {
     mutation.mutate({
       name:        form.name,
-      slug:        form.slug,
+      slug:        form.slug || undefined,
       description: form.description || undefined,
+      themeColor:  form.themeColor || undefined,
       visibility:  form.visibility as "private" | "unlisted" | "public",
       enabledFeatures: form.enabledFeatures,
     })
