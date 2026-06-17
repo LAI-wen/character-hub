@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { ContextHeader } from "@/components/ContextHeader"
 import { LoadingSpinner } from "@/components/LoadingSpinner"
+import { showToast } from "@/lib/query/client"
 import {
   DndContext,
   DragOverlay,
@@ -463,7 +464,7 @@ function DroppableColumn({ statusKey, comms, onMove, onArchive, isOver }: Column
       {statusKey === "talk" && (
         <button
           type="button"
-          onClick={() => {/* coming soon */}}
+          onClick={() => showToast("委託洽談功能即將推出")}
           style={{
             display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
             padding: 11, marginTop: "var(--s2)",
