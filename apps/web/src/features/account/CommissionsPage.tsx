@@ -70,7 +70,7 @@ const DEMO_COMMS: Commission[] = [
   { id: "cm7", char: "nozomi", title: "頭像 icon",          artist: "@momoko",   status: "done",     due: "2026.03.02", budget: "NT$2,000",  usage: "personal",   unread: 0, updated: "2 個月前",  ago: 1440 },
 ]
 
-const TODAY = new Date("2026-06-04")
+const TODAY = new Date()
 
 function dueSoon(due: string): boolean {
   const m = /^(\d{4})\.(\d{2})\.(\d{2})$/.exec(due)
