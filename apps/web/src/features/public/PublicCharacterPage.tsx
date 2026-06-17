@@ -31,6 +31,7 @@ function splitLines(val: string) {
 // ── Sticky topbar ──────────────────────────────────────────────────────────────
 
 type PublicTab = "general" | "commission"
+const TAB_LABELS: Record<PublicTab, string> = { general: "一般", commission: "委託" }
 
 function TopBar({
   character,
@@ -93,7 +94,7 @@ function TopBar({
               transition: "background .14s, color .14s",
             }}
           >
-            {t === "general" ? "一般 General" : "委託 Commission"}
+            {TAB_LABELS[t]}
           </button>
         ))}
       </div>
@@ -409,7 +410,7 @@ export function PublicCharacterPage() {
   if (status === "pending") {
     return (
       <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "var(--bg)" }}>
-        <p style={{ color: "var(--text-faint)" }}>載入中⋯</p>
+        <LoadingSpinner />
       </div>
     )
   }

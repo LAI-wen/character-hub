@@ -305,7 +305,7 @@ export function GalleryPage() {
         </div>
       )}
 
-      {status === "pending" && <p style={{ color: "var(--text-faint)" }}>載入中⋯</p>}
+      {status === "pending" && <LoadingSpinner />}
       {status === "error"   && <p style={{ color: "var(--avoid)"  }}>無法載入圖庫</p>}
 
       {status === "success" && assets.length === 0 && (

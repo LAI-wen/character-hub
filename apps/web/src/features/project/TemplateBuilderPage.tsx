@@ -204,7 +204,7 @@ export function TemplateBuilderPage() {
     })
     ro.observe(el)
     return () => ro.disconnect()
-  })
+  }, [])
 
   useEffect(() => {
     if (!fs) return

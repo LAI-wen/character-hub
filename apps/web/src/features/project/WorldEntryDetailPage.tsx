@@ -1,3 +1,4 @@
+import { LoadingSpinner, PageLoading } from "@/components/LoadingSpinner"
 import { useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Link, useParams } from "react-router-dom"
@@ -28,7 +29,7 @@ export function WorldEntryDetailPage() {
   }, [entry?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (status === "pending") {
-    return <div className="page" style={{ color: "var(--text-faint)" }}>載入中⋯</div>
+    return <PageLoading />
   }
 
   if (status === "error" || !data?.entry) {

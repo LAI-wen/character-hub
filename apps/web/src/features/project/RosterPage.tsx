@@ -278,7 +278,7 @@ export function RosterPage() {
       </div>
 
       {status === "pending" && (
-        <p style={{ color: "var(--text-faint)" }}>載入中⋯</p>
+        <LoadingSpinner />
       )}
       {status === "error" && (
         <p style={{ color: "var(--avoid)" }}>無法載入角色列表</p>

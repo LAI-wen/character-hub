@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api/client"
 import { ContextHeader } from "@/components/ContextHeader"
 import { PageHeader } from "@/components/PageHeader"
 import { charColor } from "@/lib/charColor"
+import { timeAgo } from "@/lib/formatDate"
 import type { CharacterListResponse, CharacterWithMemberships } from "@oc-tools/contracts"
 
 type ViewMode = "card" | "list"
@@ -16,17 +17,6 @@ const VIS_DOT: Record<string, { label: string; color: string }> = {
   private:  { label: "私人",   color: "var(--border-strong)" },
 }
 
-function timeAgo(iso: string): string {
-  const ms = Date.now() - new Date(iso).getTime()
-  const min = Math.floor(ms / 60000)
-  if (min < 60) return `${Math.max(1, min)}分鐘前`
-  const hr = Math.floor(min / 60)
-  if (hr < 24) return `${hr}小時前`
-  const day = Math.floor(hr / 24)
-  if (day < 30) return `${day}天前`
-  const mo = Math.floor(day / 30)
-  return `${mo}個月前`
-}
 
 type Group = {
   id: string
@@ -282,7 +272,7 @@ export function MyCharactersPage() {
         action={<Link to="/characters/new" className="btn btn-accent">＋ 新角色</Link>}
       />
 
-      {status === "pending" && <p style={{ color: "var(--text-faint)" }}>載入中⋯</p>}
+      {status === "pending" && <LoadingSpinner />}
       {status === "error"   && <p style={{ color: "var(--avoid)" }}>無法載入角色</p>}
 
       {status === "success" && all.length === 0 && (

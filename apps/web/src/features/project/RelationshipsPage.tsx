@@ -603,7 +603,7 @@ export function RelationshipsPage() {
         }
       />
 
-      {isPending && <p style={{color:"var(--text-faint)"}}>載入中⋯</p>}
+      {isPending && <LoadingSpinner />}
       {isError   && <p style={{color:"var(--avoid)"}}>無法載入關係資料</p>}
       {!isPending && !isError && allRels.length===0 && (
         <p style={{color:"var(--text-faint)"}}>還沒有關係資料。</p>

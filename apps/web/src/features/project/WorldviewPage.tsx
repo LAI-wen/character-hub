@@ -342,7 +342,7 @@ export function WorldviewPage() {
       />
 
       {status === "pending" && (
-        <p style={{ color: "var(--text-faint)" }}>載入中⋯</p>
+        <LoadingSpinner />
       )}
       {status === "error" && (
         <p style={{ color: "var(--avoid)" }}>無法載入世界觀條目</p>

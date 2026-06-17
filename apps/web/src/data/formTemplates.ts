@@ -1,4 +1,4 @@
-function uid() { return Math.random().toString(36).slice(2, 9) }
+import { uid } from "@/lib/uid"
 
 export interface FormTemplate {
   id: string

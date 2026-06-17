@@ -2481,6 +2481,7 @@ function mapPublicPage(row: PublicPageRow) {
     projectId: row.project_id,
     slug: row.slug,
     status: row.status,
+    draftJson: parseJson<Record<string, unknown>>(row.draft_json, {}),
     settings: parseJson<Record<string, unknown>>(row.settings_json, {}),
     theme: parseJson<Record<string, unknown>>(row.theme_json, {}),
     publishedVersionId: row.published_version_id,
@@ -2491,6 +2492,7 @@ function mapPublicPage(row: PublicPageRow) {
 
 const updatePublicPageSchema = z.object({
   status: z.enum(['draft', 'published', 'disabled']).optional(),
+  draftJson: z.record(z.unknown()).optional(),
   settings: z.record(z.unknown()).optional(),
   theme: z.record(z.unknown()).optional(),
 });
@@ -2514,6 +2516,7 @@ appApiRouter.patch('/projects/:projectId/public-page', async (c) => {
   const sets: string[] = ['updated_at = ?', 'updated_by_user_id = ?'];
   const vals: unknown[] = [now, user.sub];
   if (input.status) { sets.push('status = ?'); vals.push(input.status); }
+  if (input.draftJson) { sets.push('draft_json = ?'); vals.push(JSON.stringify(input.draftJson)); }
   if (input.settings) { sets.push('settings_json = ?'); vals.push(JSON.stringify(input.settings)); }
   if (input.theme) { sets.push('theme_json = ?'); vals.push(JSON.stringify(input.theme)); }
   vals.push(row.id);
@@ -2800,6 +2803,52 @@ appApiRouter.post('/account/invites', async (c) => {
   }
   await run(db, 'INSERT INTO invite_codes (id, code, created_by_user_id) VALUES (?, ?, ?)', [id, code, user.sub]);
   return c.json({ invite: { id, code, createdAt: new Date().toISOString() } }, 201);
+});
+
+// ── Account preferences (commission / privacy / notifications) ────────────────
+
+const prefsSchema = z.object({
+  commission: z.object({
+    status:    z.enum(['open', 'waitlist', 'paused']).optional(),
+    tagline:   z.string().max(80).optional(),
+    cap:       z.enum(['2', '3', '5', '0']).optional(),
+    usage:     z.enum(['personal', 'commercial']).optional(),
+    autoReply: z.string().max(800).optional(),
+    perms:     z.record(z.boolean()).optional(),
+  }).optional(),
+  privacy: z.object({
+    defaultVisibility: z.enum(['public', 'unlisted', 'password', 'private']).optional(),
+    watermark: z.boolean().optional(),
+    seo:       z.boolean().optional(),
+    branding:  z.boolean().optional(),
+  }).optional(),
+  notifications: z.record(z.object({ email: z.boolean(), discord: z.boolean() })).optional(),
+}).strict();
+
+appApiRouter.get('/account/preferences', async (c) => {
+  const db = getDb(c);
+  const user = c.get('user');
+  const row = await first<{ preferences_json: string }>(
+    db, 'SELECT preferences_json FROM users WHERE id = ?', [user.sub],
+  );
+  return c.json(parseJson(row?.preferences_json, {}));
+});
+
+appApiRouter.patch('/account/preferences', async (c) => {
+  const db = getDb(c);
+  const user = c.get('user');
+  const input = await validateJson(c, prefsSchema);
+  const row = await first<{ preferences_json: string }>(
+    db, 'SELECT preferences_json FROM users WHERE id = ?', [user.sub],
+  );
+  const current = parseJson(row?.preferences_json, {}) as Record<string, unknown>;
+  const merged: Record<string, unknown> = { ...current };
+  if (input.commission !== undefined) merged.commission = { ...(current.commission as object ?? {}), ...input.commission };
+  if (input.privacy !== undefined) merged.privacy = { ...(current.privacy as object ?? {}), ...input.privacy };
+  if (input.notifications !== undefined) merged.notifications = input.notifications;
+  await run(db, 'UPDATE users SET preferences_json = ?, updated_at = ? WHERE id = ?',
+    [JSON.stringify(merged), nowIso(), user.sub]);
+  return c.json(merged);
 });
 
 publicApiRouter.get('/characters/:slug', async (c) => {

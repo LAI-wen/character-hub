@@ -7,6 +7,7 @@ import { ContextHeader } from "@/components/ContextHeader"
 import { TemplateCanvas, buildDefaultTemplate } from "@/components/TemplateCanvas"
 import type { CanvasCharacter, CanvasSection, CanvasSwatch, CanvasAlbum } from "@/components/TemplateCanvas"
 import { charColor } from "@/lib/charColor"
+import { PageLoading } from "@/components/LoadingSpinner"
 import type { CharacterResponse, CharacterListResponse } from "@oc-tools/contracts"
 
 // ── Small shared utils ────────────────────────────────────────────────────────
@@ -672,7 +673,7 @@ export function CharacterDetailPage() {
     recordView({ type: "char", id: character.id, name: character.name, path: `/characters/${character.id}`, color: charColor(character.id), imgUrl: character.avatarUrl ?? undefined })
   }, [character?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (status === "pending") return <div className="page"><p style={{ color: "var(--text-faint)" }}>載入中⋯</p></div>
+  if (status === "pending") return <PageLoading />
   if (status === "error")   return <div className="page"><p style={{ color: "var(--avoid)" }}>找不到角色</p></div>
   if (!character) return null
 

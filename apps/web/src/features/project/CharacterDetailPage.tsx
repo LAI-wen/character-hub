@@ -1,3 +1,4 @@
+import { LoadingSpinner, PageLoading } from "@/components/LoadingSpinner"
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Link, useParams } from "react-router-dom"
@@ -337,7 +338,7 @@ export function CharacterDetailPage() {
     enabled: !!projectId && !!linkId,
   })
 
-  if (status === "pending") return <div className="page" style={{ color: "var(--text-faint)" }}>載入中⋯</div>
+  if (status === "pending") return <PageLoading />
 
   if (status === "error" || !data?.character) {
     return (

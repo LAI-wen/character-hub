@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/PageHeader"
 import { useProjectContext } from "@/routes/layouts/ProjectLayout"
 import { useAuth } from "@/lib/auth/context"
 import { apiClient } from "@/lib/api/client"
+import { fmtDate } from "@/lib/formatDate"
 
 type Member = {
   id: string
@@ -20,9 +21,6 @@ type Member = {
   invitedByHandle?: string | null
 }
 
-function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString("zh-TW", { year: "numeric", month: "short", day: "numeric" })
-}
 
 // ── Permission groups definition ───────────────────────────────────────────────
 
@@ -457,7 +455,7 @@ export function ParticipantsPage() {
         }
       />
 
-      {status === "pending" && <p style={{ color: "var(--text-faint)" }}>載入中⋯</p>}
+      {status === "pending" && <LoadingSpinner />}
       {status === "error" && <p style={{ color: "var(--avoid)" }}>無法載入成員</p>}
 
       {status === "success" && (

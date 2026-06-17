@@ -6,6 +6,7 @@ import { useProjectContext } from "@/routes/layouts/ProjectLayout"
 import { useAuth } from "@/lib/auth/context"
 import { apiClient } from "@/lib/api/client"
 import { charColor } from "@/lib/charColor"
+import { fmtDate } from "@/lib/formatDate"
 
 type RosterEntry = {
   projectLink: {
@@ -46,9 +47,6 @@ const STATUS_LABELS: Record<string, string> = {
 const REVIEW_STATUSES = ["pending"]
 const MY_STATUSES = ["draft", "pending", "active", "approved", "rejected"]
 
-function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString("zh-TW", { year: "numeric", month: "short", day: "numeric" })
-}
 
 export function ApplicationsPage() {
   const { projectId } = useParams<{ projectId: string }>()
@@ -147,7 +145,7 @@ export function ApplicationsPage() {
         )}
       </div>
 
-      {queryStatus === "pending" && <p style={{ color: "var(--text-faint)" }}>載入中⋯</p>}
+      {queryStatus === "pending" && <LoadingSpinner />}
       {queryStatus === "error" && <p style={{ color: "var(--avoid)" }}>無法載入申請資料</p>}
 
       {queryStatus === "success" && (

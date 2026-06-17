@@ -10,6 +10,7 @@ type PublicPage = {
   projectId: string
   slug: string
   status: "draft" | "published" | "disabled"
+  draftJson: Record<string, unknown>
   settings: Record<string, unknown>
   theme: Record<string, unknown>
   publishedVersionId: string | null
@@ -35,7 +36,7 @@ export function PublicPagePage() {
   })
 
   const patchMutation = useMutation({
-    mutationFn: (body: { status?: string }) =>
+    mutationFn: (body: { status?: string; draftJson?: Record<string, unknown>; settings?: Record<string, unknown>; theme?: Record<string, unknown> }) =>
       apiClient(`/api/app/projects/${projectId}/public-page`, {
         method: "PATCH",
         body: JSON.stringify(body),
@@ -72,7 +73,7 @@ export function PublicPagePage() {
       </div>
 
       {status === "pending" && (
-        <p style={{ color: "var(--text-faint)" }}>載入中⋯</p>
+        <LoadingSpinner />
       )}
 
       {status === "error" && (

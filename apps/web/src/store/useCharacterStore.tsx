@@ -686,12 +686,16 @@ export function CharacterStoreProvider({
         fr.onload = () => {
           try {
             const obj = JSON.parse(String(fr.result))
-            if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
-              const c = obj as Character
-              setChar(() => c)
-              patchUi({ selBlock: null })
-            } else alert('檔案格式不正確')
-          } catch { alert('檔案讀取失敗') }
+            if (!obj || typeof obj !== 'object' || Array.isArray(obj)) {
+              alert('檔案格式不正確：不是有效的角色備份'); return
+            }
+            if (typeof obj.id !== 'string' || typeof obj.name !== 'string') {
+              alert('檔案格式不正確：缺少必要欄位 id / name'); return
+            }
+            const c = obj as Character
+            setChar(() => c)
+            patchUi({ selBlock: null })
+          } catch { alert('檔案讀取失敗：JSON 格式錯誤') }
         }
         fr.readAsText(f)
       }

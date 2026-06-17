@@ -148,7 +148,7 @@ export function HeightComparePage() {
         </div>
       )}
 
-      {status === "pending" && <p style={{ color: "var(--text-faint)" }}>載入中⋯</p>}
+      {status === "pending" && <LoadingSpinner />}
       {status === "error"   && <p style={{ color: "var(--avoid)" }}>無法載入角色</p>}
 
       {status === "success" && (

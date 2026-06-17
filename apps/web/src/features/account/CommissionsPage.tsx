@@ -710,7 +710,7 @@ export function CommissionsPage() {
 
       {/* Loading / error states */}
       {status === "pending" && (
-        <p style={{ color: "var(--text-faint)", padding: "0 var(--s8)" }}>載入中⋯</p>
+        <LoadingSpinner />
       )}
       {status === "error" && (
         <p style={{ color: "var(--avoid)", padding: "0 var(--s8)" }}>無法載入委託</p>

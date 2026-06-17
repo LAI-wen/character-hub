@@ -245,7 +245,7 @@ export function TimelinePage() {
       <NewEventForm projectId={projectId!} onCreated={refresh} />
 
       {status === "pending" && (
-        <p style={{ color: "var(--text-faint)", marginTop: "var(--s6)" }}>載入中⋯</p>
+        <LoadingSpinner />
       )}
 
       {status === "success" && events.length === 0 && (

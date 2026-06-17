@@ -1,3 +1,4 @@
+import { LoadingSpinner, PageLoading } from "@/components/LoadingSpinner"
 import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -88,7 +89,7 @@ export function WorldEntryEditPage() {
   })
 
   if (status === "pending") {
-    return <div className="page" style={{ color: "var(--text-faint)" }}>載入中⋯</div>
+    return <PageLoading />
   }
 
   if (status === "error" || !data?.entry) {

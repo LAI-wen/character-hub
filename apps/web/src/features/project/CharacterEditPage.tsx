@@ -7,6 +7,7 @@ import { EyedropperModal } from '@/components/EyedropperModal'
 import { AnnotationModal } from '@/components/AnnotationModal'
 import { CharBackupModal } from '@/components/CharBackupModal'
 import { CharacterStoreProvider, useCharacterStore } from '@/store/useCharacterStore'
+import { PageLoading } from '@/components/LoadingSpinner'
 import { FormPage } from '@/features/charEdit/FormPage'
 import { DesignPage } from '@/features/charEdit/DesignPage'
 import { apiClient } from '@/lib/api/client'
@@ -183,7 +184,7 @@ function ProjectCharacterEditLoader() {
     enabled: !!projectId && !!linkId,
   })
 
-  if (status === 'pending') return <div className="page"><div style={{ padding: 40, color: 'var(--text-dim)' }}>載入中…</div></div>
+  if (status === 'pending') return <PageLoading />
   if (status === 'error' || !data?.character?.id) return <div className="page"><div style={{ padding: 40, color: 'var(--text-dim)' }}>找不到角色</div></div>
 
   const charId = data.character.id

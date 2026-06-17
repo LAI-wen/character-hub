@@ -7,6 +7,25 @@ type IconItem =
   | { t: 'path'; d: string }
 
 const ICONS: Record<string, IconItem[]> = {
+  // Navigation icons (AppLayout)
+  home:    [{ t: 'path', d: 'M3 11l9-7 9 7' }, { t: 'path', d: 'M5 10v9h14v-9' }],
+  mask:    [{ t: 'path', d: 'M4 5c0 8 4 13 8 13s8-5 8-13c-3 1-5 1-8 1s-5 0-8-1Z' }],
+  box:     [{ t: 'path', d: 'M3 7l9-4 9 4-9 4-9-4Z' }, { t: 'path', d: 'M3 7v10l9 4 9-4V7' }, { t: 'path', d: 'M12 11v10' }],
+  window:  [{ t: 'rect', x: 3, y: 4, w: 18, h: 16, rx: 2 }, { t: 'path', d: 'M3 9h18' }],
+  star:    [{ t: 'path', d: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z' }],
+  ruler:   [{ t: 'rect', x: 3, y: 8, w: 18, h: 8, rx: 1 }, { t: 'path', d: 'M7 8v3M11 8v4M15 8v3M19 8v4' }],
+  grid:    [{ t: 'rect', x: 3, y: 3, w: 7, h: 7, rx: 1 }, { t: 'rect', x: 14, y: 3, w: 7, h: 7, rx: 1 }, { t: 'rect', x: 3, y: 14, w: 7, h: 7, rx: 1 }, { t: 'rect', x: 14, y: 14, w: 7, h: 7, rx: 1 }],
+  globe:   [{ t: 'circle', cx: 12, cy: 12, r: 9 }, { t: 'path', d: 'M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3c-2.5 2.5-2.5 15 0 18' }],
+  nodes:   [{ t: 'circle', cx: 6, cy: 6, r: 2 }, { t: 'circle', cx: 18, cy: 7, r: 2 }, { t: 'circle', cx: 12, cy: 18, r: 2 }, { t: 'path', d: 'M8 7l8 .5M7 8l4 8M17 9l-4 7' }],
+  book:    [{ t: 'path', d: 'M5 4h10a3 3 0 0 1 3 3v13a2.5 2.5 0 0 0-2.5-2H5Z' }, { t: 'path', d: 'M5 4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2' }, { t: 'path', d: 'M9 8h5M9 11h5' }],
+  gear:    [{ t: 'circle', cx: 12, cy: 12, r: 3 }, { t: 'path', d: 'M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.3 1a7 7 0 0 0-1.7-1l-.4-2.5H9.5l-.4 2.5a7 7 0 0 0-1.7 1l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 1.7 1l.4 2.5h4.9l.4-2.5a7 7 0 0 0 1.7-1l2.3 1 2-3.4-2-1.5a7 7 0 0 0 .1-1Z' }],
+  search:  [{ t: 'circle', cx: 11, cy: 11, r: 7 }, { t: 'path', d: 'M21 21l-4-4' }],
+  clock:   [{ t: 'circle', cx: 12, cy: 12, r: 9 }, { t: 'path', d: 'M12 7v5l3 3' }],
+  bulb:    [{ t: 'path', d: 'M9 21h6M12 3a6 6 0 0 1 6 6c0 2.5-1.3 4.7-3 6H9c-1.7-1.3-3-3.5-3-6a6 6 0 0 1 6-6Z' }, { t: 'path', d: 'M9 17h6' }],
+  check2:  [{ t: 'path', d: 'M9 12l2 2 4-4' }, { t: 'rect', x: 3, y: 4, w: 18, h: 16, rx: 2 }],
+  upload2: [{ t: 'path', d: 'M12 16V8M8 12l4-4 4 4' }, { t: 'rect', x: 3, y: 16, w: 18, h: 4, rx: 1 }],
+  people:  [{ t: 'circle', cx: 9, cy: 7, r: 3 }, { t: 'path', d: 'M3 21v-1a6 6 0 0 1 6-6h0' }, { t: 'circle', cx: 16, cy: 9, r: 3 }, { t: 'path', d: 'M12 21v-1a6 6 0 0 1 6-6h3' }],
+  // Component icons
   user: [
     { t: 'circle', cx: 12, cy: 8, r: 4 },
     { t: 'path', d: 'M5.5 21a7 7 0 0 1 13 0' },

@@ -1,12 +1,12 @@
 import type { CanvasBlock, CanvasTemplate, CanvasDesign } from '@/components/TemplateCanvas'
+import { uid as _uid } from '@/lib/uid'
 
 type Block = CanvasBlock
 type Template = CanvasTemplate
 type Design = CanvasDesign
 type MinChar = { sections?: { id: string }[]; albums?: { id: string }[] }
 
-export const uid = (p = 'x'): string =>
-  p + Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-3)
+export const uid = (p = 'x'): string => _uid(p)
 
 export const DEF_DESIGN: Design = {
   bg: '#ffffff',

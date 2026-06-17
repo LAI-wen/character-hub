@@ -55,7 +55,7 @@ export function WorkspacePage() {
               <Link to="/projects" className="sec-more">全部 →</Link>
             </div>
 
-            {projStatus === "pending" && <p style={{ color: "var(--text-faint)", fontSize: 14 }}>載入中⋯</p>}
+            {projStatus === "pending" && <LoadingSpinner />}
             {projStatus === "error"   && <p style={{ color: "var(--avoid)", fontSize: 14 }}>無法載入企劃</p>}
 
             {projStatus === "success" && projects.length === 0 && (

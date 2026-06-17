@@ -5,6 +5,7 @@ import { ContextHeader } from "@/components/ContextHeader"
 import { useProjectContext } from "@/routes/layouts/ProjectLayout"
 import { useAuth } from "@/lib/auth/context"
 import { apiClient } from "@/lib/api/client"
+import { fmtDate } from "@/lib/formatDate"
 
 type Submission = {
   id: string
@@ -42,9 +43,6 @@ const TYPE_COLOR: Record<string, string> = {
   other: "#7A6B4A",
 }
 
-function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString("zh-TW", { year: "numeric", month: "short", day: "numeric" })
-}
 
 export function ContentSubmissionsPage() {
   const { projectId } = useParams<{ projectId: string }>()

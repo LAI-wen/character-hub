@@ -1,4 +1,5 @@
 import { useRef, useState, type CSSProperties } from 'react'
+import { uid } from '@/lib/uid'
 
 export type AnnotationKind = 'pin' | 'rect'
 
@@ -13,7 +14,6 @@ export interface Annotation {
   note: string
 }
 
-function uid() { return Math.random().toString(36).slice(2, 9) }
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v))
 
 interface Props {

@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next"
 import { useAuth } from "@/lib/auth/context"
 import { apiClient } from "@/lib/api/client"
 import { CommandPalette } from "@/components/CommandPalette"
+import { Icon } from "@/components/Icon"
 import type { ProjectListResponse, ProjectResponse } from "@oc-tools/contracts"
 
 type AccountNavLink = { to: string; label: string; icon: string }
@@ -41,45 +42,6 @@ const PROJECT_NAV: ProjectNavItem[] = [
   { path: "settings",      label: "nav.settings",     icon: "gear" },
 ]
 
-// Minimal SVG icons (same set as v3 shell.js ICONS)
-const ICONS: Record<string, string> = {
-  home:   '<path d="M3 11l9-7 9 7"/><path d="M5 10v9h14v-9"/>',
-  mask:   '<path d="M4 5c0 8 4 13 8 13s8-5 8-13c-3 1-5 1-8 1s-5 0-8-1Z"/>',
-  box:    '<path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/>',
-  window: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/>',
-  star:   '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
-  ruler:  '<rect x="3" y="8" width="18" height="8" rx="1.5"/><path d="M7 8v3M11 8v4M15 8v3M19 8v4"/>',
-  plus:   '<path d="M12 5v14M5 12h14"/>',
-  grid:   '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
-  globe:  '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3c-2.5 2.5-2.5 15 0 18"/>',
-  nodes:  '<circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="7" r="2.4"/><circle cx="12" cy="18" r="2.4"/><path d="M8 7l8 .5M7 8l4 8M17 9l-4 7"/>',
-  book:   '<path d="M5 4h10a3 3 0 0 1 3 3v13a2.5 2.5 0 0 0-2.5-2H5Z"/><path d="M5 4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2"/><path d="M9 8h5M9 11h5"/>',
-  image:  '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M21 16l-5-5-7 7"/>',
-  gear:   '<circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.3 1a7 7 0 0 0-1.7-1l-.4-2.5H9.5l-.4 2.5a7 7 0 0 0-1.7 1l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 1.7 1l.4 2.5h4.9l.4-2.5a7 7 0 0 0 1.7-1l2.3 1 2-3.4-2-1.5a7 7 0 0 0 .1-1Z"/>',
-  search:  '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/>',
-  clock:   '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
-  bulb:    '<path d="M9 21h6M12 3a6 6 0 0 1 6 6c0 2.5-1.3 4.7-3 6H9c-1.7-1.3-3-3.5-3-6a6 6 0 0 1 6-6Z"/><path d="M9 17h6"/>',
-  check2:  '<path d="M9 12l2 2 4-4"/><rect x="3" y="4" width="18" height="16" rx="2"/>',
-  upload2: '<path d="M12 16V8M8 12l4-4 4 4"/><rect x="3" y="16" width="18" height="4" rx="1.5"/>',
-  layout:  '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>',
-  people:  '<circle cx="9" cy="7" r="3"/><path d="M3 21v-1a6 6 0 0 1 6-6h0"/><circle cx="16" cy="9" r="3"/><path d="M12 21v-1a6 6 0 0 1 6-6h3"/>',
-}
-
-function Icon({ k, size = 18 }: { k: string; size?: number }) {
-  return (
-    <svg
-      className="ic"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      style={{ width: size, height: size, flexShrink: 0 }}
-      dangerouslySetInnerHTML={{ __html: ICONS[k] ?? "" }}
-    />
-  )
-}
 
 export function AppLayout() {
   const { viewer, logout } = useAuth()
@@ -172,7 +134,7 @@ export function AppLayout() {
 
         {/* Search → opens command palette */}
         <button className="sb-search" onClick={() => setCmdOpen(true)}>
-          <Icon k="search" size={16} />
+          <Icon name="search" size={16} />
           <span style={{ flex: 1, textAlign: "left" }}>{t("nav.search")}</span>
           <span className="kbd">⌘K</span>
         </button>
@@ -219,7 +181,7 @@ export function AppLayout() {
                     to={item.to}
                     className={({ isActive }) => "sb-item" + (isActive ? " on" : "")}
                   >
-                    <Icon k={item.icon} />
+                    <Icon name={item.icon} />
                     {t(item.label)}
                   </NavLink>
                 )
@@ -236,7 +198,7 @@ export function AppLayout() {
                     to={to}
                     className={"sb-item" + (isActive ? " on" : "")}
                   >
-                    <Icon k={item.icon} />
+                    <Icon name={item.icon} />
                     {t(item.label)}
                   </NavLink>
                 )
@@ -247,18 +209,18 @@ export function AppLayout() {
         {/* Quick add */}
         <div className="quick-wrap" ref={quickRef}>
           <button className="sb-quick" onClick={() => setQuickOpen(v => !v)}>
-            <Icon k="plus" size={17} />
+            <Icon name="plus" size={17} />
             <span style={{ flex: 1, textAlign: "left" }}>{t("nav.quickAdd")}</span>
             <span className="cv">▾</span>
           </button>
           {quickOpen && (
             <div className="quick-menu">
               <Link to="/characters/new" className="qm" onClick={() => setQuickOpen(false)}>
-                <Icon k="mask" size={16} />
+                <Icon name="mask" size={16} />
                 {t("nav.newCharacter")}
               </Link>
               <button className="qm" onClick={() => { setQuickOpen(false); navigate("/projects") }}>
-                <Icon k="box" size={16} />
+                <Icon name="box" size={16} />
                 {t("nav.newProject")}
               </button>
             </div>

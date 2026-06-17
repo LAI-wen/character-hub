@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { showConfirm } from '@/components/ConfirmModal'
 import { BUILTIN_FORMS, type FormTemplate, loadForms, saveForms, schemaFromSections, sectionsFromSchema } from '@/data/formTemplates'
-
-function uid() { return Math.random().toString(36).slice(2, 9) }
+import { uid } from '@/lib/uid'
 
 type Section = { id: string; title: string; group: string; fields: { id: string; label: string; type: string; value: string }[] }
 

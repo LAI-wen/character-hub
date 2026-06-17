@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react"
 import { useParams } from "react-router-dom"
 import { ContextHeader } from "@/components/ContextHeader"
 import { useProjectContext } from "@/routes/layouts/ProjectLayout"
+import { fmtDateShort as fmtDate } from "@/lib/formatDate"
 
 const STORAGE_KEY = "inspiration_v1"
 
@@ -47,9 +48,6 @@ function loadItems(): InspirationItem[] {
 }
 function saveItems(items: InspirationItem[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
-}
-function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString("zh-TW", { month: "short", day: "numeric" })
 }
 function detectType(text: string): InspType {
   if (/^https?:\/\//i.test(text.trim())) return "link"

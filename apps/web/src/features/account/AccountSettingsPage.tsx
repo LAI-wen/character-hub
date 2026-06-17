@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-// import { Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { apiClient } from "@/lib/api/client"
 import { ContextHeader } from "@/components/ContextHeader"
@@ -561,30 +560,92 @@ function SetSeg<T extends string>({
   )
 }
 
-function CommissionPanel() {
-  const [status, setStatus] = useState<"open" | "waitlist" | "paused">("open")
-  const [tagline, setTagline] = useState("7 月檔期額滿，8 月開放候補")
-  const [cap, setCap] = useState<"2" | "3" | "5" | "0">("3")
-  const [usage, setUsage] = useState<"personal" | "commercial">("personal")
-  const [autoReply, setAutoReply] = useState("謝謝你的來信！我會在 3 個工作天內回覆。在這之前，麻煩先確認角色頁的「必畫／避免」重點，以及授權範圍，謝謝。")
+type CommissionPrefs = {
+  status: "open" | "waitlist" | "paused"
+  tagline: string
+  cap: "2" | "3" | "5" | "0"
+  usage: "personal" | "commercial"
+  autoReply: string
+  perms: Record<string, boolean>
+}
+type PrivacyPrefs = {
+  defaultVisibility: "public" | "unlisted" | "password" | "private"
+  watermark: boolean
+  seo: boolean
+  branding: boolean
+}
+type NotifRow = { key: string; t: string; s: string; email: boolean; discord: boolean }
+type Preferences = {
+  commission?: Partial<CommissionPrefs>
+  privacy?: Partial<PrivacyPrefs>
+  notifications?: Record<string, { email: boolean; discord: boolean }>
+}
 
-  type Perm = { key: string; label: string; en: string; allow: boolean; checked: boolean }
-  const [perms, setPerms] = useState<Perm[]>([
-    { key: "repost", label: "標註出處後可轉載", en: "Repost w/ credit", allow: true, checked: true },
-    { key: "edit",   label: "允許個人二改",     en: "Personal edits",  allow: true, checked: true },
-    { key: "ai",     label: "用於 AI 訓練",      en: "AI training",     allow: false, checked: false },
-    { key: "comm",   label: "商業 / 營利用途",   en: "Commercial",      allow: false, checked: false },
-  ])
+const PREFS_QK = ["account", "preferences"] as const
+
+function usePreferences() {
+  const qc = useQueryClient()
+  const { data } = useQuery({
+    queryKey: PREFS_QK,
+    queryFn: () => apiClient<Preferences>("/api/app/account/preferences"),
+    staleTime: 5 * 60 * 1000,
+  })
+  const mutation = useMutation({
+    mutationFn: (patch: Preferences) =>
+      apiClient<Preferences>("/api/app/account/preferences", { method: "PATCH", body: patch }),
+    onSuccess: (updated) => qc.setQueryData(PREFS_QK, updated),
+  })
+  return { prefs: data ?? {}, save: mutation.mutate, isPending: mutation.isPending, isError: mutation.isError }
+}
+
+const DEFAULT_PERMS = [
+  { key: "repost", label: "標註出處後可轉載", en: "Repost w/ credit", allow: true },
+  { key: "edit",   label: "允許個人二改",     en: "Personal edits",  allow: true },
+  { key: "ai",     label: "用於 AI 訓練",      en: "AI training",     allow: false },
+  { key: "comm",   label: "商業 / 營利用途",   en: "Commercial",      allow: false },
+]
+
+function CommissionPanel() {
+  const { prefs, save, isPending } = usePreferences()
+  const cp = prefs.commission
+  const [status, setStatus] = useState<"open" | "waitlist" | "paused">(cp?.status ?? "open")
+  const [tagline, setTagline] = useState(cp?.tagline ?? "")
+  const [cap, setCap] = useState<"2" | "3" | "5" | "0">(cp?.cap ?? "3")
+  const [usage, setUsage] = useState<"personal" | "commercial">(cp?.usage ?? "personal")
+  const [autoReply, setAutoReply] = useState(cp?.autoReply ?? "")
+
+  type Perm = { key: string; label: string; en: string; allow: boolean }
+  const [perms, setPerms] = useState<Perm[]>(() =>
+    DEFAULT_PERMS.map(p => ({ ...p, allow: cp?.perms?.[p.key] ?? p.allow }))
+  )
+
+  useEffect(() => {
+    if (!cp) return
+    if (cp.status) setStatus(cp.status)
+    if (cp.tagline !== undefined) setTagline(cp.tagline)
+    if (cp.cap) setCap(cp.cap)
+    if (cp.usage) setUsage(cp.usage)
+    if (cp.autoReply !== undefined) setAutoReply(cp.autoReply)
+    if (cp.perms) setPerms(DEFAULT_PERMS.map(p => ({ ...p, allow: cp.perms![p.key] ?? p.allow })))
+  }, [cp])
+
+  const saveField = useCallback((patch: Partial<CommissionPrefs>) => {
+    save({ commission: patch })
+  }, [save])
 
   function togglePerm(key: string) {
-    setPerms(ps => ps.map(p => p.key === key ? { ...p, checked: !p.checked, allow: !p.checked } : p))
+    setPerms(ps => {
+      const next = ps.map(p => p.key === key ? { ...p, allow: !p.allow } : p)
+      saveField({ perms: Object.fromEntries(next.map(p => [p.key, p.allow])) })
+      return next
+    })
   }
 
   return (
     <>
       <div className="set-card">
         <div className="set-ch">
-          <h2>接案狀態</h2>
+          <h2>接案狀態{isPending && <span style={{ fontSize: 11, fontWeight: 400, color: "var(--text-faint)", marginLeft: 8 }}>儲存中…</span>}</h2>
           <p className="desc">顯示在你的公開檔案與每個角色的委託名片上。</p>
         </div>
         <div className="set-body">
@@ -593,7 +654,7 @@ function CommissionPanel() {
             <div className="set-ctl">
               <SetSeg
                 value={status}
-                onChange={setStatus}
+                onChange={v => { setStatus(v); saveField({ status: v }) }}
                 statusColors
                 options={[
                   { v: "open",     label: "接案中" },
@@ -614,6 +675,7 @@ function CommissionPanel() {
                 value={tagline}
                 maxLength={40}
                 onChange={e => setTagline(e.target.value)}
+                onBlur={e => saveField({ tagline: e.target.value })}
               />
             </div>
           </div>
@@ -625,7 +687,7 @@ function CommissionPanel() {
             <div className="set-ctl">
               <SetSeg
                 value={cap}
-                onChange={setCap}
+                onChange={v => { setCap(v); saveField({ cap: v }) }}
                 options={[
                   { v: "2", label: "2 件" },
                   { v: "3", label: "3 件" },
@@ -649,7 +711,7 @@ function CommissionPanel() {
             <div className="set-ctl">
               <SetSeg
                 value={usage}
-                onChange={setUsage}
+                onChange={v => { setUsage(v); saveField({ usage: v }) }}
                 options={[
                   { v: "personal",   label: "個人用途" },
                   { v: "commercial", label: "商業用途" },
@@ -671,7 +733,7 @@ function CommissionPanel() {
                       {p.label}
                       <span className="en">{p.en}</span>
                     </span>
-                    <Toggle checked={p.checked} onChange={() => togglePerm(p.key)} />
+                    <Toggle checked={p.allow} onChange={() => togglePerm(p.key)} />
                   </div>
                 ))}
               </div>
@@ -689,6 +751,7 @@ function CommissionPanel() {
                 placeholder="收到委託訊息時的自動回覆…"
                 value={autoReply}
                 onChange={e => setAutoReply(e.target.value)}
+                onBlur={e => saveField({ autoReply: e.target.value })}
               />
             </div>
           </div>
@@ -699,15 +762,29 @@ function CommissionPanel() {
 }
 
 function PrivacyPanel() {
-  const [defPriv, setDefPriv] = useState<"public" | "unlisted" | "password" | "private">("unlisted")
-  const [watermark, setWatermark] = useState(true)
-  const [seo, setSeo] = useState(false)
-  const [branding, setBranding] = useState(true)
+  const { prefs, save, isPending } = usePreferences()
+  const pp = prefs.privacy
+  const [defPriv, setDefPriv] = useState<"public" | "unlisted" | "password" | "private">(pp?.defaultVisibility ?? "unlisted")
+  const [watermark, setWatermark] = useState(pp?.watermark ?? true)
+  const [seo, setSeo] = useState(pp?.seo ?? false)
+  const [branding, setBranding] = useState(pp?.branding ?? true)
+
+  useEffect(() => {
+    if (!pp) return
+    if (pp.defaultVisibility) setDefPriv(pp.defaultVisibility)
+    if (pp.watermark !== undefined) setWatermark(pp.watermark)
+    if (pp.seo !== undefined) setSeo(pp.seo)
+    if (pp.branding !== undefined) setBranding(pp.branding)
+  }, [pp])
+
+  const saveField = useCallback((patch: Partial<PrivacyPrefs>) => {
+    save({ privacy: patch })
+  }, [save])
 
   return (
     <div className="set-card">
       <div className="set-ch">
-        <h2>隱私與分享</h2>
+        <h2>隱私與分享{isPending && <span style={{ fontSize: 11, fontWeight: 400, color: "var(--text-faint)", marginLeft: 8 }}>儲存中…</span>}</h2>
         <p className="desc">控制新角色的預設可見範圍，以及公開頁面的呈現。</p>
       </div>
       <div className="set-body">
@@ -716,7 +793,7 @@ function PrivacyPanel() {
           <div className="set-ctl">
             <SetSeg
               value={defPriv}
-              onChange={setDefPriv}
+              onChange={v => { setDefPriv(v); saveField({ defaultVisibility: v }) }}
               options={[
                 { v: "public",   label: "公開" },
                 { v: "unlisted", label: "限連結" },
@@ -732,7 +809,7 @@ function PrivacyPanel() {
             <span className="set-sub">在公開角色圖右下角加上代號。</span>
           </div>
           <div className="set-ctl">
-            <Toggle checked={watermark} onChange={setWatermark} />
+            <Toggle checked={watermark} onChange={v => { setWatermark(v); saveField({ watermark: v }) }} />
           </div>
         </div>
         <div className="set-row set-row-compact">
@@ -741,7 +818,7 @@ function PrivacyPanel() {
             <span className="set-sub">關閉後，公開頁不會出現在 Google。</span>
           </div>
           <div className="set-ctl">
-            <Toggle checked={seo} onChange={setSeo} />
+            <Toggle checked={seo} onChange={v => { setSeo(v); saveField({ seo: v }) }} />
           </div>
         </div>
         <div className="set-row set-row-compact">
@@ -750,7 +827,7 @@ function PrivacyPanel() {
             <span className="set-sub">公開頁頁尾的小標。</span>
           </div>
           <div className="set-ctl">
-            <Toggle checked={branding} onChange={setBranding} />
+            <Toggle checked={branding} onChange={v => { setBranding(v); saveField({ branding: v }) }} />
           </div>
         </div>
       </div>
@@ -760,27 +837,45 @@ function PrivacyPanel() {
 
 // ── Notifications panel ───────────────────────────────────────────────────────
 
-const NOTIF_ROWS = [
-  { t: "新委託訊息",       s: "有人寄來委託洽談或回覆",  email: true,  discord: true  },
-  { t: "委託狀態變更",     s: "委託進入下一階段時",      email: true,  discord: false },
-  { t: "截止日提醒",       s: "委託到期前 3 天",         email: true,  discord: true  },
-  { t: "有人收藏你的角色", s: "公開角色被加入收藏",       email: false, discord: false },
-  { t: "產品更新",         s: "新功能與公告",            email: false, discord: false },
+const NOTIF_DEFAULTS: NotifRow[] = [
+  { key: "new_commission",  t: "新委託訊息",       s: "有人寄來委託洽談或回覆",  email: true,  discord: true  },
+  { key: "commission_step", t: "委託狀態變更",     s: "委託進入下一階段時",      email: true,  discord: false },
+  { key: "deadline",        t: "截止日提醒",       s: "委託到期前 3 天",         email: true,  discord: true  },
+  { key: "fav",             t: "有人收藏你的角色", s: "公開角色被加入收藏",       email: false, discord: false },
+  { key: "product",         t: "產品更新",         s: "新功能與公告",            email: false, discord: false },
 ]
 
 function NotificationsPanel() {
-  const [rows, setRows] = useState(() =>
-    NOTIF_ROWS.map(r => ({ ...r }))
+  const { prefs, save, isPending } = usePreferences()
+  const [rows, setRows] = useState<NotifRow[]>(() =>
+    NOTIF_DEFAULTS.map(r => ({
+      ...r,
+      email:   prefs.notifications?.[r.key]?.email   ?? r.email,
+      discord: prefs.notifications?.[r.key]?.discord ?? r.discord,
+    }))
   )
 
+  useEffect(() => {
+    if (!prefs.notifications) return
+    setRows(NOTIF_DEFAULTS.map(r => ({
+      ...r,
+      email:   prefs.notifications![r.key]?.email   ?? r.email,
+      discord: prefs.notifications![r.key]?.discord ?? r.discord,
+    })))
+  }, [prefs.notifications])
+
   function toggle(idx: number, col: "email" | "discord") {
-    setRows(prev => prev.map((r, i) => i === idx ? { ...r, [col]: !r[col] } : r))
+    setRows(prev => {
+      const next = prev.map((r, i) => i === idx ? { ...r, [col]: !r[col] } : r)
+      save({ notifications: Object.fromEntries(next.map(r => [r.key, { email: r.email, discord: r.discord }])) })
+      return next
+    })
   }
 
   return (
     <div className="set-card">
       <div className="card-h">
-        <h2>通知</h2>
+        <h2>通知{isPending && <span style={{ fontSize: 11, fontWeight: 400, color: "var(--text-faint)", marginLeft: 8 }}>儲存中…</span>}</h2>
         <p className="desc">選擇要在哪裡收到提醒。重要的委託訊息建議至少開一個。</p>
       </div>
       <div className="notif">
@@ -790,7 +885,7 @@ function NotificationsPanel() {
           <span className="nhead">Discord</span>
         </div>
         {rows.map((row, i) => (
-          <div key={i} className="nrow">
+          <div key={row.key} className="nrow">
             <span className="nlabel">
               {row.t}
               <span className="sub">{row.s}</span>

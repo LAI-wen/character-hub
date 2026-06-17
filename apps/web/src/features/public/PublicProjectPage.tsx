@@ -60,7 +60,7 @@ export function PublicProjectPage() {
   if (status === "pending") {
     return (
       <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "var(--bg)" }}>
-        <p style={{ color: "var(--text-faint)" }}>載入中⋯</p>
+        <LoadingSpinner />
       </div>
     )
   }

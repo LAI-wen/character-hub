@@ -327,7 +327,7 @@ export function StoryPage() {
     <div className="page">
       <ContextHeader scope="project" crumbs={[{ label: project.name, href: `/p/${pid}` }, "故事"]} />
 
-      {status === "pending" && <p style={{ color: "var(--text-faint)" }}>載入中⋯</p>}
+      {status === "pending" && <LoadingSpinner />}
       {status === "error" && <p style={{ color: "var(--avoid)" }}>無法載入故事</p>}
 
       {status === "success" && stories.length === 0 && (
