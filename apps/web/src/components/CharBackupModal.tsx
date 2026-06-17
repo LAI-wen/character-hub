@@ -81,7 +81,7 @@ export function CharBackupModal({ charName: _charName, sections, onExport, onImp
       <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 20, boxShadow: '0 30px 80px rgba(0,0,0,0.4)', maxWidth: 560, width: '100%', maxHeight: '88vh', overflowY: 'auto', padding: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 4 }}>
           <h2 style={{ fontFamily: 'inherit', fontWeight: 700, fontSize: 18, margin: 0, color: 'var(--text)' }}>備份與格式</h2>
-          <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 9, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-dim)', cursor: 'pointer', fontSize: 16 }}>×</button>
+          <button aria-label="關閉" onClick={onClose} style={{ width: 32, height: 32, borderRadius: 9, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-dim)', cursor: 'pointer', fontSize: 16 }}>×</button>
         </div>
         <p style={{ fontSize: 12.5, color: 'var(--text-dim)', margin: '0 0 18px', lineHeight: 1.6 }}>
           <b style={{ color: 'var(--text)' }}>內容</b>是你填的資料，<b style={{ color: 'var(--text)' }}>格式</b>只是欄位的結構。

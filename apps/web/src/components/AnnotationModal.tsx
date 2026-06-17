@@ -84,7 +84,7 @@ export function AnnotationModal({ imageUrl, initialAnnotations, onUpdate, onClos
               {tab('rect', '▭ 框選')}
             </div>
           </div>
-          <button onClick={onClose} style={{ width: 34, height: 34, borderRadius: 9, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-dim)', cursor: 'pointer', fontSize: 17 }}>×</button>
+          <button aria-label="關閉" onClick={onClose} style={{ width: 34, height: 34, borderRadius: 9, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-dim)', cursor: 'pointer', fontSize: 17 }}>×</button>
         </div>
 
         <div style={{ display: 'flex', gap: 18, padding: 20, overflowY: 'auto', flexWrap: 'wrap' }}>

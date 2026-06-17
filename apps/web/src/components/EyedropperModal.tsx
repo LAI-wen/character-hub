@@ -86,7 +86,7 @@ export function EyedropperModal({ avatarUrl, mainVisualUrl, albums, onAddSwatch,
       <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 20, boxShadow: '0 30px 80px rgba(0,0,0,0.4)', maxWidth: 560, width: '100%', padding: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 14 }}>
           <h2 style={{ fontFamily: 'inherit', fontWeight: 700, fontSize: 17, margin: 0, color: 'var(--text)' }}>圖片吸色</h2>
-          <button onClick={onClose} style={{ width: 34, height: 34, borderRadius: 9, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-dim)', cursor: 'pointer', fontSize: 17 }}>×</button>
+          <button aria-label="關閉" onClick={onClose} style={{ width: 34, height: 34, borderRadius: 9, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-dim)', cursor: 'pointer', fontSize: 17 }}>×</button>
         </div>
 
         {url ? (
