@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/PageHeader"
 import { useAuth } from "@/lib/auth/context"
 import { Icon } from "@/components/Icon"
 import { showConfirm } from "@/components/ConfirmModal"
+import { fmtDate } from "@/lib/formatDate"
 
 type AccountProfile = {
   id: string
@@ -313,7 +314,7 @@ function ConnectedAccountsPanel() {
                     {isConnected && acct ? (
                       <div style={{ fontSize: 12, color: "var(--text-faint)", marginTop: 1 }}>
                         {t("settings.account.connectedSince", {
-                          date: new Date(acct.connectedAt).toLocaleDateString(),
+                          date: fmtDate(acct.connectedAt),
                         })}
                       </div>
                     ) : (
@@ -457,7 +458,7 @@ function InviteCodesPanel() {
                   color: inv.usedAt ? "var(--text-faint)" : "var(--ok, #1B5E20)",
                 }}>
                   {inv.usedAt
-                    ? t("settings.invites.usedOn", { date: new Date(inv.usedAt).toLocaleDateString() })
+                    ? t("settings.invites.usedOn", { date: fmtDate(inv.usedAt) })
                     : t("settings.invites.unused")}
                 </span>
                 {!inv.usedAt && (
