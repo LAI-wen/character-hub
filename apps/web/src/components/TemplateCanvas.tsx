@@ -312,7 +312,7 @@ export function TemplateCanvas(props: CanvasProps) {
     const mode = b.mode || 'grid'
     const ratioKey = b.ratio || 'square'
     const uniform = ratioKey !== ('natural' as string)
-    if (!al) return <div style={{ color: 'var(--text-2,#8d7c69)', fontSize: 13 }}>（未綁定相簿）</div>
+    if (!al) return editable ? <div style={{ color: 'var(--text-2,#8d7c69)', fontSize: 13 }}>（未綁定相簿 — 點選此積木後，從右側面板選擇相簿）</div> : null
     const imgs = (al.images || []).filter((im) => im && str(im.url))
     if (!imgs.length)
       return (
@@ -644,7 +644,7 @@ export function TemplateCanvas(props: CanvasProps) {
       }
       case 'section': {
         const sec = findSection(b.sourceId)
-        if (!sec) return <div style={{ color: 'var(--text-2,#8d7c69)', fontSize: 13 }}>（未綁定區塊）</div>
+        if (!sec) return editable ? <div style={{ color: 'var(--text-2,#8d7c69)', fontSize: 13 }}>（未綁定區塊 — 點選此積木後，從右側面板選擇區塊）</div> : null
         const cards = b.variant === 'cards'
         const body = (sec.fields || []).map((f) => fieldEl(f, sec, cards)).filter(Boolean)
         const ttl = b.hideTitle ? null : (
@@ -660,7 +660,7 @@ export function TemplateCanvas(props: CanvasProps) {
         )
       }
       case 'palette': {
-        if (!palette.length) return <div style={{ color: 'var(--text-2,#8d7c69)', fontSize: 13 }}>（尚無配色）</div>
+        if (!palette.length) return editable ? <div style={{ color: 'var(--text-2,#8d7c69)', fontSize: 13 }}>（尚無配色 — 前往「圖設定」頁新增色票）</div> : null
         const pv = b.pvar || 'swatch'
         const pjc = st.align === 'center' ? 'center' : st.align === 'right' ? 'flex-end' : 'flex-start'
         if (pv === ('bar' as string))
