@@ -14,14 +14,14 @@ const REFRESH_MAX_AGE = 30 * 24 * 60 * 60;
 const registerSchema = z.object({
   email: z.string().email(),
   handle: z.string().min(2).max(32).regex(/^[a-z0-9-]+$/),
-  password: z.string().min(8),
+  password: z.string().min(8).max(1000),
   display_name: z.string().max(64).optional(),
   invite_code: z.string().min(1),
 });
 
 const loginSchema = z.object({
   email: z.string().email(),
-  password: z.string(),
+  password: z.string().max(1000),
 });
 
 function refreshCookie(token: string, maxAge: number) {
