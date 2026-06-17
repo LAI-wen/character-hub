@@ -1855,10 +1855,8 @@ const MAX_ASSET_SIZE = 10 * 1024 * 1024;
 
 type AssetRow = { id: string; title: string; r2_key: string | null; mime_type: string | null; size_bytes: number | null; width: number | null; height: number | null; asset_type: string; author_name: string | null; source_url: string | null; created_at: string; project_id?: string | null; project_name?: string | null };
 
-const r2Url = r2PublicUrl;
-
 function mapAsset(row: AssetRow) {
-  return { id: row.id, title: row.title, url: row.r2_key ? r2Url(row.r2_key) : '', mimeType: row.mime_type ?? null, sizeBytes: row.size_bytes ?? null, width: row.width ?? null, height: row.height ?? null, assetType: row.asset_type, authorName: row.author_name ?? null, sourceUrl: row.source_url ?? null, createdAt: row.created_at, projectId: row.project_id ?? null, projectName: row.project_name ?? null };
+  return { id: row.id, title: row.title, url: row.r2_key ? r2PublicUrl(row.r2_key) : '', mimeType: row.mime_type ?? null, sizeBytes: row.size_bytes ?? null, width: row.width ?? null, height: row.height ?? null, assetType: row.asset_type, authorName: row.author_name ?? null, sourceUrl: row.source_url ?? null, createdAt: row.created_at, projectId: row.project_id ?? null, projectName: row.project_name ?? null };
 }
 
 appApiRouter.get('/projects/:projectId/assets', async (c) => {
@@ -1897,7 +1895,7 @@ appApiRouter.post('/projects/:projectId/assets', async (c) => {
   const linkId = crypto.randomUUID();
   await run(db, `INSERT INTO asset_links (id, asset_id, project_id, target_type, target_id, role, sort_order, visibility, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)`,
     [linkId, id, project.id, 'project', project.id, 'gallery', 0, 'private', now, now]);
-  return c.json({ asset: { id, title: assetTitle, url: r2Url(r2Key), mimeType: file.type, width: null, height: null, assetType: 'illustration', authorName: null, sourceUrl: null, createdAt: now } }, 201);
+  return c.json({ asset: { id, title: assetTitle, url: r2PublicUrl(r2Key), mimeType: file.type, width: null, height: null, assetType: 'illustration', authorName: null, sourceUrl: null, createdAt: now } }, 201);
 });
 
 appApiRouter.delete('/projects/:projectId/assets/:assetId', async (c) => {
