@@ -20,10 +20,13 @@ export const WorldEntrySchema = z.object({
 export type WorldEntry = z.infer<typeof WorldEntrySchema>
 
 export const CreateWorldEntrySchema = z.object({
-  title: z.string().min(1).max(200),
+  title: z.string().min(1).max(180),
   type: z.string().default("lore"),
-  content: z.string().max(50000).optional(),
-  parentId: z.string().optional(),
+  slug: z.string().min(1).max(180).optional(),
+  summary: z.string().max(4000).nullable().optional(),
+  content: z.string().max(60000).nullable().optional(),
+  parentId: z.string().nullable().optional(),
+  visibility: VisibilitySchema.optional(),
 })
 export type CreateWorldEntryRequest = z.infer<typeof CreateWorldEntrySchema>
 
