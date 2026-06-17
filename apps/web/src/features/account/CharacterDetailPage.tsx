@@ -142,8 +142,8 @@ function OverviewTab({
   hasProfile,
 }: {
   canvasChar: CanvasCharacter
-  template: any
-  design: any
+  template: CanvasTemplate | undefined
+  design: CanvasDesign
   charId: string
   memberships: { projectId: string; projectName: string; projectColor: string }[]
   hasProfile: boolean
