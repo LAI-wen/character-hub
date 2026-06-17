@@ -9,6 +9,7 @@ import { recordView } from "@/lib/recentlyViewed"
 import { showConfirm } from "@/components/ConfirmModal"
 import type { WorldEntryResponse } from "@oc-tools/contracts"
 import { typeLabel, typeColor } from "@/lib/worldviewTypes"
+import { fmtDate } from "@/lib/formatDate"
 
 export function WorldEntryDetailPage() {
   const { projectId, entryId } = useParams<{ projectId: string; entryId: string }>()
@@ -129,11 +130,11 @@ export function WorldEntryDetailPage() {
               </div>
               <div className="r">
                 <span className="k">建立</span>
-                <span>{new Date(e.createdAt).toLocaleDateString("zh-TW")}</span>
+                <span>{fmtDate(e.createdAt)}</span>
               </div>
               <div className="r">
                 <span className="k">更新</span>
-                <span>{new Date(e.updatedAt).toLocaleDateString("zh-TW")}</span>
+                <span>{fmtDate(e.updatedAt)}</span>
               </div>
             </div>
           </div>

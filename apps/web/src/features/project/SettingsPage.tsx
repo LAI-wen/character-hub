@@ -152,6 +152,11 @@ export function SettingsPage() {
                     onChange={e => setForm(f => ({ ...f, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") }))}
                   />
                 </div>
+                {form.visibility !== "private" && !form.slug && (
+                  <p style={{ fontSize: 12, color: "var(--warn, #c08a00)", marginTop: 4 }}>
+                    企劃設為公開或限連結時，建議設定一個易讀的 URL 代號。
+                  </p>
+                )}
               </div>
             </div>
             <div className="set-row">

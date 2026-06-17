@@ -6,6 +6,7 @@ import { apiClient } from "@/lib/api/client"
 import { compressImage } from "@/lib/compressImage"
 import type { AssetListResponse, Asset } from "@oc-tools/contracts"
 import { Icon } from "@/components/Icon"
+import { fmtDate } from "@/lib/formatDate"
 
 // ── Detail Drawer ────────────────────────────────────────────────────────────
 
@@ -79,7 +80,7 @@ function AssetDrawer({
             </div>
             <div className="b">
               <div className="k">上傳時間</div>
-              <div className="v">{new Date(asset.createdAt).toLocaleDateString("zh-Hant")}</div>
+              <div className="v">{fmtDate(asset.createdAt)}</div>
             </div>
           </div>
 

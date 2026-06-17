@@ -7,6 +7,7 @@ import { ContextHeader } from "@/components/ContextHeader"
 import { TemplateCanvas, buildDefaultTemplate } from "@/components/TemplateCanvas"
 import type { CanvasCharacter, CanvasSection, CanvasSwatch, CanvasAlbum, CanvasDesign, Template as CanvasTemplate } from "@/components/TemplateCanvas"
 import { charColor } from "@/lib/charColor"
+import { fmtDate } from "@/lib/formatDate"
 import { PageLoading } from "@/components/LoadingSpinner"
 import type { CharacterResponse, CharacterListResponse } from "@oc-tools/contracts"
 
@@ -739,7 +740,7 @@ export function CharacterDetailPage() {
             )}
             {character.updatedAt && (
               <span style={{ fontSize: 12.5, color: "var(--text-faint)" }}>
-                更新 {new Date(character.updatedAt).toLocaleDateString("zh-TW")}
+                更新 {fmtDate(character.updatedAt)}
               </span>
             )}
             {(character.tags ?? []).map(tag => <span key={tag} className="tag">{tag}</span>)}

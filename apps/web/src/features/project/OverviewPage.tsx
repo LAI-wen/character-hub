@@ -106,7 +106,9 @@ export function OverviewPage() {
               <div className="ovc-n">{stats?.characters ?? roster.length}<span className="ovc-u">位</span></div>
             </div>
             <div className="ovc-list">
-              {roster.length === 0
+              {rosterQuery.status === "error"
+                ? <div className="ovc-li ovc-empty" style={{ color: "var(--avoid)" }}>載入失敗</div>
+                : roster.length === 0
                 ? <div className="ovc-li ovc-empty">尚無角色</div>
                 : roster.slice(0, 4).map(({ projectLink, character }) => character && (
                     <div key={projectLink.id} className="ovc-li">
@@ -128,7 +130,9 @@ export function OverviewPage() {
               <div className="ovc-n">{stats?.worldEntries ?? world.length}<span className="ovc-u">條</span></div>
             </div>
             <div className="ovc-list">
-              {world.length === 0
+              {worldQuery.status === "error"
+                ? <div className="ovc-li ovc-empty" style={{ color: "var(--avoid)" }}>載入失敗</div>
+                : world.length === 0
                 ? <div className="ovc-li ovc-empty">尚無世界觀條目</div>
                 : world.slice(0, 4).map(entry => (
                     <div key={entry.id} className="ovc-li">
