@@ -81,7 +81,7 @@ function CharacterEditInner({ charId, projectId, linkId }: { charId: string; pro
   const annotTarget = ui.annot
     ? character.albums
         .flatMap(al => al.images.map(im => ({ al, im })))
-        .find(x => x.al.id === ui.annot!.aid && x.im.id === ui.annot!.iid)
+        .find(x => x.al.id === ui.annot?.aid && x.im.id === ui.annot?.iid)
     : null
 
   const handleCropComplete = async (file: File) => {

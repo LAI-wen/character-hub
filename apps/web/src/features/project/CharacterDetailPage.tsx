@@ -402,7 +402,7 @@ export function CharacterDetailPage() {
           </h1>
           {(character.species || character.summary) && (
             <p className="tagline">
-              {character.species ?? character.summary!.slice(0, 80)}
+              {character.species ?? character.summary?.slice(0, 80)}
             </p>
           )}
           <div className="meta">
