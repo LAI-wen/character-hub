@@ -77,7 +77,7 @@ function TopBar({
       </div>
 
       {/* Tab pills */}
-      <div style={{ display: "flex", gap: 4, flexShrink: 0, background: "var(--surface-2)", borderRadius: 999, padding: 4 }}>
+      <div style={{ display: "flex", gap: 4, flexShrink: 1, minWidth: 0, background: "var(--surface-2)", borderRadius: 999, padding: 4, overflow: "hidden" }}>
         {(["general", "commission"] as PublicTab[]).map(t => (
           <button
             key={t}
