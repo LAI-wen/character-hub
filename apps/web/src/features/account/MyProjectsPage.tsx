@@ -6,6 +6,7 @@ import { ContextHeader } from "@/components/ContextHeader"
 import { PageHeader } from "@/components/PageHeader"
 import { LoadingSpinner } from "@/components/LoadingSpinner"
 import type { ProjectListResponse, ProjectResponse } from "@oc-tools/contracts"
+import { slugify } from "@/lib/utils/slugify"
 
 const VIS_LABELS: Record<string, string> = {
   public: "公開", unlisted: "限連結", private: "私人",
@@ -14,10 +15,6 @@ const THEME_COLORS = [
   "#8A857C","#3B5E6B","#5E7E55","#8B5E3C","#7B5EA7",
   "#B5654A","#9E332B","#4A7B8C","#6B4A1E","#C9A24B",
 ]
-
-function slugify(s: string) {
-  return s.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "").replace(/-+/g, "-").replace(/^-|-$/g, "")
-}
 
 export function MyProjectsPage() {
   const qc = useQueryClient()

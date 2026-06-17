@@ -6,6 +6,7 @@ import { AppApiError } from "@/lib/api/errors"
 import { ContextHeader } from "@/components/ContextHeader"
 import { PageHeader } from "@/components/PageHeader"
 import { charColor } from "@/lib/charColor"
+import { slugify } from "@/lib/utils/slugify"
 import type { CharacterListResponse, ProjectListResponse, CharacterWithMemberships } from "@oc-tools/contracts"
 
 // ── Icons ────────────────────────────────────────────────────────────────────
@@ -73,7 +74,7 @@ function SlugEditModal({
     mutationFn: () =>
       apiClient(`/api/app/${type === "character" ? "characters" : "projects"}/${id}`, {
         method: "PATCH",
-        body: { slug: slug.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "") },
+        body: { slug: slugify(slug) },
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: type === "character" ? ["characters"] : ["projects"] })
@@ -82,7 +83,7 @@ function SlugEditModal({
     onError: (e: Error) => setErr(e instanceof AppApiError && e.code === "CONFLICT" ? "網址已被使用，請換一個" : "儲存失敗，請再試一次"),
   })
 
-  const cleaned = slug.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "")
+  const cleaned = slugify(slug)
 
   return (
     <div className="modal-overlay" onClick={onClose}>
