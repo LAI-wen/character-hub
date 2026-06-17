@@ -19,8 +19,6 @@ type PublicPage = {
   updatedAt: string
 }
 
-const BASE_URL = "https://oc-tools-8g5.pages.dev"
-
 export function PublicPagePage() {
   const { projectId } = useParams<{ projectId: string }>()
   const { project } = useProjectContext()
@@ -49,7 +47,7 @@ export function PublicPagePage() {
 
   const page = data?.publicPage
   const projectSlug = data?.projectSlug ?? project.slug ?? ""
-  const publicUrl = `${BASE_URL}/page/${projectSlug}`
+  const publicUrl = `${window.location.origin}/page/${projectSlug}`
 
   return (
     <div className="page">

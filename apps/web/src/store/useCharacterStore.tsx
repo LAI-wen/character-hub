@@ -706,12 +706,17 @@ export function CharacterStoreProvider({
               showToast('檔案格式不正確：缺少 sections 欄位'); return
             }
             const safeUrl = (v: unknown) => (typeof v === 'string' && /^https?:\/\//.test(v)) ? v : ''
+            // Strip server-managed fields so import never overwrites identity fields
+            const prohibited = new Set(['id', 'ownerUserId', 'slug', 'createdAt', 'updatedAt'])
+            const editable = Object.fromEntries(
+              Object.entries(obj as Record<string, unknown>).filter(([k]) => !prohibited.has(k))
+            ) as Partial<Character>
             const c: Character = {
-              ...obj as Character,
+              ...editable,
               avatarUrl: safeUrl(obj.avatarUrl),
               mainVisualUrl: safeUrl(obj.mainVisualUrl),
               albums: normalizeAlbums((obj as Character).albums),
-            }
+            } as Character
             setChar(() => c)
             patchUi({ selBlock: null })
           } catch { showToast('檔案讀取失敗：JSON 格式錯誤') }

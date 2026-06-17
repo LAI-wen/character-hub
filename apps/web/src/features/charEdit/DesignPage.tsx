@@ -82,7 +82,7 @@ export function DesignPage() {
     })
     ro.observe(el)
     return () => ro.disconnect()
-  })
+  }, [])
 
   const templates = character.templates
   const isEdit = ui.designMode === 'edit'
