@@ -704,7 +704,13 @@ export function CharacterStoreProvider({
             if (!Array.isArray(obj.sections)) {
               alert('檔案格式不正確：缺少 sections 欄位'); return
             }
-            const c = { ...obj as Character, albums: normalizeAlbums((obj as Character).albums) }
+            const safeUrl = (v: unknown) => (typeof v === 'string' && /^https?:\/\//.test(v)) ? v : ''
+            const c: Character = {
+              ...obj as Character,
+              avatarUrl: safeUrl(obj.avatarUrl),
+              mainVisualUrl: safeUrl(obj.mainVisualUrl),
+              albums: normalizeAlbums((obj as Character).albums),
+            }
             setChar(() => c)
             patchUi({ selBlock: null })
           } catch { alert('檔案讀取失敗：JSON 格式錯誤') }

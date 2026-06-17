@@ -234,6 +234,10 @@ export function TimelinePage() {
         <LoadingSpinner />
       )}
 
+      {status === "error" && (
+        <p style={{ color: "var(--avoid)", padding: "var(--s4)" }}>無法載入時間軸，請稍後再試</p>
+      )}
+
       {status === "success" && events.length === 0 && (
         <div className="tl-empty">
           <p style={{ color: "var(--text-faint)" }}>還沒有事件，點上方按鈕建立第一個吧。</p>
