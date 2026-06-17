@@ -69,10 +69,15 @@ const PERM_GROUPS: PermGroup[] = [
 // Role presets: which permissions each role grants by default
 const ROLE_PRESETS: Record<string, Set<string>> = {
   owner: new Set(PERM_GROUPS.flatMap(g => g.rows.map(r => r.code))),
-  admin: new Set([
+  host: new Set([
     "member:view", "member:invite", "member:update_role", "member:remove",
     "character:approve", "character:update_link", "world:create", "world:update", "story:update",
     "publicPage:update", "publicPage:publish", "pageTemplate:update", "pageOverride:update_own",
+  ]),
+  cohost: new Set([
+    "member:view", "member:invite",
+    "character:approve", "character:update_link", "world:create", "world:update", "story:update",
+    "publicPage:update", "pageTemplate:update", "pageOverride:update_own",
   ]),
   member: new Set([
     "member:view",
@@ -80,14 +85,17 @@ const ROLE_PRESETS: Record<string, Set<string>> = {
     "world:create",
     "publicPage:update", "pageOverride:update_own",
   ]),
+  viewer: new Set(["member:view"]),
 }
 
 const OWNER_FIXED = new Set(["project:transfer_ownership", "project:archive"])
 
 const ROLE_LABEL: Record<string, string> = {
-  owner: "企劃擁有者",
-  admin: "主持人",
+  owner:  "企劃擁有者",
+  host:   "主持人",
+  cohost: "協辦人",
   member: "參與者",
+  viewer: "觀察者",
 }
 
 // ── Member list panel ──────────────────────────────────────────────────────────
@@ -149,7 +157,7 @@ function MemberListPane({
               </span>
               <span className="hd">@{m.handle}</span>
               <span className="meta">
-                <span className={`badge ${m.role === "owner" || m.role === "admin" ? "approved" : ""}`}>
+                <span className={`badge ${["owner", "host", "cohost"].includes(m.role) ? "approved" : ""}`}>
                   {ROLE_LABEL[m.role] ?? m.role}
                 </span>
                 <span className="hd">{m.charCount} 角色</span>
