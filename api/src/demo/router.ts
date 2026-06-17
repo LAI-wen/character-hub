@@ -48,7 +48,7 @@ function characterForLink(link: DemoProjectCharacterLink) {
 }
 
 function hasFeature(project: DemoProject, feature: string) {
-  return project.enabledFeatures.includes(feature as never);
+  return (project.enabledFeatures as readonly string[]).includes(feature);
 }
 
 function isCollaborative(project: DemoProject) {
