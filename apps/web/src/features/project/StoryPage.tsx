@@ -338,7 +338,7 @@ export function StoryPage() {
     const ni = fi + dir
     if (ni < 0 || ni >= ids.length) return
     ;[ids[fi], ids[ni]] = [ids[ni], ids[fi]]
-    qc.setQueryData(["project", pid, "story", curStoryId], (old: any) => {
+    qc.setQueryData(["project", pid, "story", curStoryId], (old: StoryDetailResponse | undefined) => {
       if (!old) return old
       const reordered = [...old.chapters]
       ;[reordered[fi], reordered[ni]] = [reordered[ni], reordered[fi]]
