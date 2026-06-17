@@ -12,3 +12,13 @@ export const WORLDVIEW_TYPE_COLORS: Record<string, string> = {
 
 export function typeLabel(t: string): string { return WORLDVIEW_TYPE_LABELS[t] ?? t }
 export function typeColor(t: string): string { return WORLDVIEW_TYPE_COLORS[t] ?? "#8A857C" }
+
+export const ENTRY_TYPES = [
+  { value: "faction", label: "勢力" },
+  { value: "location", label: "地點" },
+  { value: "concept", label: "概念" },
+  { value: "lore", label: "世界觀" },
+  { value: "item", label: "道具" },
+  { value: "event", label: "事件" },
+  { value: "other", label: "其他" },
+]

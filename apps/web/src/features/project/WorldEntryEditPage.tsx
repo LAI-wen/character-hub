@@ -9,17 +9,7 @@ import { apiClient } from "@/lib/api/client"
 import { ContextHeader } from "@/components/ContextHeader"
 import { useProjectContext } from "@/routes/layouts/ProjectLayout"
 import type { WorldEntryResponse } from "@oc-tools/contracts"
-import { typeColor } from "@/lib/worldviewTypes"
-
-const ENTRY_TYPES = [
-  { value: "faction", label: "勢力" },
-  { value: "location", label: "地點" },
-  { value: "concept", label: "概念" },
-  { value: "lore", label: "世界觀" },
-  { value: "item", label: "道具" },
-  { value: "event", label: "事件" },
-  { value: "other", label: "其他" },
-]
+import { typeColor, ENTRY_TYPES } from "@/lib/worldviewTypes"
 
 const EditSchema = z.object({
   title: z.string().min(1, "標題為必填").max(180),
