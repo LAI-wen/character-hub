@@ -165,7 +165,7 @@ export function CharacterNewPage() {
               <div className="ed-field">
                 <label>公開設定</label>
                 <select className="inp" {...register("visibility")}>
-                  <option value="private">私人</option>
+                  <option value="private">私人 — 只有你</option>
                   <option value="unlisted">限連結 — 有連結的人</option>
                   <option value="public">公開 — 任何人可見</option>
                 </select>
