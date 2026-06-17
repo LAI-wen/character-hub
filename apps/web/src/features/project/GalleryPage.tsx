@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useProjectContext } from "@/routes/layouts/ProjectLayout"
 import { ContextHeader } from "@/components/ContextHeader"
 import { apiClient } from "@/lib/api/client"
+import { AppApiError } from "@/lib/api/errors"
 import { compressImage } from "@/lib/compressImage"
 import type { AssetListResponse, Asset } from "@oc-tools/contracts"
 import { Icon } from "@/components/Icon"
@@ -243,7 +244,7 @@ export function GalleryPage() {
       }
       qc.invalidateQueries({ queryKey: ["project", pid, "assets"] })
     } catch (e: unknown) {
-      setUploadError(e instanceof Error ? e.message : "上傳失敗")
+      setUploadError((e instanceof AppApiError && e.detail) ? e.detail : "上傳失敗，請再試一次")
     } finally {
       setUploading(false)
       if (fileRef.current) fileRef.current.value = ""

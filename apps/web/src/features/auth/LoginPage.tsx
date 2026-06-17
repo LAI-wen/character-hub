@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useSearchParams } from "react-router-dom"
 import { useForm } from "react-hook-form"
 import { apiClient, clearCsrfToken } from "@/lib/api/client"
+import { AppApiError } from "@/lib/api/errors"
 import { useAuth } from "@/lib/auth/context"
 import type { Viewer } from "@oc-tools/contracts"
 import styles from "./LoginPage.module.css"
@@ -65,13 +66,12 @@ export function LoginPage() {
       })
       window.location.href = searchParams.get("redirect") ?? "/workspace"
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "註冊失敗，請再試一次"
-      if (msg.includes("INVITE_INVALID")) {
+      if (err instanceof AppApiError && err.code === "INVITE_INVALID") {
         registerForm.setError("inviteCode", { message: "邀請碼無效或已被使用" })
-      } else if (msg.includes("CONFLICT")) {
+      } else if (err instanceof AppApiError && err.code === "CONFLICT") {
         registerForm.setError("root", { message: "這個 Email 或帳號名稱已被使用" })
       } else {
-        registerForm.setError("root", { message: msg })
+        registerForm.setError("root", { message: "註冊失敗，請再試一次" })
       }
     }
   }
