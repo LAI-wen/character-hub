@@ -15,7 +15,8 @@ export async function hashPassword(password: string): Promise<string> {
 
 export async function verifyPassword(password: string, stored: string): Promise<boolean> {
   const [saltHex, hashHex] = stored.split(':');
-  const salt = new Uint8Array(saltHex.match(/.{2}/g)!.map(b => parseInt(b, 16)));
+  if (!saltHex || !hashHex) return false;
+  const salt = new Uint8Array((saltHex.match(/.{2}/g) ?? []).map(b => parseInt(b, 16)));
   const enc = new TextEncoder();
   const keyMaterial = await crypto.subtle.importKey(
     'raw', enc.encode(password), 'PBKDF2', false, ['deriveBits']
@@ -25,7 +26,7 @@ export async function verifyPassword(password: string, stored: string): Promise<
     keyMaterial, 256
   );
   const newHash = new Uint8Array(bits);
-  const storedHash = new Uint8Array(hashHex.match(/.{2}/g)!.map(b => parseInt(b, 16)));
+  const storedHash = new Uint8Array((hashHex.match(/.{2}/g) ?? []).map(b => parseInt(b, 16)));
   // Constant-time comparison to prevent timing attacks
   if (newHash.length !== storedHash.length) return false;
   let diff = 0;

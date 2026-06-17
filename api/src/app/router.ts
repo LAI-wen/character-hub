@@ -1174,8 +1174,9 @@ appApiRouter.get('/characters', async (c) => {
   );
   const membershipMap = new Map<string, { projectId: string; projectName: string; projectColor: string; factionLabel?: string | null; projectRole?: string | null; status?: string | null; linkId?: string }[]>();
   for (const r of memRows) {
-    if (!membershipMap.has(r.character_id)) membershipMap.set(r.character_id, []);
-    membershipMap.get(r.character_id)!.push({
+    let memberships = membershipMap.get(r.character_id);
+    if (!memberships) { memberships = []; membershipMap.set(r.character_id, memberships) }
+    memberships.push({
       projectId: r.project_id, projectName: r.project_name, projectColor: r.project_color,
       factionLabel: r.faction_label, projectRole: r.project_role, status: r.status, linkId: r.link_id,
     });

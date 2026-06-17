@@ -196,15 +196,13 @@ export function RosterPage() {
 
   // Group by faction (fallback: projectRole, then "未分組")
   type Group = { label: string; rows: typeof roster }
+  const groupMap = new Map<string, Group>()
   const groups: Group[] = []
-  const seen = new Set<string>()
   for (const row of visible) {
     const label = row.projectLink.factionLabel ?? row.projectLink.projectRole ?? "未分組"
-    if (!seen.has(label)) {
-      seen.add(label)
-      groups.push({ label, rows: [] })
-    }
-    groups.find((g) => g.label === label)!.rows.push(row)
+    let grp = groupMap.get(label)
+    if (!grp) { grp = { label, rows: [] }; groupMap.set(label, grp); groups.push(grp) }
+    grp.rows.push(row)
   }
 
   return (

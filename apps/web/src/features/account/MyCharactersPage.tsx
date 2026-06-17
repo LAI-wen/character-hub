@@ -235,17 +235,20 @@ export function MyCharactersPage() {
     for (const char of visible) {
       const memberships = char.memberships ?? []
       if (memberships.length === 0) {
-        if (!map.has("__none__")) map.set("__none__", { id: "__none__", name: "未加入企劃", color: "#8A857C", chars: [] })
-        map.get("__none__")!.chars.push(char)
+        let none = map.get("__none__")
+        if (!none) { none = { id: "__none__", name: "未加入企劃", color: "#8A857C", chars: [] }; map.set("__none__", none) }
+        none.chars.push(char)
       } else {
         for (const m of memberships) {
-          if (!map.has(m.projectId)) map.set(m.projectId, { id: m.projectId, name: m.projectName, color: m.projectColor, chars: [] })
-          map.get(m.projectId)!.chars.push(char)
+          let proj = map.get(m.projectId)
+          if (!proj) { proj = { id: m.projectId, name: m.projectName, color: m.projectColor, chars: [] }; map.set(m.projectId, proj) }
+          proj.chars.push(char)
         }
       }
     }
     const result = [...map.entries()].filter(([k]) => k !== "__none__").map(([, v]) => v)
-    if (map.has("__none__")) result.push(map.get("__none__")!)
+    const noneGroup = map.get("__none__")
+    if (noneGroup) result.push(noneGroup)
     return result
   }, [visible])
 
