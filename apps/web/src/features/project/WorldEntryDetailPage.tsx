@@ -1,17 +1,29 @@
 import { LoadingSpinner, PageLoading } from "@/components/LoadingSpinner"
 import { useEffect } from "react"
-import { useQuery } from "@tanstack/react-query"
-import { Link, useParams } from "react-router-dom"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { Link, useParams, useNavigate } from "react-router-dom"
 import { apiClient } from "@/lib/api/client"
 import { ContextHeader } from "@/components/ContextHeader"
 import { useProjectContext } from "@/routes/layouts/ProjectLayout"
 import { recordView } from "@/lib/recentlyViewed"
+import { showConfirm } from "@/components/ConfirmModal"
 import type { WorldEntryResponse } from "@oc-tools/contracts"
 import { typeLabel, typeColor } from "@/lib/worldviewTypes"
 
 export function WorldEntryDetailPage() {
   const { projectId, entryId } = useParams<{ projectId: string; entryId: string }>()
   const { project } = useProjectContext()
+  const navigate = useNavigate()
+  const qc = useQueryClient()
+
+  const deleteMutation = useMutation({
+    mutationFn: () => apiClient(`/api/app/projects/${projectId}/world-entries/${entryId}`, { method: "DELETE" }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["project", projectId, "world-entries"] })
+      navigate(`/p/${projectId}/worldview`)
+    },
+    onError: () => alert('刪除失敗，請稍後再試'),
+  })
 
   const { data, status } = useQuery({
     queryKey: ["project", projectId, "world-entry", entryId],
@@ -72,6 +84,17 @@ export function WorldEntryDetailPage() {
           <Link to={`/p/${projectId}/worldview`} className="btn btn-ghost">← 世界觀</Link>
           <Link to={`/p/${projectId}/worldview/${entryId}/edit`} className="btn">編輯條目</Link>
           <Link to={`/p/${projectId}/worldview/new?parent=${entryId}`} className="btn">＋ 子條目</Link>
+          <button
+            className="btn btn-ghost"
+            style={{ color: "var(--avoid)" }}
+            disabled={deleteMutation.isPending}
+            onClick={async () => {
+              if (!await showConfirm(`刪除「${e.title}」？此操作無法復原。`, { title: "刪除條目", confirmLabel: "刪除", danger: true })) return
+              deleteMutation.mutate()
+            }}
+          >
+            刪除
+          </button>
         </div>
       </div>
 
