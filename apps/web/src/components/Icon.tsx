@@ -160,6 +160,23 @@ const ICONS: Record<string, IconItem[]> = {
     { t: 'circle', cx: 9, cy: 8, r: 2, f: 1 },
     { t: 'circle', cx: 15, cy: 16, r: 2, f: 1 },
   ],
+  x:        [{ t: 'path', d: 'M18 6L6 18M6 6l12 12' }],
+  shield:   [{ t: 'path', d: 'M12 3l7 3v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6z' }],
+  bell:     [{ t: 'path', d: 'M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6' }, { t: 'path', d: 'M10 20a2 2 0 0 0 4 0' }],
+  smile:    [{ t: 'circle', cx: 12, cy: 12, r: 9 }, { t: 'path', d: 'M8 13s1.5 2 4 2 4-2 4-2' }, { t: 'line', x1: 9, y1: 9, x2: 9.01, y2: 9 }, { t: 'line', x1: 15, y1: 9, x2: 15.01, y2: 9 }],
+  database: [{ t: 'path', d: 'M12 3c4.4 0 8 1.3 8 3v12c0 1.7-3.6 3-8 3s-8-1.3-8-3V6c0-1.7 3.6-3 8-3z' }, { t: 'path', d: 'M4 6c0 1.7 3.6 3 8 3s8-1.3 8-3M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3' }],
+  mail:     [{ t: 'path', d: 'M21 5H3a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1Z' }, { t: 'path', d: 'm3 6 9 7 9-7' }],
+  checkbox: [{ t: 'rect', x: 3, y: 3, w: 18, h: 18, rx: 2 }, { t: 'path', d: 'm9 12 2 2 4-4' }],
+  zoom:     [{ t: 'circle', cx: 11, cy: 11, r: 7 }, { t: 'path', d: 'm21 21-4.3-4.3' }, { t: 'line', x1: 8, y1: 11, x2: 14, y2: 11 }, { t: 'line', x1: 11, y1: 8, x2: 11, y2: 14 }],
+  pen: [
+    { t: 'path', d: 'M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7' },
+    { t: 'path', d: 'M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z' },
+  ],
+  warn: [
+    { t: 'path', d: 'M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z' },
+    { t: 'line', x1: 12, y1: 9, x2: 12, y2: 13 },
+    { t: 'line', x1: 12, y1: 17, x2: 12, y2: 17 },
+  ],
 }
 
 export type IconName = keyof typeof ICONS

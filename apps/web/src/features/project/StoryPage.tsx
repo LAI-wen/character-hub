@@ -4,21 +4,7 @@ import { useProjectContext } from "@/routes/layouts/ProjectLayout"
 import { ContextHeader } from "@/components/ContextHeader"
 import { apiClient } from "@/lib/api/client"
 import type { StoryListResponse, StoryDetailResponse, Story, Chapter } from "@oc-tools/contracts"
-
-function Ic({ d, size = 16 }: { d: string; size?: number }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"
-      style={{ width: size, height: size, display: "inline-block", flexShrink: 0, verticalAlign: "middle" }}
-      dangerouslySetInnerHTML={{ __html: d }} />
-  )
-}
-const IC = {
-  book:  '<path d="M5 4h10a3 3 0 0 1 3 3v13a2.5 2.5 0 0 0-2.5-2H5Z"/><path d="M5 4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2"/><path d="M9 8h5M9 11h5"/>',
-  x:     '<path d="M18 6L6 18M6 6l12 12"/>',
-  plus:  '<path d="M12 5v14M5 12h14"/>',
-  pen:   '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/>',
-  chevD: '<path d="M6 9l6 6 6-6"/>',
-}
+import { Icon } from "@/components/Icon"
 
 function storyStatusLabel(s: string | undefined) {
   return { draft: "草稿", ongoing: "連載中", completed: "已完結", archived: "已封存" }[s ?? ""] ?? (s ?? "草稿")
@@ -184,7 +170,7 @@ function ChapterMain({
           </span>
           <div className="acts">
             <button className="btn btn-sm" onClick={() => { setEditing(true); setTimeout(() => taRef.current?.focus(), 50) }}>
-              <Ic d={IC.pen} size={12} /> 編輯
+              <Icon name="pen" size={12} /> 編輯
             </button>
             {onArchive && (
               <button className="btn btn-sm" onClick={onArchive}>封存</button>
@@ -349,7 +335,7 @@ export function StoryPage() {
 
       {status === "success" && stories.length === 0 && (
         <div className="ph-empty">
-          <div className="ph-icon"><Ic d={IC.book} size={40} /></div>
+          <div className="ph-icon"><Icon name="book" size={40} /></div>
           <p>還沒有故事。建立第一個吧。</p>
           <button className="btn btn-accent" style={{ marginTop: "var(--s4)" }} onClick={() => setCreateOpen(true)}>
             ＋ 新增故事
@@ -462,7 +448,7 @@ export function StoryPage() {
           <div className="modal modal-sm" onClick={e => e.stopPropagation()}>
             <div className="modal-h">
               <h2>新增故事</h2>
-              <button className="modal-close" onClick={() => setCreateOpen(false)}><Ic d={IC.x} size={15} /></button>
+              <button className="modal-close" onClick={() => setCreateOpen(false)}><Icon name="x" size={15} /></button>
             </div>
             <div className="modal-body" style={{ display: "flex", flexDirection: "column", gap: "var(--s4)" }}>
               <div>
@@ -494,7 +480,7 @@ export function StoryPage() {
           <div className="modal modal-sm" onClick={e => e.stopPropagation()}>
             <div className="modal-h">
               <h2>故事設定 · {curStory.title}</h2>
-              <button className="modal-close" onClick={() => setEditStoryOpen(false)}><Ic d={IC.x} size={15} /></button>
+              <button className="modal-close" onClick={() => setEditStoryOpen(false)}><Icon name="x" size={15} /></button>
             </div>
             <div className="modal-body" style={{ display: "flex", flexDirection: "column", gap: "var(--s4)" }}>
               <div>

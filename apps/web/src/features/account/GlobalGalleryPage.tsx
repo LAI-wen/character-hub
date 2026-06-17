@@ -5,22 +5,12 @@ import { ContextHeader } from "@/components/ContextHeader"
 import { PageHeader } from "@/components/PageHeader"
 import { apiClient } from "@/lib/api/client"
 import type { AssetListResponse, Asset } from "@oc-tools/contracts"
+import { Icon } from "@/components/Icon"
 
 function fmtBytes(b: number) {
   if (b < 1024) return `${b} B`
   if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`
   return `${(b / 1024 / 1024).toFixed(1)} MB`
-}
-
-const IC_SEARCH = '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>'
-const IC_X = '<path d="M18 6L6 18M6 6l12 12"/>'
-
-function Ic({ d, size = 18 }: { d: string; size?: number }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"
-      style={{ width: size, height: size, display: "block", flexShrink: 0 }}
-      dangerouslySetInnerHTML={{ __html: d }} />
-  )
 }
 
 export function GlobalGalleryPage() {
@@ -104,9 +94,7 @@ export function GlobalGalleryPage() {
           <div className="gl-main">
             <div className="gl-toolbar">
               <div className="searchf" style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-                  style={{ position: "absolute", left: 11, width: 15, height: 15, color: "var(--text-faint)", pointerEvents: "none" }}
-                  dangerouslySetInnerHTML={{ __html: IC_SEARCH }} />
+                <Icon name="search" size={15} style={{ position: "absolute", left: 11, color: "var(--text-faint)", pointerEvents: "none" }} />
                 <input
                   type="search"
                   placeholder="搜尋圖片…"
@@ -141,7 +129,7 @@ export function GlobalGalleryPage() {
       {preview && (
         <div className="gal-lb" onClick={() => setPreview(null)}>
           <div className="gal-lb-box" onClick={e => e.stopPropagation()}>
-            <button className="gal-lb-close" onClick={() => setPreview(null)}><Ic d={IC_X} size={16} /></button>
+            <button className="gal-lb-close" onClick={() => setPreview(null)}><Icon name="x" size={16} /></button>
             <img src={preview.url} alt={preview.title} />
             <div className="gal-lb-foot">
               <div>

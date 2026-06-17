@@ -5,27 +5,7 @@ import { ContextHeader } from "@/components/ContextHeader"
 import { apiClient } from "@/lib/api/client"
 import { compressImage } from "@/lib/compressImage"
 import type { AssetListResponse, Asset } from "@oc-tools/contracts"
-
-function Ic({ d, size = 18 }: { d: string; size?: number }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"
-      strokeLinecap="round" strokeLinejoin="round"
-      style={{ width: size, height: size, display: "block", flexShrink: 0 }}
-      dangerouslySetInnerHTML={{ __html: d }} />
-  )
-}
-const IC = {
-  image:    '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M21 16l-5-5-7 7"/>',
-  upload:   '<path d="M12 3v13"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M8 8l4-5 4 5"/>',
-  x:        '<path d="M18 6L6 18M6 6l12 12"/>',
-  trash:    '<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>',
-  search:   '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
-  gridsm:   '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
-  columns:  '<rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="18" rx="1"/><rect x="17" y="3" width="5" height="18" rx="1"/>',
-  check:    '<polyline points="20 6 9 17 4 12"/>',
-  checkbox: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="m9 12 2 2 4-4"/>',
-  zoom:     '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/><path d="M8 11h6M11 8v6"/>',
-}
+import { Icon } from "@/components/Icon"
 
 // ── Detail Drawer ────────────────────────────────────────────────────────────
 
@@ -285,7 +265,7 @@ export function GalleryPage() {
             onClick={() => fileRef.current?.click()}
             style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
           >
-            <Ic d={IC.upload} size={15} />
+            <Icon name="upload" size={15} />
             {uploading ? "上傳中…" : "＋ 上傳圖片"}
           </button>
         </div>
@@ -316,7 +296,7 @@ export function GalleryPage() {
           onDragOver={e => e.preventDefault()}
           onDrop={e => { e.preventDefault(); handleFiles(e.dataTransfer.files) }}
         >
-          <div style={{ opacity: .4, marginBottom: "var(--s3)" }}><Ic d={IC.image} size={48} /></div>
+          <div style={{ opacity: .4, marginBottom: "var(--s3)" }}><Icon name="image" size={48} /></div>
           <p style={{ fontWeight: 600 }}>點擊或拖曳圖片上傳</p>
           <p style={{ fontSize: 12, marginTop: "var(--s2)" }}>支援 JPEG、PNG、WebP、GIF，最大 10 MB</p>
         </div>
@@ -348,7 +328,7 @@ export function GalleryPage() {
             {/* Toolbar */}
             <div className="gl-toolbar">
               <div className="searchf">
-                <Ic d={IC.search} size={15} />
+                <Icon name="search" size={15} />
                 <input
                   type="search"
                   placeholder="搜尋圖片…"
@@ -359,10 +339,10 @@ export function GalleryPage() {
 
               <div className="ac-view">
                 <button className={layout === "grid"    ? "on" : ""} title="網格"   onClick={() => setLayout("grid")}>
-                  <Ic d={IC.gridsm}  size={15} />
+                  <Icon name="grid" size={15} />
                 </button>
                 <button className={layout === "masonry" ? "on" : ""} title="瀑布流" onClick={() => setLayout("masonry")}>
-                  <Ic d={IC.columns} size={15} />
+                  <Icon name="columns" size={15} />
                 </button>
               </div>
 
@@ -373,7 +353,7 @@ export function GalleryPage() {
                 style={{ display: "inline-flex", alignItems: "center", gap: 5 }}
                 onClick={() => { setMulti(m => !m); setSelected({}) }}
               >
-                <Ic d={IC.checkbox} size={13} />
+                <Icon name="checkbox" size={13} />
                 {multi ? "結束多選" : "多選"}
               </button>
 
@@ -395,7 +375,7 @@ export function GalleryPage() {
                 >
                   {multi && (
                     <span className="sel-check">
-                      {selected[a.id] && <Ic d={IC.check} size={11} />}
+                      {selected[a.id] && <Icon name="check" size={11} />}
                     </span>
                   )}
                   <div className="thumb">
@@ -411,7 +391,7 @@ export function GalleryPage() {
                       title="刪除"
                       onClick={e => { e.stopPropagation(); setDeleteId(a.id) }}
                     >
-                      <Ic d={IC.trash} size={12} />
+                      <Icon name="trash" size={12} />
                     </button>
                   )}
                 </button>
@@ -420,7 +400,7 @@ export function GalleryPage() {
               {/* Upload tile */}
               <button className="acard acard-add" onClick={() => fileRef.current?.click()}>
                 <div className="thumb">
-                  <Ic d={IC.upload} size={28} />
+                  <Icon name="upload" size={28} />
                   <span style={{ fontSize: 12 }}>上傳圖片</span>
                 </div>
               </button>
@@ -466,7 +446,7 @@ export function GalleryPage() {
             <div className="modal-h">
               <h2>刪除圖片？</h2>
               <button className="modal-close" onClick={() => setDeleteId(null)}>
-                <Ic d={IC.x} size={15} />
+                <Icon name="x" size={15} />
               </button>
             </div>
             <div className="modal-body">

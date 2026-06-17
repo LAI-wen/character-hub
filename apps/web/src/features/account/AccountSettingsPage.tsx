@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api/client"
 import { ContextHeader } from "@/components/ContextHeader"
 import { PageHeader } from "@/components/PageHeader"
 import { useAuth } from "@/lib/auth/context"
+import { Icon } from "@/components/Icon"
 
 type AccountProfile = {
   id: string
@@ -24,26 +25,24 @@ type ConnectedAccount = {
 type Section = "profile" | "commission" | "privacy" | "notif" | "appearance" | "data" | "projdef" | "invites" | "account"
 
 const SECTIONS: { id: Section; labelKey: string; icon: string }[] = [
-  { id: "profile",    labelKey: "settings.sections.profile",    icon: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>' },
-  { id: "commission", labelKey: "settings.sections.commission", icon: '<path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/>' },
-  { id: "privacy",    labelKey: "settings.sections.privacy",    icon: '<path d="M12 3l7 3v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6z"/>' },
-  { id: "notif",      labelKey: "settings.sections.notif",      icon: '<path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 20a2 2 0 0 0 4 0"/>' },
-  { id: "appearance", labelKey: "settings.sections.appearance", icon: '<circle cx="12" cy="12" r="9"/><circle cx="9" cy="9" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="9" r="1" fill="currentColor" stroke="none"/>' },
-  { id: "data",       labelKey: "settings.sections.data",       icon: '<ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>' },
-  { id: "projdef",    labelKey: "settings.sections.projdef",    icon: '<path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/>' },
-  { id: "invites",    labelKey: "settings.sections.invites",    icon: '<path d="M21 5H3a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1Z"/><path d="m3 6 9 7 9-7"/>' },
+  { id: "profile",    labelKey: "settings.sections.profile",    icon: "user" },
+  { id: "commission", labelKey: "settings.sections.commission", icon: "window" },
+  { id: "privacy",    labelKey: "settings.sections.privacy",    icon: "shield" },
+  { id: "notif",      labelKey: "settings.sections.notif",      icon: "bell" },
+  { id: "appearance", labelKey: "settings.sections.appearance", icon: "smile" },
+  { id: "data",       labelKey: "settings.sections.data",       icon: "database" },
+  { id: "projdef",    labelKey: "settings.sections.projdef",    icon: "box" },
+  { id: "invites",    labelKey: "settings.sections.invites",    icon: "mail" },
 ]
 
 const ACCOUNT_SECTION = {
   id: "account" as Section,
   labelKey: "settings.sections.account",
-  icon: '<circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.3 1a7 7 0 0 0-1.7-1l-.3-2.5H9.4l-.3 2.5a7 7 0 0 0-1.7 1l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 1.7 1l.3 2.5h4.9l.3-2.5a7 7 0 0 0 1.7-1l2.3 1 2-3.4-2-1.5a7 7 0 0 0 .1-1z"/>',
+  icon: "gear",
 }
 
 function NavIcon({ d }: { d: string }) {
-  return (
-    <svg className="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" dangerouslySetInnerHTML={{ __html: d }} />
-  )
+  return <span className="ic"><Icon name={d} size={18} /></span>
 }
 
 function GoogleIcon() {

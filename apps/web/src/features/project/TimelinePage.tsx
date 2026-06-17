@@ -6,22 +6,7 @@ import { ContextHeader } from "@/components/ContextHeader"
 import { PageHeader } from "@/components/PageHeader"
 import { useProjectContext } from "@/routes/layouts/ProjectLayout"
 import type { StoryEventListResponse, StoryEvent } from "@oc-tools/contracts"
-
-function Ic({ d, size = 14 }: { d: string; size?: number }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
-      style={{ width: size, height: size, display: "block", flexShrink: 0 }}
-      dangerouslySetInnerHTML={{ __html: d }} />
-  )
-}
-const IC = {
-  up:    '<path d="M12 19V5M5 12l7-7 7 7"/>',
-  down:  '<path d="M12 5v14M5 12l7 7 7-7"/>',
-  x:     '<path d="M18 6L6 18M6 6l12 12"/>',
-  trash: '<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>',
-  plus:  '<path d="M12 5v14M5 12h14"/>',
-  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
-}
+import { Icon } from "@/components/Icon"
 
 // ── Event item ────────────────────────────────────────────────────────────────
 
@@ -118,9 +103,9 @@ function EventItem({
         <div className="tl-nm">{event.title}</div>
         {event.summary && <p className="tl-sum">{event.summary}</p>}
         <div className="tl-actions">
-          <button className="tl-mv" disabled={isFirst} onClick={e => { e.stopPropagation(); onMoveUp() }} title="往上移"><Ic d={IC.up} /></button>
-          <button className="tl-mv" disabled={isLast}  onClick={e => { e.stopPropagation(); onMoveDown() }} title="往下移"><Ic d={IC.down} /></button>
-          <button className="tl-del" onClick={e => { e.stopPropagation(); onDelete() }} title="刪除"><Ic d={IC.trash} /></button>
+          <button className="tl-mv" disabled={isFirst} onClick={e => { e.stopPropagation(); onMoveUp() }} title="往上移"><Icon name="arrowUp" size={14} /></button>
+          <button className="tl-mv" disabled={isLast}  onClick={e => { e.stopPropagation(); onMoveDown() }} title="往下移"><Icon name="arrowDown" size={14} /></button>
+          <button className="tl-del" onClick={e => { e.stopPropagation(); onDelete() }} title="刪除"><Icon name="trash" size={14} /></button>
         </div>
       </div>
     </div>
@@ -156,7 +141,7 @@ function NewEventForm({ projectId, onCreated }: { projectId: string; onCreated: 
     return (
       <button className="btn btn-accent tl-add" onClick={() => setOpen(true)}
         style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-        <Ic d={IC.plus} size={15} /> 新增事件
+        <Icon name="plus" size={15} /> 新增事件
       </button>
     )
   }
@@ -278,7 +263,7 @@ export function TimelinePage() {
           <div className="modal modal-sm" onClick={e => e.stopPropagation()}>
             <div className="modal-h">
               <h2>刪除這個事件？</h2>
-              <button className="modal-close" onClick={() => setDeleteId(null)}><Ic d={IC.x} size={15} /></button>
+              <button className="modal-close" onClick={() => setDeleteId(null)}><Icon name="x" size={15} /></button>
             </div>
             <div className="modal-foot">
               <button className="btn btn-ghost" onClick={() => setDeleteId(null)}>取消</button>
