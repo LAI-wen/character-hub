@@ -168,7 +168,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
   let globalIdx = 0
 
   return (
-    <div className="cmdk" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+    <div role="dialog" aria-modal="true" aria-label="搜尋" className="cmdk" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div className="box">
         <div className="field">
           <span className="ic"><Icon name="search" size={16} /></span>
@@ -176,6 +176,10 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
             ref={inputRef}
             placeholder="搜尋角色、世界觀、企劃…"
             autoComplete="off"
+            aria-label="搜尋"
+            aria-autocomplete="list"
+            role="combobox"
+            aria-expanded={filtered.length > 0}
             value={q}
             onChange={e => { setQ(e.target.value); setSelIdx(0) }}
             onKeyDown={handleKeyDown}
@@ -186,7 +190,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
           }
         </div>
 
-        <div className="results">
+        <div className="results" role="listbox" aria-label="搜尋結果">
           {filtered.length === 0 && q && !searching ? (
             <div className="none">找不到「{q}」</div>
           ) : (
@@ -198,6 +202,8 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
                   return (
                     <div
                       key={`${item.group}-${item.to}`}
+                      role="option"
+                      aria-selected={idx === selIdx}
                       className={"row" + (idx === selIdx ? " sel" : "")}
                       onMouseEnter={() => setSelIdx(idx)}
                       onClick={() => go(item)}
