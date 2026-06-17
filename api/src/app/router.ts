@@ -461,11 +461,9 @@ function mapProjectLink(row: ProjectCharacterLinkRow | null) {
     projectId: row.project_id,
     characterId: row.character_id,
     submittedByUserId: row.submitted_by_user_id,
-    submittedBy: row.submitted_by_user_id,
     status: row.status,
     factionId: row.faction_id,
     factionLabel: row.faction_label,
-    faction: row.faction_label,
     projectRole: row.project_role,
     visibility: row.visibility,
     templateVersionId: row.template_version_id,
@@ -473,7 +471,6 @@ function mapProjectLink(row: ProjectCharacterLinkRow | null) {
     submittedAt: row.submitted_at,
     reviewedAt: row.reviewed_at,
     reviewedByUserId: row.reviewed_by_user_id,
-    reviewedBy: row.reviewed_by_user_id,
     reviewMessage: row.review_message,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -519,49 +516,25 @@ function mapEntityLink(row: EntityLinkRow) {
   };
 }
 
-function relationshipAvatar(ref: { type: string; id: string }, fallback: string, color: string) {
-  const label = ref.type === 'world_entry' ? '世' : ref.type === 'group' ? '群' : ref.id.slice(0, 1).toUpperCase() || fallback;
-  return [label, color];
-}
-
 function mapRelationship(row: RelationshipRow) {
-  const sourceRef = { type: row.source_type, id: row.source_id };
-  const targetRef = { type: row.target_type, id: row.target_id };
-  const album = parseJson<string[]>(row.album_json, []);
-  const timeline = parseJson<[string, string][]>(row.timeline_json, []);
-  const relText = row.type === row.label ? row.label : `${row.label} ${row.type}`.trim();
   return {
     id: row.id,
-    baseId: row.id,
     projectId: row.project_id,
-    sourceRef,
-    targetRef,
     sourceType: row.source_type,
     sourceId: row.source_id,
     targetType: row.target_type,
     targetId: row.target_id,
     type: row.type,
     label: row.label,
-    title: row.label,
-    rel: relText,
-    chip: `${row.label} · ${row.type}`,
     description: row.description,
-    desc: row.description || '這筆關係尚未填寫詳細說明。',
     direction: row.direction,
     groupId: row.group_id,
     visibility: row.visibility,
-    album,
-    timeline,
-    nodes: [row.source_id, row.target_id],
-    avatars: [
-      relationshipAvatar(sourceRef, '源', '#8FA3B0'),
-      relationshipAvatar(targetRef, '目', '#D84A3D'),
-    ],
+    timeline: parseJson<[string, string][]>(row.timeline_json, []),
     srcView: row.src_view ?? null,
     tgtView: row.tgt_view ?? null,
     mapStyle: (row.map_style as 'line' | 'arrows' | null) ?? 'line',
     sortOrder: row.sort_order,
-    createdByUserId: row.created_by_user_id,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     deletedAt: row.deleted_at,
