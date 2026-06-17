@@ -38,6 +38,11 @@ export function LoginPage() {
 
   const oauthError = searchParams.get("error")
 
+  function safeRedirect(): string {
+    const r = searchParams.get("redirect") ?? ""
+    return r.startsWith("/") && !r.startsWith("//") ? r : "/workspace"
+  }
+
   async function onLogin(data: LoginForm) {
     try {
       clearCsrfToken()
@@ -45,7 +50,7 @@ export function LoginPage() {
         method: "POST",
         body: data,
       })
-      window.location.href = searchParams.get("redirect") ?? "/workspace"
+      window.location.href = safeRedirect()
     } catch {
       loginForm.setError("root", { message: "Email 或密碼錯誤" })
     }
@@ -64,7 +69,7 @@ export function LoginPage() {
           invite_code: data.inviteCode.trim().toUpperCase(),
         },
       })
-      window.location.href = searchParams.get("redirect") ?? "/workspace"
+      window.location.href = safeRedirect()
     } catch (err) {
       if (err instanceof AppApiError && err.code === "INVITE_INVALID") {
         registerForm.setError("inviteCode", { message: "邀請碼無效或已被使用" })
