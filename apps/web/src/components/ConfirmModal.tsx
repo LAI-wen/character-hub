@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 
 export type ConfirmOptions = {
@@ -59,8 +59,17 @@ function ConfirmDialog({
   opts?: ConfirmOptions
   onResolve: (v: boolean) => void
 }) {
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onResolve(false) }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [onResolve])
+
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={opts?.title ? 'confirm-title' : undefined}
       onClick={() => onResolve(false)}
       style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(20,16,13,0.55)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
     >
@@ -69,7 +78,7 @@ function ConfirmDialog({
         style={{ background: 'var(--surface)', borderRadius: 20, boxShadow: '0 30px 80px rgba(0,0,0,0.35)', maxWidth: 420, width: '100%', padding: '28px 28px 24px' }}
       >
         {opts?.title && (
-          <h2 style={{ fontFamily: 'var(--font-serif)', fontWeight: 700, fontSize: 18, margin: '0 0 10px', color: 'var(--text)' }}>{opts.title}</h2>
+          <h2 id="confirm-title" style={{ fontFamily: 'var(--font-serif)', fontWeight: 700, fontSize: 18, margin: '0 0 10px', color: 'var(--text)' }}>{opts.title}</h2>
         )}
         <p style={{ fontSize: 14.5, color: 'var(--text-dim)', margin: 0, lineHeight: 1.6 }}>{message}</p>
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 24 }}>
