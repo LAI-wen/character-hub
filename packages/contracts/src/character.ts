@@ -3,7 +3,7 @@ import { VisibilitySchema } from "./common"
 
 export const CharacterSchema = z.object({
   id: z.string(),
-  ownerUserId: z.string(),
+  ownerUserId: z.string().optional(),
   ownerId: z.string().optional(),
   slug: z.string(),
   name: z.string(),
