@@ -38,7 +38,7 @@ export function HeightComparePage() {
     queryFn: () => apiClient<ProjectListResponse>("/api/app/projects"),
   })
 
-  const projects = projData?.projects ?? []
+  const allProjects = projData?.projects ?? []
 
   // Local state: on/off toggles + editable heights (start from API data)
   const [toggles, setToggles] = useState<Record<string, boolean>>({})
@@ -82,6 +82,11 @@ export function HeightComparePage() {
       projectIds: (c.memberships ?? []).map(m => m.projectId),
     }))
   }, [charData, heights, toggles])
+
+  const projectsWithChars = useMemo(() => {
+    const ids = new Set(entries.flatMap(e => e.projectIds))
+    return allProjects.filter(p => ids.has(p.id))
+  }, [allProjects, entries])
 
   const visible = useMemo(() =>
     scope === "*" ? entries : entries.filter(e => e.projectIds.includes(scope)),
@@ -134,12 +139,12 @@ export function HeightComparePage() {
       />
 
       {/* Scope filter */}
-      {projects.length > 0 && (
+      {projectsWithChars.length > 0 && (
         <div className="hc-scopebar">
           <span className="hc-scope-lb">企劃</span>
           <div className="hc-scope-chips">
             <button className={"scope-chip" + (scope === "*" ? " on" : "")} onClick={() => setScope("*")}>全部</button>
-            {projects.map(p => (
+            {projectsWithChars.map(p => (
               <button key={p.id} className={"scope-chip" + (scope === p.id ? " on" : "")} onClick={() => setScope(p.id)}>
                 <span className="dot" style={{ background: p.themeColor ?? "#8A857C", width: 8, height: 8, borderRadius: "50%", display: "inline-block", marginRight: 6 }} />
                 {p.name}
