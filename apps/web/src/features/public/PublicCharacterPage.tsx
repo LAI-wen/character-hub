@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useParams } from "react-router-dom"
 import { apiClient } from "@/lib/api/client"
@@ -430,6 +430,12 @@ export function PublicCharacterPage() {
   }
 
   const { character } = data
+
+  useEffect(() => {
+    document.title = `${character.name} — CharacterHub`
+    return () => { document.title = "CharacterHub" }
+  }, [character.name])
+
   const accent = character.themeColor ?? charColor(character.id)
   const canvasChar = buildCanvasCharacter(character)
   const gp = (character.generalProfile ?? {}) as Record<string, unknown>

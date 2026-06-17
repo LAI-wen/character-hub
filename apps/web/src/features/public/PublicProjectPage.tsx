@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useQuery, useMutation } from "@tanstack/react-query"
 import { useParams, Link, useNavigate } from "react-router-dom"
 import { apiClient } from "@/lib/api/client"
@@ -79,6 +79,12 @@ export function PublicProjectPage() {
   }
 
   const { project, characters, worldEntries } = data
+
+  useEffect(() => {
+    document.title = `${project.name} — CharacterHub`
+    return () => { document.title = "CharacterHub" }
+  }, [project.name])
+
   const accentColor = project.themeColor ?? "var(--accent)"
   const isOwner = viewer?.id === project.ownerUserId
   const canApply = viewer && !isOwner
