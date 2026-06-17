@@ -6,6 +6,7 @@ import { ContextHeader } from "@/components/ContextHeader"
 import { PageHeader } from "@/components/PageHeader"
 import { useAuth } from "@/lib/auth/context"
 import { Icon } from "@/components/Icon"
+import { showConfirm } from "@/components/ConfirmModal"
 
 type AccountProfile = {
   id: string
@@ -148,7 +149,11 @@ function StoragePanel() {
               <button
                 className="btn btn-sm"
                 style={{ color: "var(--avoid)", borderColor: "var(--avoid)" }}
-                onClick={() => { localStorage.clear(); alert("本地資料已清除") }}
+                onClick={async () => {
+                  if (!await showConfirm("這會清除所有本地儲存的草稿、主題、面板狀態。此操作無法復原。", { title: "清除本地資料？", confirmLabel: "確認清除" })) return
+                  localStorage.clear()
+                  alert("本地資料已清除")
+                }}
               >
                 清除本地
               </button>
