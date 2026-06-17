@@ -294,11 +294,13 @@ function PermPane({ member, projectId }: { member: Member | null; projectId: str
   const qc = useQueryClient()
 
   const saveMutation = useMutation({
-    mutationFn: (permissions: Record<string, PermEffect>) =>
-      apiClient(`/api/app/projects/${projectId}/members/${member!.id}`, {
+    mutationFn: (permissions: Record<string, PermEffect>) => {
+      if (!member) return Promise.reject(new Error('No member selected'))
+      return apiClient(`/api/app/projects/${projectId}/members/${member.id}`, {
         method: 'PATCH',
         body: { permissions },
-      }),
+      })
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['project', projectId, 'members'] })
       setOverrides({})
@@ -320,7 +322,7 @@ function PermPane({ member, projectId }: { member: Member | null; projectId: str
 
   function getEff(code: string): { effect: PermEffect; source: PermSource } {
     if (overrides[code]) return { effect: overrides[code], source: overrides[code] === "allow" ? "allow" : "deny" }
-    if (OWNER_FIXED.has(code)) return { effect: member!.role === "owner" ? "allow" : "deny", source: "ownerFixed" }
+    if (OWNER_FIXED.has(code)) return { effect: member.role === "owner" ? "allow" : "deny", source: "ownerFixed" }
     return { effect: presetPerms.has(code) ? "allow" : "deny", source: "preset" }
   }
 

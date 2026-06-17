@@ -784,10 +784,10 @@ export function TemplateBuilderPage() {
       ) : null}
 
       {/* fullscreen presentation */}
-      {fs ? (
+      {fs && activeTpl ? (
         <div style={{ position: "fixed", inset: 0, zIndex: 90, background: activeTpl?.template.design?.bg || "#fff", overflowY: "auto" }}>
           <button onClick={() => setFs(false)} title="關閉 (Esc)" style={{ position: "fixed", top: 18, right: 20, width: 42, height: 42, borderRadius: 12, border: "none", background: "rgba(0,0,0,0.22)", color: "#fff", cursor: "pointer", fontSize: 22, zIndex: 3 }}>×</button>
-          <TemplateCanvas character={character} template={activeTpl!.template} annotateMode={annotateMode} viewport={device} pageView={pageCount > 1 ? fsPage : "all"} onNavTo={p => setFsPage(p as number)} />
+          <TemplateCanvas character={character} template={activeTpl.template} annotateMode={annotateMode} viewport={device} pageView={pageCount > 1 ? fsPage : "all"} onNavTo={p => setFsPage(p as number)} />
           {pageCount > 1 ? (
             <div style={{ position: "fixed", left: "50%", bottom: 24, transform: "translateX(-50%)", display: "flex", alignItems: "center", gap: 14, background: "rgba(0,0,0,0.34)", backdropFilter: "blur(8px)", borderRadius: 999, padding: "8px 14px", zIndex: 3 }}>
               <button onClick={() => setFsPage(p => Math.max(0, p - 1))} style={{ width: 34, height: 34, borderRadius: "50%", border: "none", background: "rgba(255,255,255,0.16)", color: "#fff", cursor: "pointer", fontSize: 18 }}>‹</button>
