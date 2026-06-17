@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { apiClient } from "@/lib/api/client"
+import { AppApiError } from "@/lib/api/errors"
 import { showToast } from "@/lib/query/client"
 import { ContextHeader } from "@/components/ContextHeader"
 import { PageHeader } from "@/components/PageHeader"
@@ -190,7 +191,7 @@ function PasswordForm({ hasPassword }: { hasPassword: boolean }) {
       setOpen(false)
       setCurrent(""); setNext(""); setConfirm(""); setErr("")
     },
-    onError: (e: Error) => setErr(e.message || t("common.saveFailed")),
+    onError: (e: Error) => setErr((e instanceof AppApiError && e.detail) ? e.detail : t("common.saveFailed")),
   })
 
   function handleSubmit() {

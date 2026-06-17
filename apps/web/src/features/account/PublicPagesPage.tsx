@@ -2,6 +2,7 @@ import { useState, useMemo } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Link } from "react-router-dom"
 import { apiClient } from "@/lib/api/client"
+import { AppApiError } from "@/lib/api/errors"
 import { ContextHeader } from "@/components/ContextHeader"
 import { PageHeader } from "@/components/PageHeader"
 import { charColor } from "@/lib/charColor"
@@ -78,7 +79,7 @@ function SlugEditModal({
       qc.invalidateQueries({ queryKey: type === "character" ? ["characters"] : ["projects"] })
       onClose()
     },
-    onError: (e: Error) => setErr(e.message || "網址已被使用，請換一個"),
+    onError: (e: Error) => setErr(e instanceof AppApiError && e.code === "CONFLICT" ? "網址已被使用，請換一個" : "儲存失敗，請再試一次"),
   })
 
   const cleaned = slug.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "")
