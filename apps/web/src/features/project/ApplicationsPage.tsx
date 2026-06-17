@@ -62,7 +62,7 @@ export function ApplicationsPage() {
   const isOwner = project.ownerUserId === viewer?.id
 
   const { data, status: queryStatus } = useQuery({
-    queryKey: ["project", projectId, "characters"],
+    queryKey: ["project", projectId, "roster"],
     queryFn: () => apiClient<{ roster: RosterEntry[] }>(`/api/app/projects/${projectId}/characters`),
     enabled: !!projectId,
   })
@@ -88,7 +88,7 @@ export function ApplicationsPage() {
         body: { status, reviewMessage },
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["project", projectId, "characters"] })
+      queryClient.invalidateQueries({ queryKey: ["project", projectId, "roster"] })
     },
   })
 

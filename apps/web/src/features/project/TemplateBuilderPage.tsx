@@ -101,7 +101,7 @@ export function TemplateBuilderPage() {
 
   // ── Remote: character list ────────────────────────────────────────────────
   const { data: charListData } = useQuery({
-    queryKey: ["project", projectId, "characters"],
+    queryKey: ["project", projectId, "roster"],
     queryFn: () => apiClient<{ characters: Array<{ id: string; linkId: string; name: string; avatarUrl?: string }> }>(
       `/api/app/projects/${projectId}/characters`
     ),

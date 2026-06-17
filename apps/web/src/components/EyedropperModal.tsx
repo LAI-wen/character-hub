@@ -92,7 +92,7 @@ export function EyedropperModal({ avatarUrl, mainVisualUrl, albums, onAddSwatch,
         {url ? (
           <>
             <p style={{ fontSize: 13, color: 'var(--text-dim)', margin: '0 0 12px' }}>在圖片上點一下，取色加入配色。</p>
-            <img src={url} onClick={onPick} draggable={false}
+            <img src={url} alt="" onClick={onPick} draggable={false}
               style={{ maxWidth: '100%', maxHeight: '48vh', display: 'block', margin: '0 auto', borderRadius: 12, border: '1px solid var(--border)', cursor: 'crosshair' }} />
             {taint && <p style={{ fontSize: 12, color: '#c0584f', textAlign: 'center', margin: '10px 0 0' }}>這張圖無法吸色（跨網域限制），請改用「上傳圖片」。</p>}
             <div style={{ textAlign: 'center', marginTop: 14 }}>
