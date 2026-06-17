@@ -56,6 +56,7 @@ export function ApplicationsPage() {
 
   const [tab, setTab] = useState<"mine" | "review">("mine")
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [rejectTarget, setRejectTarget] = useState<{ linkId: string; msg: string } | null>(null)
 
   const isOwner = project.ownerUserId === viewer?.id
 
@@ -95,9 +96,13 @@ export function ApplicationsPage() {
   }
 
   function handleReject(linkId: string) {
-    const msg = prompt("拒絕原因（可留空）")
-    if (msg === null) return
-    patchMutation.mutate({ linkId, status: "rejected", reviewMessage: msg || undefined })
+    setRejectTarget({ linkId, msg: "" })
+  }
+
+  function confirmReject() {
+    if (!rejectTarget) return
+    patchMutation.mutate({ linkId: rejectTarget.linkId, status: "rejected", reviewMessage: rejectTarget.msg || undefined })
+    setRejectTarget(null)
   }
 
   function StatusBadge({ status }: { status: string }) {
@@ -114,6 +119,25 @@ export function ApplicationsPage() {
   return (
     <div className="page">
       <ContextHeader scope="project" crumbs={[{ label: project.name, href: `/p/${projectId}` }, "角色申請"]} />
+
+      {rejectTarget && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.45)", display: "grid", placeItems: "center" }}>
+          <div style={{ background: "var(--bg-2)", border: "1px solid var(--border)", borderRadius: 16, padding: 24, width: 360, maxWidth: "90vw", boxShadow: "0 12px 40px rgba(0,0,0,0.25)" }}>
+            <p style={{ fontWeight: 700, marginBottom: 12 }}>拒絕申請</p>
+            <textarea
+              autoFocus
+              placeholder="拒絕原因（可留空）"
+              value={rejectTarget.msg}
+              onChange={e => setRejectTarget(t => t ? { ...t, msg: e.target.value } : null)}
+              style={{ width: "100%", boxSizing: "border-box", minHeight: 80, fontFamily: "inherit", fontSize: 13.5, padding: "8px 10px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg-3)", color: "var(--text)", outline: "none", resize: "vertical" }}
+            />
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
+              <button className="btn" onClick={() => setRejectTarget(null)}>取消</button>
+              <button className="btn btn-danger" onClick={confirmReject}>確認拒絕</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="pageh">
         <div className="ht">

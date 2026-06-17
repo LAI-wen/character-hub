@@ -253,6 +253,9 @@ export function StoryPage() {
   const [addChOpen, setAddChOpen] = useState(false)
   const [addChTitle, setAddChTitle] = useState("")
   const [editStoryOpen, setEditStoryOpen] = useState(false)
+  const [editStoryTitle, setEditStoryTitle] = useState("")
+  const [editStoryDesc, setEditStoryDesc] = useState("")
+  const [editStoryStatus, setEditStoryStatus] = useState<Story["status"]>("draft")
 
   const { data, status } = useQuery({
     queryKey: ["project", pid, "stories"],
@@ -310,6 +313,15 @@ export function StoryPage() {
   const reorderChaptersMutation = useMutation({
     mutationFn: (ids: string[]) =>
       apiClient(`/api/app/projects/${pid}/stories/${curStoryId}/chapters/reorder`, { method: "PUT", json: { ids } }),
+  })
+
+  const patchStoryMutation = useMutation({
+    mutationFn: (body: { title?: string; description?: string; status?: string }) =>
+      apiClient<{ story: Story }>(`/api/app/projects/${pid}/stories/${curStoryId}`, { method: "PATCH", json: body }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["project", pid, "stories"] })
+      setEditStoryOpen(false)
+    },
   })
 
   function handleReorder(chId: string, dir: -1 | 1) {
@@ -380,7 +392,12 @@ export function StoryPage() {
               {view === "chapters" && (
                 <button className="btn btn-sm" onClick={() => setAddChOpen(true)}>＋ 章節</button>
               )}
-              <button className="btn btn-sm" onClick={() => setEditStoryOpen(true)}>⚙ 故事設定</button>
+              <button className="btn btn-sm" onClick={() => {
+                setEditStoryTitle(curStory.title)
+                setEditStoryDesc(curStory.description ?? "")
+                setEditStoryStatus(curStory.status as Story["status"])
+                setEditStoryOpen(true)
+              }}>⚙ 故事設定</button>
               <button className="btn btn-sm btn-accent" onClick={() => setCreateOpen(true)}>＋ 新故事</button>
             </div>
           </div>
@@ -481,17 +498,47 @@ export function StoryPage() {
             </div>
             <div className="modal-body" style={{ display: "flex", flexDirection: "column", gap: "var(--s4)" }}>
               <div>
-                <label className="field-label">狀態</label>
-                <div style={{ display: "flex", gap: "var(--s2)", flexWrap: "wrap", marginTop: 4 }}>
-                  {(["draft", "ongoing", "completed", "archived"] as const).map(s => (
-                    <span key={s} className={`badge ${storyStatusCls(s)}`}>{storyStatusLabel(s)}</span>
-                  ))}
-                </div>
+                <label className="field-label">標題</label>
+                <input
+                  className="field-input"
+                  value={editStoryTitle}
+                  onChange={e => setEditStoryTitle(e.target.value)}
+                  style={{ width: "100%", boxSizing: "border-box", marginTop: 4 }}
+                />
               </div>
-              <p style={{ fontSize: 13, color: "var(--text-faint)", margin: 0 }}>故事設定編輯功能即將推出。</p>
+              <div>
+                <label className="field-label">簡介</label>
+                <textarea
+                  className="field-input"
+                  value={editStoryDesc}
+                  onChange={e => setEditStoryDesc(e.target.value)}
+                  rows={3}
+                  style={{ width: "100%", boxSizing: "border-box", resize: "vertical", marginTop: 4 }}
+                />
+              </div>
+              <div>
+                <label className="field-label">狀態</label>
+                <select
+                  className="field-input"
+                  value={editStoryStatus}
+                  onChange={e => setEditStoryStatus(e.target.value as Story["status"])}
+                  style={{ width: "100%", boxSizing: "border-box", marginTop: 4 }}
+                >
+                  {(["draft", "ongoing", "completed", "archived"] as const).map(s => (
+                    <option key={s} value={s}>{storyStatusLabel(s)}</option>
+                  ))}
+                </select>
+              </div>
             </div>
             <div className="modal-foot">
-              <button className="btn btn-ghost" onClick={() => setEditStoryOpen(false)}>關閉</button>
+              <button className="btn btn-ghost" onClick={() => setEditStoryOpen(false)}>取消</button>
+              <button
+                className="btn btn-accent"
+                disabled={patchStoryMutation.isPending || !editStoryTitle.trim()}
+                onClick={() => patchStoryMutation.mutate({ title: editStoryTitle.trim(), description: editStoryDesc || undefined, status: editStoryStatus })}
+              >
+                {patchStoryMutation.isPending ? "儲存中⋯" : "儲存"}
+              </button>
             </div>
           </div>
         </div>

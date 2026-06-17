@@ -6,6 +6,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { apiClient } from "@/lib/api/client"
 import { ContextHeader } from "@/components/ContextHeader"
 import type { CharacterResponse } from "@oc-tools/contracts"
+import { charColor } from "@/lib/charColor"
 
 const Schema = z.object({
   name:       z.string().min(1, "必填"),
@@ -15,12 +16,6 @@ const Schema = z.object({
 })
 type Fields = z.infer<typeof Schema>
 
-const PALETTE = ["#4A6FA5","#C0392B","#27AE60","#8E44AD","#E67E22","#16A085","#2C3E50","#7F8C8D","#D35400","#1A5276"]
-function charColor(id: string): string {
-  let h = 0
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0
-  return PALETTE[h % PALETTE.length]
-}
 function tempColor(name: string): string {
   return name ? charColor(name + "__preview") : "#8A857C"
 }

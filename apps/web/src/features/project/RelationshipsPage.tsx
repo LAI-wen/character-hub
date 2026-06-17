@@ -425,8 +425,12 @@ export function RelationshipsPage() {
 
   useEffect(() => {
     if (!mapRef.current) return
-    const { offsetWidth, offsetHeight } = mapRef.current
-    if (offsetWidth > 0) setDims({ W: offsetWidth, H: offsetHeight || 460 })
+    const el = mapRef.current
+    const ro = new ResizeObserver(() => {
+      if (el.offsetWidth > 0) setDims({ W: el.offsetWidth, H: el.offsetHeight || 460 })
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
   }, [])
 
   // ── queries ──────────────────────────────────────────────────────────────
