@@ -254,17 +254,13 @@ async function consumeInvite(db: D1Database, invite: string | null, newUserId: s
 }
 
 async function issueTokensAndRedirect(c: AuthContext, userId: string, handle: string, frontendUrl: string) {
-  const [accessToken, refreshToken, sessionToken] = await Promise.all([
-    signAccessToken(userId, handle, c.env.JWT_SECRET),
+  const [refreshToken, sessionToken] = await Promise.all([
     signRefreshToken(userId, handle, c.env.JWT_SECRET),
     signSessionToken(userId, handle, c.env.JWT_SECRET),
   ]);
   c.header('Set-Cookie', refreshCookie(refreshToken, REFRESH_MAX_AGE));
   c.header('Set-Cookie', sessionCookie(sessionToken, REFRESH_MAX_AGE, isLocalRequest(c)));
   const base = frontendUrl.replace(/\/$/, '');
-  // Session cookie is already set above; access token is not passed via URL
-  // to avoid leaking it into server logs or browser history.
-  void accessToken;
   return c.redirect(`${base}/auth/callback`);
 }
 

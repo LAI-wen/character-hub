@@ -146,7 +146,7 @@ export function SettingsPage() {
                   <input
                     className="inp"
                     value={form.slug}
-                    maxLength={50}
+                    maxLength={120}
                     pattern="[a-z0-9-]+"
                     disabled={!canEdit}
                     onChange={e => setForm(f => ({ ...f, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") }))}
