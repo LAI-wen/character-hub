@@ -10,6 +10,7 @@ import {
   closestCorners,
   type DragStartEvent,
   type DragEndEvent,
+  type DragOverEvent,
 } from "@dnd-kit/core"
 import {
   SortableContext,
@@ -550,7 +551,7 @@ export function CommissionsPage() {
     setActiveId(event.active.id as string)
   }
 
-  function handleDragOver(event: { over: { id: string } | null }) {
+  function handleDragOver(event: DragOverEvent) {
     const overId = event.over?.id as string | undefined
     if (overId && overId in STATUS) {
       setOverColumn(overId as StatusKey)
@@ -722,7 +723,7 @@ export function CommissionsPage() {
           sensors={sensors}
           collisionDetection={closestCorners}
           onDragStart={handleDragStart}
-          onDragOver={handleDragOver as never}
+          onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
         >
           <div style={{
@@ -762,12 +763,6 @@ export function CommissionsPage() {
         </DndContext>
       )}
 
-      {/* Responsive styles */}
-      <style>{`
-        @media (max-width: 980px) {
-          .cm-board { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
     </div>
   )
 }

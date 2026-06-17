@@ -2,6 +2,7 @@ import { useCharacterStore } from '@/store/useCharacterStore'
 import type { FormTab } from '@/store/useCharacterStore'
 import { Icon } from '@/components/Icon'
 import { TemplateCanvas } from '@/components/TemplateCanvas'
+import type { CanvasCharacter, CanvasTemplate } from '@/components/TemplateCanvas'
 import { IdentityCard } from './IdentityCard'
 import { ImagesCard, PaletteCard } from './ImagesPaletteCards'
 import { SectionsEditor } from './SectionsEditor'
@@ -70,7 +71,7 @@ export function FormPage() {
             <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-2)', textTransform: 'uppercase' }}>即時預覽</span>
           </div>
           <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 22, padding: 18, maxHeight: 'calc(100vh - 130px)', overflowY: 'auto' }}>
-            <TemplateCanvas character={character as never} template={activeTemplate as never} annotateMode={ui.annotateMode as never} />
+            <TemplateCanvas character={character as CanvasCharacter} template={activeTemplate as CanvasTemplate | null} annotateMode={ui.annotateMode} />
           </div>
         </div>
       </aside>

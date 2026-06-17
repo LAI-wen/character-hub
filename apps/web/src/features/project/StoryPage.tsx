@@ -278,7 +278,7 @@ export function StoryPage() {
       apiClient<{ story: Story }>(`/api/app/projects/${pid}/stories`, { method: "POST", json: body }),
     onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ["project", pid, "stories"] })
-      setSelectedStoryId((res as any).story?.id ?? null)
+      setSelectedStoryId(res.story?.id ?? null)
       setCreateOpen(false)
       setCreateTitle("")
       setCreateDesc("")
@@ -294,7 +294,7 @@ export function StoryPage() {
       }),
     onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ["project", pid, "story", curStoryId] })
-      setSelectedChapterId((res as any).chapter?.id ?? null)
+      setSelectedChapterId(res.chapter?.id ?? null)
       setAddChOpen(false)
       setAddChTitle("")
     },
@@ -307,6 +307,11 @@ export function StoryPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["project", pid, "story", curStoryId] }),
   })
 
+  const reorderChaptersMutation = useMutation({
+    mutationFn: (ids: string[]) =>
+      apiClient(`/api/app/projects/${pid}/stories/${curStoryId}/chapters/reorder`, { method: "PUT", json: { ids } }),
+  })
+
   function handleReorder(chId: string, dir: -1 | 1) {
     const ids = chapters.map(c => c.id)
     const fi = ids.indexOf(chId)
@@ -314,13 +319,13 @@ export function StoryPage() {
     const ni = fi + dir
     if (ni < 0 || ni >= ids.length) return
     ;[ids[fi], ids[ni]] = [ids[ni], ids[fi]]
-    // Fire optimistic reorder (best-effort, no API for reorder currently)
     qc.setQueryData(["project", pid, "story", curStoryId], (old: any) => {
       if (!old) return old
       const reordered = [...old.chapters]
       ;[reordered[fi], reordered[ni]] = [reordered[ni], reordered[fi]]
       return { ...old, chapters: reordered }
     })
+    reorderChaptersMutation.mutate(ids)
   }
 
   return (

@@ -7,7 +7,7 @@ import { ContextHeader } from "@/components/ContextHeader"
 import { useProjectContext } from "@/routes/layouts/ProjectLayout"
 import { TemplateCanvas, buildDefaultTemplate } from "@/components/TemplateCanvas"
 import { charColor } from "@/lib/charColor"
-import type { CanvasCharacter, CanvasSection, CanvasSwatch, CanvasAlbum } from "@/components/TemplateCanvas"
+import type { CanvasCharacter, CanvasSection, CanvasSwatch, CanvasAlbum, CanvasDesign, Template as CanvasTemplate } from "@/components/TemplateCanvas"
 import type { ProjectCharacterLinkResponse } from "@oc-tools/contracts"
 
 // ── Visibility badge ──────────────────────────────────────────────────────────
@@ -363,8 +363,9 @@ export function CharacterDetailPage() {
     palette:       (gp.palette as CanvasSwatch[] | undefined) ?? [],
     albums:        (gp.albums as CanvasAlbum[] | undefined) ?? [],
   }
-  const template = (gp.template as { blocks: unknown[] } | undefined) ?? buildDefaultTemplate(canvasChar)
-  const design   = (gp.design as Record<string, unknown> | undefined) ?? { primary: color, bg: "#ffffff" }
+  const templates = (gp.templates as CanvasTemplate[] | undefined) ?? []
+  const template = templates[0] ?? buildDefaultTemplate(canvasChar)
+  const design = (gp.design as CanvasDesign | undefined) ?? { primary: color, bg: "#ffffff" } as CanvasDesign
 
   const albums = (gp.albums as CanvasAlbum[] | undefined) ?? []
   const allImageCount = albums.reduce((sum, a) => sum + a.images.length, 0)
@@ -460,7 +461,7 @@ export function CharacterDetailPage() {
                   編輯角色本體 →
                 </Link>
               </div>
-              <TemplateCanvas character={canvasChar} template={template as any} design={design as any} />
+              <TemplateCanvas character={canvasChar} template={template} design={design} />
             </div>
           ) : (
             <div style={{ textAlign: "center", padding: "var(--s8) var(--s5)", border: "1.5px dashed var(--border)", borderRadius: "var(--r-lg)" }}>

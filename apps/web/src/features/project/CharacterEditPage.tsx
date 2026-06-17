@@ -155,8 +155,8 @@ function CharacterEditInner({ charId, projectId, linkId }: { charId: string; pro
       {annotTarget ? (
         <AnnotationModal
           imageUrl={annotTarget.im.url}
-          initialAnnotations={annotTarget.im.annotations as never}
-          onUpdate={anns => setAnnotations(annotTarget.al.id, annotTarget.im.id, anns as never)}
+          initialAnnotations={annotTarget.im.annotations}
+          onUpdate={anns => setAnnotations(annotTarget.al.id, annotTarget.im.id, anns)}
           onClose={closeAnnot}
         />
       ) : null}
@@ -164,10 +164,10 @@ function CharacterEditInner({ charId, projectId, linkId }: { charId: string; pro
       {ui.formTpl ? (
         <CharBackupModal
           charName={character.name}
-          sections={character.sections as never}
+          sections={character.sections}
           onExport={exportChar}
           onImport={importCharFile}
-          onApplySections={secs => importCharacter({ ...character, sections: secs as never })}
+          onApplySections={secs => importCharacter({ ...character, sections: secs as typeof character.sections })}
           onClose={closeFormTpl}
         />
       ) : null}

@@ -25,7 +25,7 @@ export const RelationshipSchema = z.object({
   tgtView: z.string().nullable().optional(), // target 眼中的 source
   // "line" = single central label | "arrows" = two directional coloured chips
   mapStyle: z.enum(["line", "arrows"]).default("line"),
-  direction: z.enum(["undirected", "forward", "both", "none"]).default("undirected"),
+  direction: z.enum(["undirected", "one-way", "two-way", "many"]).default("undirected"),
   groupId: z.string().nullable().optional(),
   visibility: z.string().default("private"),
   // Inline timeline — [[timeLabel, eventText], ...]
@@ -50,7 +50,7 @@ export const CreateRelationshipSchema = z.object({
   srcView: z.string().max(500).optional(),
   tgtView: z.string().max(500).optional(),
   mapStyle: z.enum(["line", "arrows"]).optional(),
-  direction: z.enum(["undirected", "forward", "both", "none"]).optional(),
+  direction: z.enum(["undirected", "one-way", "two-way", "many"]).optional(),
   groupId: z.string().optional(),
   visibility: z.string().optional(),
   timeline: z.array(RelationshipTimelineItemSchema).optional(),

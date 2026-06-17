@@ -1833,6 +1833,19 @@ appApiRouter.post('/projects/:projectId/stories/:storyId/chapters', async (c) =>
   return c.json({ chapter: { id, storyId: story.id, title: input.title, summary: input.summary ?? null, content: input.content ?? null, sortOrder, status: 'draft', createdAt: now, updatedAt: now } }, 201);
 });
 
+appApiRouter.put('/projects/:projectId/stories/:storyId/chapters/reorder', async (c) => {
+  const db = getDb(c);
+  const { project } = await getVisibleProject(c, c.req.param('projectId'), 'story:update');
+  const story = await first<{ id: string }>(db, `SELECT id FROM stories WHERE id = ? AND project_id = ? AND archived_at IS NULL`, [c.req.param('storyId'), project.id]);
+  if (!story) throw new AppHttpError(404, 'NOT_FOUND', 'Story not found');
+  const { ids } = await validateJson(c, z.object({ ids: z.array(z.string()) }));
+  const now = nowIso();
+  await Promise.all(ids.map((id, i) =>
+    run(db, `UPDATE story_chapters SET sort_order = ?, updated_at = ? WHERE id = ? AND story_id = ?`, [i, now, id, story.id])
+  ));
+  return c.json({ ok: true });
+});
+
 appApiRouter.patch('/projects/:projectId/stories/:storyId/chapters/:chapterId', async (c) => {
   const db = getDb(c);
   const { project } = await getVisibleProject(c, c.req.param('projectId'), 'story:update');

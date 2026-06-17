@@ -5,7 +5,7 @@ import { recordView } from "@/lib/recentlyViewed"
 import { apiClient } from "@/lib/api/client"
 import { ContextHeader } from "@/components/ContextHeader"
 import { TemplateCanvas, buildDefaultTemplate } from "@/components/TemplateCanvas"
-import type { CanvasCharacter, CanvasSection, CanvasSwatch, CanvasAlbum } from "@/components/TemplateCanvas"
+import type { CanvasCharacter, CanvasSection, CanvasSwatch, CanvasAlbum, CanvasDesign, Template as CanvasTemplate } from "@/components/TemplateCanvas"
 import { charColor } from "@/lib/charColor"
 import { PageLoading } from "@/components/LoadingSpinner"
 import type { CharacterResponse, CharacterListResponse } from "@oc-tools/contracts"
@@ -691,9 +691,9 @@ export function CharacterDetailPage() {
     palette:       (gp.palette as CanvasSwatch[] | undefined) ?? [],
     albums:        (gp.albums as CanvasAlbum[] | undefined) ?? [],
   }
-  const templates = (gp.templates as Array<{ blocks: unknown[] }> | undefined) ?? []
+  const templates = (gp.templates as CanvasTemplate[] | undefined) ?? []
   const template = templates[0] ?? buildDefaultTemplate(canvasChar)
-  const design   = (gp.design as Record<string, unknown> | undefined) ?? { primary: color, bg: "#ffffff" }
+  const design = (gp.design as CanvasDesign | undefined) ?? { primary: color, bg: "#ffffff" } as CanvasDesign
 
   const albums = (gp.albums as CanvasAlbum[] | undefined) ?? []
   const allImageCount = albums.reduce((sum, a) => sum + a.images.length, 0)
@@ -787,8 +787,8 @@ export function CharacterDetailPage() {
       {tab === "overview" && (
         <OverviewTab
           canvasChar={canvasChar}
-          template={template as any}
-          design={design as any}
+          template={template}
+          design={design}
           charId={charId!}
           memberships={memberships}
           hasProfile={hasProfile}

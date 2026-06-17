@@ -7,6 +7,7 @@ import { BlockInspector } from '@/features/project/templateBuilder/BlockInspecto
 import { BlockListPanel } from '@/features/project/templateBuilder/BlockListPanel'
 import { GlobalDesignPanel } from '@/features/project/templateBuilder/GlobalDesignPanel'
 import type { Block, BlockType } from '@/store/useCharacterStore'
+import type { CanvasCharacter, CanvasTemplate, CanvasBlock } from '@/components/TemplateCanvas'
 
 const seg = (active: boolean) => ({
   fontFamily: 'inherit',
@@ -135,7 +136,7 @@ export function DesignPage() {
   // Build ctx objects for existing templateBuilder sub-components
   const listCtx = {
     selBlock: ui.selBlock,
-    activeTemplate: activeTemplate as never,
+    activeTemplate: activeTemplate as CanvasTemplate | null,
     selectBlock,
     moveBlockDir,
     duplicateBlock,
@@ -144,8 +145,8 @@ export function DesignPage() {
   }
 
   const inspectorCtx = {
-    character: character as never,
-    activeTemplate: activeTemplate as never,
+    character: character as CanvasCharacter,
+    activeTemplate: activeTemplate as CanvasTemplate | null,
     selectBlock,
     moveBlockDir,
     duplicateBlock,
@@ -155,15 +156,15 @@ export function DesignPage() {
     setCols,
     setColWidth,
     addTag,
-    updateTag: updateTag as never,
+    updateTag,
     removeTag,
     libColors,
     moveOut,
   }
 
   const designCtx = {
-    character: character as never,
-    activeTemplate: activeTemplate as never,
+    character: character as CanvasCharacter,
+    activeTemplate: activeTemplate as CanvasTemplate | null,
     updateDesign,
     libColors,
     addLibColor,
@@ -172,11 +173,11 @@ export function DesignPage() {
 
   const canvas = (editable: boolean, page: number | 'all' | null) => (
     <TemplateCanvas
-      character={character as never}
-      template={activeTemplate as never}
-      annotateMode={ui.annotateMode as never}
-      viewport={ui.device as never}
-      pageView={page as never}
+      character={character as CanvasCharacter}
+      template={activeTemplate as CanvasTemplate | null}
+      annotateMode={ui.annotateMode}
+      viewport={ui.device}
+      pageView={page}
       editable={editable}
       selectedId={editable ? ui.selBlock : null}
       onSelect={editable ? selectBlock : undefined}
@@ -289,7 +290,7 @@ export function DesignPage() {
               <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-2)' }}>裝置</span>
               <div style={{ display: 'flex', gap: 4, background: 'var(--bg-3)', padding: 4, borderRadius: 11 }}>
                 {DEVICES.map(d => (
-                  <button key={d.key} onClick={() => setDevice(d.key as never)} title={d.label} style={{ ...seg(ui.device === d.key), padding: '6px 9px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <button key={d.key} onClick={() => setDevice(d.key)} title={d.label} style={{ ...seg(ui.device === d.key), padding: '6px 9px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                     <Icon name={d.icon} size={14} />
                   </button>
                 ))}
@@ -353,7 +354,7 @@ export function DesignPage() {
           {!mobile ? (
             <aside style={{ width: 320, flexShrink: 0 }}>
               <div style={{ position: 'sticky', top: 84, background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 18, padding: 18, maxHeight: 'calc(100vh - 110px)', overflowY: 'auto' }}>
-                {selected ? <BlockInspector block={selected as never} ctx={inspectorCtx} /> : noSelPanel}
+                {selected ? <BlockInspector block={selected as CanvasBlock} ctx={inspectorCtx} /> : noSelPanel}
               </div>
             </aside>
           ) : null}
@@ -391,7 +392,7 @@ export function DesignPage() {
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
               <span style={{ width: 40, height: 4, borderRadius: 999, background: 'var(--border)' }} />
             </div>
-            {sheet === 'inspect' && selected ? <BlockInspector block={selected as never} ctx={inspectorCtx} /> : noSelPanel}
+            {sheet === 'inspect' && selected ? <BlockInspector block={selected as CanvasBlock} ctx={inspectorCtx} /> : noSelPanel}
           </div>
         </>
       ) : null}
@@ -422,7 +423,7 @@ export function DesignPage() {
       {fs ? (
         <div style={{ position: 'fixed', inset: 0, zIndex: 90, background: activeTemplate?.design?.bg || '#fff', overflowY: 'auto' }}>
           <button onClick={() => setFs(false)} title="關閉 (Esc)" style={{ position: 'fixed', top: 18, right: 20, width: 42, height: 42, borderRadius: 12, border: 'none', background: 'rgba(0,0,0,0.22)', color: '#fff', cursor: 'pointer', fontSize: 22, zIndex: 3 }}>×</button>
-          <TemplateCanvas character={character as never} template={activeTemplate as never} annotateMode={ui.annotateMode as never} viewport={ui.device as never} pageView={pageCount > 1 ? fsPage : 'all'} onNavTo={p => setFsPage(p as number)} />
+          <TemplateCanvas character={character as CanvasCharacter} template={activeTemplate as CanvasTemplate | null} annotateMode={ui.annotateMode} viewport={ui.device} pageView={pageCount > 1 ? fsPage : 'all'} onNavTo={p => setFsPage(p as number)} />
           {pageCount > 1 ? (
             <div style={{ position: 'fixed', left: '50%', bottom: 24, transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 14, background: 'rgba(0,0,0,0.34)', backdropFilter: 'blur(8px)', borderRadius: 999, padding: '8px 14px', zIndex: 3 }}>
               <button onClick={() => setFsPage(p => Math.max(0, p - 1))} title="上一頁 (↑)" style={{ width: 34, height: 34, borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.16)', color: '#fff', cursor: 'pointer', fontSize: 18 }}>‹</button>

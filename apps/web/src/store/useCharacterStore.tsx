@@ -130,7 +130,7 @@ export interface CharacterStore {
   moveOut: (id: string) => void
   autoPaginate: (beforeIds: string[]) => void
   addTag: (blockId: string) => void
-  updateTag: (blockId: string, tagId: string, k: 'label' | 'color', v: string) => void
+  updateTag: (blockId: string, tagId: string, k: string, v: unknown) => void
   removeTag: (blockId: string, tagId: string) => void
   libColors: () => string[]
   addLibColor: (hex: string) => void
@@ -574,7 +574,7 @@ export function CharacterStoreProvider({
 
     // Badges
     addTag: (blockId) => mutTpl((t) => ({ ...t, blocks: mapTree(t.blocks, blockId, (b) => ({ ...b, tags: [...(b.tags || []), { id: uid('tg'), label: '新標籤', color: '#c98a5e' }] })) })),
-    updateTag: (blockId, tagId, k, v) => mutTpl((t) => ({ ...t, blocks: mapTree(t.blocks, blockId, (b) => ({ ...b, tags: (b.tags || []).map((x) => x.id === tagId ? { ...x, [k]: v } : x) })) })),
+    updateTag: (blockId, tagId, k, v) => mutTpl((t) => ({ ...t, blocks: mapTree(t.blocks, blockId, (b) => ({ ...b, tags: (b.tags || []).map((x) => x.id === tagId ? { ...x, [String(k)]: v } : x) })) })),
     removeTag: (blockId, tagId) => mutTpl((t) => ({ ...t, blocks: mapTree(t.blocks, blockId, (b) => ({ ...b, tags: (b.tags || []).filter((x) => x.id !== tagId) })) })),
 
     // Color library

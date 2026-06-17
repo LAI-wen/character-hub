@@ -5,7 +5,8 @@ import { apiClient } from "@/lib/api/client"
 import { charColor } from "@/lib/charColor"
 import { TemplateCanvas, buildDefaultTemplate } from "@/components/TemplateCanvas"
 import type {
-  CanvasCharacter, CanvasSection, CanvasSwatch, CanvasAlbum, CanvasAnnotation
+  CanvasCharacter, CanvasSection, CanvasSwatch, CanvasAlbum, CanvasAnnotation,
+  CanvasTemplate, CanvasDesign,
 } from "@/components/TemplateCanvas"
 import type { Character } from "@oc-tools/contracts"
 
@@ -431,12 +432,11 @@ export function PublicCharacterPage() {
   const accent = character.themeColor ?? charColor(character.id)
   const canvasChar = buildCanvasCharacter(character)
   const gp = (character.generalProfile ?? {}) as Record<string, unknown>
-  type GpTpl = { id: string; name: string; design?: Record<string, unknown>; blocks: unknown[] }
-  const savedTpls = (gp.templates as GpTpl[] | undefined) ?? []
+  const savedTpls = (gp.templates as CanvasTemplate[] | undefined) ?? []
   const publicTplId = gp.publicTplId as string | undefined
   const activeTpl = (publicTplId ? savedTpls.find(t => t.id === publicTplId) : null) ?? savedTpls[0] ?? null
-  const template = activeTpl ?? (gp.template as { blocks: unknown[] } | undefined) ?? buildDefaultTemplate(canvasChar)
-  const design = (activeTpl?.design as Record<string, unknown> | undefined) ?? (gp.design as Record<string, unknown> | undefined) ?? { primary: accent, bg: "#ffffff" }
+  const template = activeTpl ?? buildDefaultTemplate(canvasChar)
+  const design = activeTpl?.design ?? (gp.design as CanvasDesign | undefined) ?? { primary: accent, bg: "#ffffff" }
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", paddingBottom: "var(--s10)" }}>
@@ -446,8 +446,8 @@ export function PublicCharacterPage() {
         <div style={{ maxWidth: 900, margin: "0 auto", padding: "var(--s6) var(--s5) 0" }}>
           <TemplateCanvas
             character={canvasChar}
-            template={template as any}
-            design={design as any}
+            template={template}
+            design={design}
           />
         </div>
       )}

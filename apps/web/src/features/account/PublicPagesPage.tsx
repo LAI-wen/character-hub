@@ -566,7 +566,7 @@ export function PublicPagesPage() {
                 {filteredProjs.map(p => (
                   <ProjCard
                     key={p.id}
-                    proj={p as any}
+                    proj={p}
                     origin={origin}
                     onEditSlug={() => p.slug && setSlugEdit({ type: "project", id: p.id, slug: p.slug!, prefix: "page" })}
                   />

@@ -452,12 +452,12 @@ export function InspirationPage() {
   }
 
   const crumbs = scope === "account"
-    ? ["我的靈感"] as const
-    : [{ label: project.name, href: `/p/${projectId}` }, "靈感匣"] as const
+    ? ["我的靈感"]
+    : [{ label: project.name, href: `/p/${projectId}` }, "靈感匣"]
 
   return (
     <div className="page">
-      <ContextHeader scope={scope === "account" ? "account" : "project"} crumbs={crumbs as any} />
+      <ContextHeader scope={scope === "account" ? "account" : "project"} crumbs={crumbs} />
 
       <div className="pageh">
         <div className="ht">
