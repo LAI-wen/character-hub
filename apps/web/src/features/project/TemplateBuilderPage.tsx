@@ -128,7 +128,7 @@ export function TemplateBuilderPage() {
     const gp = (c.generalProfile ?? {}) as Record<string, unknown>
     return {
       name: c.name || "角色",
-      tagline: c.tagline || "",
+      tagline: (gp.tagline as string | undefined) || c.tagline || "",
       avatarUrl: c.avatarUrl || undefined,
       mainVisualUrl: (gp.mainVisualUrl as string | undefined) || undefined,
       sections: (gp.sections as CanvasSection[] | undefined) ?? [],
