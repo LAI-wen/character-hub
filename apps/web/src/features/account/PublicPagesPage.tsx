@@ -292,6 +292,14 @@ function CharCard({
               {char.slug ? <span style={{ fontFamily: "var(--font-mono)" }}>/c/{char.slug}</span> : "尚無連結"}
             </span>
           )}
+          {vis !== "private" && !char.slug && (
+            <button
+              onClick={onEditSlug}
+              style={{ padding: "2px 8px", borderRadius: "var(--r-btn)", border: "1px solid var(--warn, #e0a83c)", background: "var(--warn-soft, #fdf6e3)", color: "var(--warn-text, #9a6f00)", cursor: "pointer", fontSize: 11, fontWeight: 700 }}
+            >
+              請設定連結
+            </button>
+          )}
           {char.slug && (
             <button
               onClick={onEditSlug}
@@ -638,6 +646,14 @@ function ProjCard({
             <span style={{ fontSize: 11.5, color: "var(--text-faint)", fontFamily: "var(--font-mono)" }}>
               {proj.slug ? `/page/${proj.slug}` : "尚無連結"}
             </span>
+          )}
+          {vis !== "private" && !proj.slug && (
+            <button
+              onClick={onEditSlug}
+              style={{ padding: "2px 8px", borderRadius: "var(--r-btn)", border: "1px solid var(--warn, #e0a83c)", background: "var(--warn-soft, #fdf6e3)", color: "var(--warn-text, #9a6f00)", cursor: "pointer", fontSize: 11, fontWeight: 700 }}
+            >
+              請設定連結
+            </button>
           )}
           {proj.slug && (
             <button

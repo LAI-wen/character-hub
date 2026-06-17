@@ -7,6 +7,7 @@ import { ContextHeader } from "@/components/ContextHeader"
 import { useProjectContext } from "@/routes/layouts/ProjectLayout"
 import { CreateRelationshipModal } from "./CreateRelationshipModal"
 import { typeColor } from "@/lib/worldviewTypes"
+import { charColor } from "@/lib/charColor"
 import type {
   Relationship,
   RelationshipGroup,
@@ -18,14 +19,6 @@ import type {
 } from "@oc-tools/contracts"
 
 // ── helpers ───────────────────────────────────────────────────────────────────
-
-function charColor(id: string): string {
-  const P = ["#3B5E6B","#8B5E3C","#5E7E55","#7B5EA7","#B5654A",
-             "#4A7B8C","#6B4A1E","#9E332B","#3B6B5E","#8A6FA0"]
-  let h = 0
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) & 0xffffffff
-  return P[Math.abs(h) % P.length]
-}
 
 const ENTITY_GLYPH: Record<string, string> = {
   org:"▣", event:"✦", place:"⬟", nation:"◉", faction:"◈",
