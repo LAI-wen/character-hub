@@ -25,6 +25,7 @@ export function GlobalGalleryPage() {
 
   const assets = data?.assets ?? []
   const totalBytes = data?.totalBytes ?? assets.reduce((s, a) => s + (a.sizeBytes ?? 0), 0)
+  const limitBytes = data?.limitBytes ?? 500 * 1024 * 1024
 
   const projects = useMemo(() => {
     const map = new Map<string, string>()
@@ -53,7 +54,10 @@ export function GlobalGalleryPage() {
         sub="你所有企劃的圖片一覽。"
         action={
           totalBytes > 0
-            ? <span style={{ fontSize: 13, color: "var(--text-faint)" }}>已使用 {fmtBytes(totalBytes)}</span>
+            ? <span style={{ fontSize: 13, color: "var(--text-faint)" }}>
+                已使用 {fmtBytes(totalBytes)} / {fmtBytes(limitBytes)}
+                {" "}({Math.round(totalBytes / limitBytes * 100)}%)
+              </span>
             : undefined
         }
       />

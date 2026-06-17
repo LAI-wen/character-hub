@@ -20,5 +20,6 @@ export type Asset = z.infer<typeof AssetSchema>
 export const AssetListResponseSchema = z.object({
   assets: z.array(AssetSchema),
   totalBytes: z.number().optional(),
+  limitBytes: z.number().optional(),
 })
 export type AssetListResponse = z.infer<typeof AssetListResponseSchema>

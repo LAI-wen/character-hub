@@ -1960,7 +1960,7 @@ appApiRouter.get('/assets', async (c) => {
      ORDER BY a.created_at DESC`,
     [user.sub]);
   const totalBytes = rows.reduce((s, r) => s + (r.size_bytes ?? 0), 0);
-  return c.json({ assets: rows.map(mapAsset), totalBytes });
+  return c.json({ assets: rows.map(mapAsset), totalBytes, limitBytes: 500 * 1024 * 1024 });
 });
 
 // Account storage usage
