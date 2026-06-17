@@ -66,8 +66,7 @@ authRouter.post('/register', async (c) => {
     'UPDATE invite_codes SET used_by_user_id = ?, used_at = ? WHERE id = ?',
   ).bind(id, new Date().toISOString(), inviteRow.id).run();
 
-  const [accessToken, refreshToken, sessionToken] = await Promise.all([
-    signAccessToken(id, handle, c.env.JWT_SECRET),
+  const [refreshToken, sessionToken] = await Promise.all([
     signRefreshToken(id, handle, c.env.JWT_SECRET),
     signSessionToken(id, handle, c.env.JWT_SECRET),
   ]);
@@ -86,8 +85,7 @@ authRouter.post('/login', async (c) => {
   if (!user || !user.password_hash) return errorResponse(c, 401, 'UNAUTHORIZED', 'Invalid credentials');
   if (!await verifyPassword(password, user.password_hash)) return errorResponse(c, 401, 'UNAUTHORIZED', 'Invalid credentials');
 
-  const [accessToken, refreshToken, sessionToken] = await Promise.all([
-    signAccessToken(user.id, user.username, c.env.JWT_SECRET),
+  const [refreshToken, sessionToken] = await Promise.all([
     signRefreshToken(user.id, user.username, c.env.JWT_SECRET),
     signSessionToken(user.id, user.username, c.env.JWT_SECRET),
   ]);
