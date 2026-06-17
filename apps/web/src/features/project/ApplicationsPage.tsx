@@ -89,6 +89,7 @@ export function ApplicationsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["project", projectId, "characters"] })
     },
+    onError: () => alert('操作失敗，請稍後再試'),
   })
 
   function handleApprove(linkId: string) {

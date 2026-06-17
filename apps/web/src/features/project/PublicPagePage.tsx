@@ -44,6 +44,7 @@ export function PublicPagePage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["project", projectId, "public-page"] })
     },
+    onError: () => alert('更新失敗，請稍後再試'),
   })
 
   const page = data?.publicPage

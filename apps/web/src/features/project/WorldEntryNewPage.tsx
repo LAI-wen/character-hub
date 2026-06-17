@@ -61,6 +61,7 @@ export function WorldEntryNewPage() {
       queryClient.invalidateQueries({ queryKey: ["project", projectId, "world-entries"] })
       navigate(`/p/${projectId}/worldview/${data.entry.id}`)
     },
+    onError: () => alert('建立失敗，請稍後再試'),
   })
 
   const color = typeColor(watchedType)

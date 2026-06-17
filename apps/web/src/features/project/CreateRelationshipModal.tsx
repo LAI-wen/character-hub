@@ -91,6 +91,7 @@ export function CreateRelationshipModal({
       qc.invalidateQueries({ queryKey: ["project", projectId, "relationships"] })
       onClose()
     },
+    onError: () => alert('儲存關係失敗，請稍後再試'),
   })
 
   const srcName = srcRef

@@ -97,6 +97,7 @@ export function TemplateBuilderPage() {
       queryClient.invalidateQueries({ queryKey: ["project", projectId, "template"] })
       setDirty(false)
     },
+    onError: () => alert('儲存模板失敗，請稍後再試'),
   })
 
   // ── Remote: character list ────────────────────────────────────────────────
