@@ -71,11 +71,12 @@ export function CreateRelationshipModal({
           },
         )
       }
+      if (!srcRef || !tgtRef) return Promise.reject(new Error('Source and target required'))
       return apiClient<RelationshipResponse>(`/api/app/projects/${projectId}/relationships`, {
         method: "POST",
         body: {
-          sourceRef: srcRef!,
-          targetRef: tgtRef!,
+          sourceRef: srcRef,
+          targetRef: tgtRef,
           label: label.trim(),
           type: relType.trim() || label.trim(),
           description: desc.trim() || undefined,
