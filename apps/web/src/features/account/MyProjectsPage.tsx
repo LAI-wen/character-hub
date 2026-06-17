@@ -47,6 +47,7 @@ export function MyProjectsPage() {
       setName(""); setDesc(""); setColor(THEME_COLORS[0])
       navigate(`/p/${res.project.id}/overview`)
     },
+    onError: () => alert('建立企劃失敗，請稍後再試'),
   })
 
   const deleteMutation = useMutation({
