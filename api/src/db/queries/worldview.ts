@@ -56,6 +56,6 @@ export function createEntryRel(db: D1Database, id: string, entryId: string, targ
   ).bind(id, entryId, targetEntryId, kind).run();
 }
 
-export function deleteEntryRel(db: D1Database, id: string) {
-  return db.prepare('DELETE FROM worldview_entry_rels WHERE id = ?').bind(id).run();
+export function deleteEntryRel(db: D1Database, id: string, entryId: string) {
+  return db.prepare('DELETE FROM worldview_entry_rels WHERE id = ? AND entry_id = ?').bind(id, entryId).run();
 }

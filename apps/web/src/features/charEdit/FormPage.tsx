@@ -16,7 +16,7 @@ const TABS: { key: FormTab; label: string }[] = [
 ]
 
 export function FormPage() {
-  const { ui, activeTemplate, character, setFormTab, resetDemo, clearAll, openFormTpl, saving } = useCharacterStore()
+  const { ui, activeTemplate, character, setFormTab, resetDemo, clearAll, openFormTpl, saving, saveError } = useCharacterStore()
   const tab = ui.formTab
 
   return (
@@ -28,8 +28,8 @@ export function FormPage() {
             <p style={{ margin: '6px 0 0', fontSize: 14, color: 'var(--text-2)' }}>區塊與欄位都能自由新增、改名、刪除。右側即時預覽。</p>
           </div>
           <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
-            <span title="自動儲存" style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-2)', display: 'inline-flex', alignItems: 'center', gap: 5, padding: '8px 4px', opacity: 0.85 }}>
-              <Icon name="check" size={14} /> {saving ? '儲存中…' : '已儲存'}
+            <span title="自動儲存" style={{ fontSize: 12.5, fontWeight: 600, color: saveError ? 'var(--avoid)' : 'var(--text-2)', display: 'inline-flex', alignItems: 'center', gap: 5, padding: '8px 4px', opacity: 0.85 }}>
+              <Icon name={saveError ? 'warn' : 'check'} size={14} /> {saving ? '儲存中…' : saveError ? '儲存失敗，請檢查網路' : '已儲存'}
             </span>
             <button style={ghostBtn()} onClick={openFormTpl}><Icon name="save" size={14} /> 備份與格式</button>
             <button style={ghostBtn()} onClick={resetDemo}><Icon name="rotate" size={14} /> 載入範例</button>

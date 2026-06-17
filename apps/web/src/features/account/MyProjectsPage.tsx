@@ -55,6 +55,7 @@ export function MyProjectsPage() {
       qc.invalidateQueries({ queryKey: ["projects"] })
       setDeleteId(null)
     },
+    onError: () => alert('刪除失敗，請稍後再試'),
   })
 
   return (

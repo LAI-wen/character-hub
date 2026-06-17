@@ -690,7 +690,8 @@ export function CharacterDetailPage() {
     palette:       (gp.palette as CanvasSwatch[] | undefined) ?? [],
     albums:        (gp.albums as CanvasAlbum[] | undefined) ?? [],
   }
-  const template = (gp.template as { blocks: unknown[] } | undefined) ?? buildDefaultTemplate(canvasChar)
+  const templates = (gp.templates as Array<{ blocks: unknown[] }> | undefined) ?? []
+  const template = templates[0] ?? buildDefaultTemplate(canvasChar)
   const design   = (gp.design as Record<string, unknown> | undefined) ?? { primary: color, bg: "#ffffff" }
 
   const albums = (gp.albums as CanvasAlbum[] | undefined) ?? []
@@ -761,6 +762,17 @@ export function CharacterDetailPage() {
           </button>
         </div>
       </div>
+
+      {/* ── Slug fallback warning ── */}
+      {character.visibility !== "private" && character.slug && /^character-[0-9a-f]{8}$/.test(character.slug) && (
+        <div style={{ background: "var(--warn-soft, #FFF8E1)", border: "1px solid var(--warn, #F0C040)", borderRadius: 10, padding: "10px 14px", fontSize: 13, color: "var(--text)", marginBottom: 4, display: "flex", gap: 10, alignItems: "flex-start" }}>
+          <span>⚠️</span>
+          <span>
+            公開網址目前是自動生成的亂碼（<code>/c/{character.slug}</code>）。
+            {" "}<Link to={`/characters/${charId}/edit`} style={{ color: "var(--accent-ink)", fontWeight: 600 }}>前往編輯</Link>，在「Romaji / 代稱」欄位填入英文名稱即可改成漂亮的網址。
+          </span>
+        </div>
+      )}
 
       {/* ── Tab navigation ── */}
       <TabStrip

@@ -283,6 +283,7 @@ export function StoryPage() {
       setCreateTitle("")
       setCreateDesc("")
     },
+    onError: () => alert('建立故事失敗，請稍後再試'),
   })
 
   const createChapterMutation = useMutation({
@@ -297,6 +298,7 @@ export function StoryPage() {
       setAddChOpen(false)
       setAddChTitle("")
     },
+    onError: () => alert('建立分章失敗，請稍後再試'),
   })
 
   const patchChapterMutation = useMutation({

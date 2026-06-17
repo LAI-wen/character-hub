@@ -85,8 +85,8 @@ export function AlbumsEditor({ kind }: { kind: AlbumKind }) {
                         </button>
                         {kind === 'ref' ? (
                           <button onClick={() => openAnnot(al.id, im.id)}
-                            style={{ fontSize: 12, fontWeight: 700, color: im.annotations.length ? '#fff' : 'var(--text-2)', background: im.annotations.length ? 'var(--accent)' : 'var(--bg-3)', border: '1px solid var(--border)', borderRadius: 8, padding: '7px 10px', cursor: 'pointer', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: 5, justifyContent: 'center' }}>
-                            <Icon name="pin" size={13} /> 標記 {im.annotations.length || ''}
+                            style={{ fontSize: 12, fontWeight: 700, color: (im.annotations ?? []).length ? '#fff' : 'var(--text-2)', background: (im.annotations ?? []).length ? 'var(--accent)' : 'var(--bg-3)', border: '1px solid var(--border)', borderRadius: 8, padding: '7px 10px', cursor: 'pointer', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: 5, justifyContent: 'center' }}>
+                            <Icon name="pin" size={13} /> 標記 {(im.annotations ?? []).length || ''}
                           </button>
                         ) : null}
                         <button onClick={() => removeImage(al.id, im.id)}

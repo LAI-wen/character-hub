@@ -5,10 +5,6 @@ export function OAuthCallbackPage() {
   const [searchParams] = useSearchParams()
 
   useEffect(() => {
-    const token = searchParams.get("token")
-    if (token) {
-      sessionStorage.setItem("access_token", token)
-    }
     window.location.replace("/workspace")
   }, [searchParams])
 

@@ -74,7 +74,7 @@ interface UIState {
 
 export interface CharacterStore {
   character: Character; ui: UIState; activeTemplate: Template | null
-  saving: boolean; charId: string
+  saving: boolean; saveError: boolean; charId: string
   setDesignMode: (m: DesignMode) => void
   setDevice: (d: DeviceKey) => void
   setAnnotateMode: (m: AnnotateMode) => void
@@ -215,6 +215,7 @@ export function CharacterStoreProvider({
   const [char, setCharRaw] = useState<Character>(EMPTY_CHAR)
   const [ui, setUi] = useState<UIState>(DEFAULT_UI)
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState(false)
   const [formTemplates, setFormTemplates] = useState<FormTemplate[]>(() => [
     ...BUILTIN_FORMS,
     ...loadForms(),
@@ -261,6 +262,7 @@ export function CharacterStoreProvider({
       const c = pendingChar.current
       const existingGp = (apiCharRef.current?.generalProfile ?? {}) as Record<string, unknown>
       setSaving(true)
+      setSaveError(false)
       try {
         await apiClient(`/api/app/characters/${charId}`, {
           method: 'PATCH',
@@ -281,6 +283,8 @@ export function CharacterStoreProvider({
         })
         qc.invalidateQueries({ queryKey: ['character', charId] })
         qc.invalidateQueries({ queryKey: ['characters'] })
+      } catch {
+        setSaveError(true)
       } finally {
         setSaving(false)
       }
@@ -336,6 +340,7 @@ export function CharacterStoreProvider({
     ui,
     activeTemplate,
     saving,
+    saveError,
     charId,
 
     // UI
@@ -745,7 +750,7 @@ export function CharacterStoreProvider({
       setChar(() => clone(c))
       patchUi({ selBlock: null })
     },
-  }), [char, ui, activeTemplate, saving, charId, mutTpl, patchUi, setChar, formTemplates, persistForms, uploadFile])
+  }), [char, ui, activeTemplate, saving, saveError, charId, mutTpl, patchUi, setChar, formTemplates, persistForms, uploadFile])
 
   return <Ctx.Provider value={store}>{children}</Ctx.Provider>
 }

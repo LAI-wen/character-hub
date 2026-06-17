@@ -530,7 +530,20 @@ export function TemplateBuilderPage() {
   )
 
   // ── Add panel ─────────────────────────────────────────────────────────────
-  const addPanel = (
+  const addPanel = activeTpl === null ? (
+    <div style={{ border: "1.5px dashed var(--border)", borderRadius: 14, padding: "20px 16px", textAlign: "center", color: "var(--text-2)", fontSize: 13, lineHeight: 1.7 }}>
+      <div style={{ fontSize: 22, marginBottom: 8 }}>📄</div>
+      <p style={{ margin: "0 0 12px", fontWeight: 600, color: "var(--text)" }}>請先建立模板</p>
+      <p style={{ margin: "0 0 14px" }}>點下方「＋ 新增模板」建立起始版型後，才能加入積木。</p>
+      <button
+        className="btn btn-accent"
+        onClick={() => setPickOpen(true)}
+        style={{ fontSize: 13 }}
+      >
+        ＋ 新增模板
+      </button>
+    </div>
+  ) : (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       {(["info", "layout"] as const).map(grp => {
         const open = addGroup === grp

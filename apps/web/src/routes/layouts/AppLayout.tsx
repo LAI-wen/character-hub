@@ -166,9 +166,9 @@ export function AppLayout() {
       {/* Sidebar */}
       <aside className={"appsb" + (sidebarOpen ? " open" : "")}>
         {/* Brand */}
-        <a className="sb-brand" href="/workspace">
+        <Link className="sb-brand" to="/workspace">
           <img src="/logo.png" alt="CharacterHub" className="sb-logo" />
-        </a>
+        </Link>
 
         {/* Search → opens command palette */}
         <button className="sb-search" onClick={() => setCmdOpen(true)}>
@@ -293,9 +293,9 @@ export function AppLayout() {
           <button className="burger" onClick={() => setSidebarOpen(v => !v)} aria-label={t("nav.mySpace")}>
             ☰
           </button>
-          <a className="mt-brand" href="/workspace">
+          <Link className="mt-brand" to="/workspace">
             <img src="/logo.png" alt="CharacterHub" className="sb-logo" style={{ height: 28 }} />
-          </a>
+          </Link>
         </div>
         <Outlet />
       </main>

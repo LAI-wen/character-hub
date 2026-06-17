@@ -20,6 +20,7 @@ id = "2c05fc09df2c4619ba0531ba62e355ce"
 FRONTEND_URL = "https://oc-tools-8g5.pages.dev"
 INVITE_LIMIT = "5"
 INVITE_ADMIN_IDS = "b7848b7e-8476-418c-a96a-c55097e281f6"
+APP_ENV = "production"
 
 [dev]
 port = 8787

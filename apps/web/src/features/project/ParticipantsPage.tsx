@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useParams } from "react-router-dom"
 import { ContextHeader } from "@/components/ContextHeader"
 import { PageHeader } from "@/components/PageHeader"
@@ -282,8 +282,22 @@ function MemberDetailPane({
 
 // ── Permission panel ───────────────────────────────────────────────────────────
 
-function PermPane({ member }: { member: Member | null }) {
+function PermPane({ member, projectId }: { member: Member | null; projectId: string }) {
   const [overrides, setOverrides] = useState<Record<string, PermEffect>>({})
+  const qc = useQueryClient()
+
+  const saveMutation = useMutation({
+    mutationFn: (permissions: Record<string, PermEffect>) =>
+      apiClient(`/api/app/projects/${projectId}/members/${member!.id}`, {
+        method: 'PATCH',
+        body: { permissions },
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['project', projectId, 'members'] })
+      setOverrides({})
+    },
+    onError: () => alert('儲存失敗，請稍後再試'),
+  })
 
   if (!member) {
     return (
@@ -388,12 +402,12 @@ function PermPane({ member }: { member: Member | null }) {
           <>
             <button
               className="btn btn-accent"
-              disabled={dirtyCount === 0}
-              onClick={reset}
+              disabled={dirtyCount === 0 || saveMutation.isPending}
+              onClick={() => saveMutation.mutate(overrides)}
             >
-              儲存權限{dirtyCount > 0 ? `（${dirtyCount}）` : ""}
+              {saveMutation.isPending ? "儲存中⋯" : `儲存權限${dirtyCount > 0 ? `（${dirtyCount}）` : ""}`}
             </button>
-            <button className="btn" onClick={reset}>
+            <button className="btn" disabled={saveMutation.isPending} onClick={reset}>
               恢復角色預設
             </button>
           </>
@@ -463,7 +477,7 @@ export function ParticipantsPage() {
               member={selected}
               projectName={project.name}
             />
-            <PermPane member={selected} />
+            <PermPane member={selected} projectId={projectId!} />
           </div>
         </>
       )}

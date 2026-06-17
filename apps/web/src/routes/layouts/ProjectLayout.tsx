@@ -48,7 +48,7 @@ export function ProjectLayout() {
   }
 
   const project = data.project
-  const role: ProjectRole = (data.viewerRole as ProjectRole) ?? "owner"
+  const role: ProjectRole = (data.viewerRole as ProjectRole) ?? "viewer"
   const stats = data.stats ?? null
 
   return (

@@ -1044,6 +1044,34 @@ appApiRouter.get('/projects/:projectId/members', async (c) => {
   return c.json({ members: rows.map(r => ({ id: r.id, userId: r.user_id, role: r.role, status: r.status, joinedAt: r.joined_at, displayName: r.display_name, handle: r.handle, charCount: r.char_count, isCurrentUser: r.user_id === user.sub })), viewerIsOwner: isOwner });
 });
 
+const updateMemberSchema = z.object({
+  permissions: z.record(z.string(), z.enum(['allow', 'deny'])).optional(),
+  role: z.enum(['host', 'cohost', 'member', 'viewer']).optional(),
+});
+
+appApiRouter.patch('/projects/:projectId/members/:memberId', async (c) => {
+  const db = getDb(c);
+  const { project, viewerRole } = await getVisibleProject(c, c.req.param('projectId'), 'project:view');
+  await requirePermission(c, 'project:manage_settings', { projectId: project.id, viewerRole });
+  const input = await validateJson(c, updateMemberSchema);
+  const memberId = c.req.param('memberId');
+  const member = await first<{ id: string; role: string }>(db,
+    'SELECT id, role FROM project_members WHERE id = ? AND project_id = ? AND removed_at IS NULL',
+    [memberId, project.id]);
+  if (!member) throw new AppHttpError(404, 'NOT_FOUND', 'Member not found');
+  if (member.role === 'owner') throw new AppHttpError(403, 'FORBIDDEN', 'Cannot modify owner permissions');
+  const now = nowIso();
+  const sets: string[] = ['updated_at = ?'];
+  const vals: unknown[] = [now];
+  if (input.permissions !== undefined) { sets.push('permissions_json = ?'); vals.push(JSON.stringify(input.permissions)); }
+  if (input.role !== undefined) { sets.push('role = ?'); vals.push(input.role); }
+  if (sets.length > 1) {
+    vals.push(memberId);
+    await run(db, `UPDATE project_members SET ${sets.join(', ')} WHERE id = ?`, vals);
+  }
+  return c.json({ ok: true });
+});
+
 appApiRouter.patch('/projects/:projectId', async (c) => {
   const db = getDb(c);
   const { project, viewerRole } = await getVisibleProject(c, c.req.param('projectId'), 'project:view');
@@ -2050,7 +2078,7 @@ appApiRouter.post('/projects/:projectId/story-events', async (c) => {
   const db = getDb(c);
   const { project } = await getVisibleProject(c, c.req.param('projectId'), 'event:create');
   const input = await validateJson(c, createEventSchema);
-  const id = genId();
+  const id = crypto.randomUUID();
   const now = nowIso();
   await run(db,
     `INSERT INTO story_events (id, project_id, story_id, title, summary, time_label, sort_key, visibility, created_at, updated_at)
@@ -2510,7 +2538,7 @@ appApiRouter.all('/commissions/*', (c) => notImplemented(c, 'CommissionRepositor
 appApiRouter.get('/search', async (c) => {
   const db = getDb(c);
   await requirePermission(c, 'authenticated');
-  const viewer = c.get('viewer')!;
+  const viewer = c.get('user')!;
   const q = (c.req.query('q') ?? '').trim();
   if (!q || q.length < 1) return c.json({ results: [] });
 
@@ -2523,7 +2551,7 @@ appApiRouter.get('/search', async (c) => {
      WHERE c.owner_user_id = ? AND c.archived_at IS NULL
        AND (c.name LIKE ? OR c.species LIKE ? OR c.summary LIKE ?)
      ORDER BY c.name ASC LIMIT 8`,
-    [viewer.id, like, like, like],
+    [viewer.sub, like, like, like],
   );
 
   const projects = await all<{ id: string; name: string; slug: string; theme_color: string | null }>(
@@ -2534,7 +2562,7 @@ appApiRouter.get('/search', async (c) => {
      WHERE p.archived_at IS NULL
        AND (p.name LIKE ? OR p.description LIKE ?)
      ORDER BY p.name ASC LIMIT 5`,
-    [viewer.id, like, like],
+    [viewer.sub, like, like],
   );
 
   const entries = await all<{ id: string; title: string; type: string; project_id: string; project_name: string }>(
@@ -2546,7 +2574,7 @@ appApiRouter.get('/search', async (c) => {
      WHERE we.archived_at IS NULL
        AND (we.title LIKE ? OR we.summary LIKE ?)
      ORDER BY we.title ASC LIMIT 8`,
-    [viewer.id, like, like],
+    [viewer.sub, like, like],
   );
 
   const results = [

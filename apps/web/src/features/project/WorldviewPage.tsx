@@ -248,6 +248,7 @@ export function WorldviewPage() {
         json: { parentId },
       }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["project", projectId, "world-entries"] }),
+    onError: () => alert('移動失敗，請稍後再試'),
   })
 
   const reorderMutation = useMutation({
@@ -260,6 +261,7 @@ export function WorldviewPage() {
       ))
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["project", projectId, "world-entries"] }),
+    onError: () => alert('排序儲存失敗，請稍後再試'),
   })
 
   const allEntries = data?.entries ?? []

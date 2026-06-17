@@ -116,6 +116,6 @@ worldviewRouter.delete('/:id/rels/:relId', requireAuth, async (c) => {
   const entry = await getEntryById(c.env.DB, c.req.param('id'));
   if (!entry) return errorResponse(c, 404, 'NOT_FOUND', 'Entry not found');
   if (entry.user_id !== sub) return errorResponse(c, 403, 'FORBIDDEN', 'Access denied');
-  await deleteEntryRel(c.env.DB, c.req.param('relId'));
+  await deleteEntryRel(c.env.DB, c.req.param('relId'), entry.id);
   return c.json({ ok: true });
 });
