@@ -16,14 +16,17 @@ interface Props {
 
 export function CharBackupModal({ charName: _charName, sections, onExport, onImport, onApplySections, onClose }: Props) {
   const [formTemplates, setFormTemplates] = useState<FormTemplate[]>(() => [...BUILTIN_FORMS, ...loadForms()])
+  const [savingName, setSavingName] = useState<string | null>(null)
 
   const persist = (list: FormTemplate[]) => { setFormTemplates(list); saveForms(list) }
 
-  const saveCurrentAsTemplate = () => {
-    const name = prompt('格式名稱？')
-    if (!name) return
-    const tpl: FormTemplate = { id: uid(), name, sections: schemaFromSections(sections) }
+  const saveCurrentAsTemplate = () => setSavingName("")
+
+  const confirmSaveName = () => {
+    if (!savingName) return
+    const tpl: FormTemplate = { id: uid(), name: savingName, sections: schemaFromSections(sections) }
     persist([...formTemplates, tpl])
+    setSavingName(null)
   }
 
   const applyTemplate = async (t: FormTemplate) => {
@@ -100,6 +103,20 @@ export function CharBackupModal({ charName: _charName, sections, onExport, onImp
             <button style={ghost} onClick={importTemplate}>匯入格式</button>
             <button style={ghost} onClick={exportTemplate}>匯出格式</button>
           </div>
+          {savingName !== null && (
+            <div style={{ display: 'flex', gap: 7, alignItems: 'center', marginBottom: 12 }}>
+              <input
+                autoFocus
+                value={savingName}
+                onChange={e => setSavingName(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') confirmSaveName(); if (e.key === 'Escape') setSavingName(null) }}
+                placeholder="格式名稱"
+                style={{ flex: 1, fontFamily: 'inherit', fontSize: 13.5, padding: '8px 10px', borderRadius: 9, border: '1px solid var(--border)', background: 'var(--bg-3)', color: 'var(--text)', outline: 'none' }}
+              />
+              <button style={softBtn} onClick={confirmSaveName} disabled={!savingName}>儲存</button>
+              <button style={ghost} onClick={() => setSavingName(null)}>取消</button>
+            </div>
+          )}
           <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-dim)', marginBottom: 9 }}>套用格式</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
             {formTemplates.map((t) => (

@@ -77,6 +77,8 @@ export function SectionsEditor({ group }: { group: SectionGroup }) {
             <button style={addBtn} onClick={() => addField(sec.id, 'tags')}>＋ 標籤</button>
             <button style={addBtn} onClick={() => addField(sec.id, 'check')}>＋ 必畫重點 ✓</button>
             <button style={addBtn} onClick={() => addField(sec.id, 'avoid')}>＋ 不可畫錯 ✕</button>
+            <button style={addBtn} onClick={() => addField(sec.id, 'attr')}>＋ 屬性表</button>
+            <button style={addBtn} onClick={() => addField(sec.id, 'object')}>＋ 物件</button>
           </div>
         </Card>
       ))}
