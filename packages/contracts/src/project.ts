@@ -25,8 +25,9 @@ export type Project = z.infer<typeof ProjectSchema>
 
 export const CreateProjectSchema = z.object({
   name: z.string().min(1).max(100),
-  slug: z.string().min(1).max(50).regex(/^[a-z0-9-]+$/),
+  slug: z.string().min(1).max(120).regex(/^[a-z0-9-]+$/).optional(),
   description: z.string().max(1000).optional(),
+  themeColor: z.string().max(32).optional(),
   visibility: VisibilitySchema.default("private"),
   enabledFeatures: z.array(FeatureSchema).optional(),
 })

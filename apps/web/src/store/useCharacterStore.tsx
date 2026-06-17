@@ -181,6 +181,27 @@ function normalizeAlbums(albums: unknown): Album[] {
   }))
 }
 
+const VALID_GROUPS = new Set<SectionGroup>(['text', 'image'])
+const VALID_FIELD_TYPES = new Set<FieldType>(['text', 'longtext', 'tags', 'check', 'avoid', 'attr', 'object'])
+
+function sanitizeSections(raw: unknown): Section[] {
+  if (!Array.isArray(raw)) return []
+  return raw.flatMap((s) => {
+    if (!s || typeof s !== 'object') return []
+    const sec = s as Record<string, unknown>
+    const group: SectionGroup = VALID_GROUPS.has(sec.group as SectionGroup) ? (sec.group as SectionGroup) : 'text'
+    const fields: Field[] = Array.isArray(sec.fields)
+      ? sec.fields.flatMap((f) => {
+          if (!f || typeof f !== 'object') return []
+          const fld = f as Record<string, unknown>
+          const type: FieldType = VALID_FIELD_TYPES.has(fld.type as FieldType) ? (fld.type as FieldType) : 'text'
+          return [{ id: typeof fld.id === 'string' ? fld.id : uid(), label: typeof fld.label === 'string' ? fld.label : '', type, value: typeof fld.value === 'string' ? fld.value : '' }]
+        })
+      : []
+    return [{ id: typeof sec.id === 'string' ? sec.id : uid(), title: typeof sec.title === 'string' ? sec.title : '', group, fields }]
+  })
+}
+
 const DEMO: Character = {
   name: '莉央', nickname: '小央',
   tagline: '我把每一個願望，都記在星圖上。',
@@ -713,6 +734,7 @@ export function CharacterStoreProvider({
             ) as Partial<Character>
             const c: Character = {
               ...editable,
+              sections: sanitizeSections(obj.sections),
               avatarUrl: safeUrl(obj.avatarUrl),
               mainVisualUrl: safeUrl(obj.mainVisualUrl),
               albums: normalizeAlbums((obj as Character).albums),
