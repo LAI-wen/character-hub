@@ -272,6 +272,7 @@ function ConnectedAccountsPanel() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["account", "connected"] })
     },
+    onError: () => alert('解除連結失敗，請稍後再試'),
   })
 
   const accounts = data?.accounts ?? []
@@ -371,6 +372,7 @@ function InviteCodesPanel() {
   const createMutation = useMutation({
     mutationFn: () => apiClient<{ invite: InviteCode }>("/api/app/account/invites", { method: "POST" }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["account", "invites"] }),
+    onError: () => alert('邀請碼產生失敗，請稍後再試'),
   })
 
   function copyCode(invite: InviteCode) {
@@ -598,6 +600,7 @@ function usePreferences() {
     mutationFn: (patch: Preferences) =>
       apiClient<Preferences>("/api/app/account/preferences", { method: "PATCH", body: patch }),
     onSuccess: (updated) => qc.setQueryData(PREFS_QK, updated),
+    onError: () => alert('儲存偏好設定失敗，請稍後再試'),
   })
   return { prefs: data ?? {}, save: mutation.mutate, isPending: mutation.isPending, isError: mutation.isError }
 }
@@ -1027,6 +1030,7 @@ export function AccountSettingsPage() {
       qc.setQueryData(["account", "profile"], data)
       setDirty(false)
     },
+    onError: () => alert('儲存個人資料失敗，請稍後再試'),
   })
 
   function discard() {
