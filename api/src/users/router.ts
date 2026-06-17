@@ -15,7 +15,7 @@ const patchMeSchema = z.object({
   avatar_url: z.string().url().optional().nullable(),
   accent_color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
   social_links: z.array(z.object({ platform: z.string(), url: z.string() })).max(10).optional(),
-  notification_prefs: z.record(z.object({ email: z.boolean(), discord: z.boolean() })).optional(),
+  notification_prefs: z.record(z.string(), z.object({ email: z.boolean(), discord: z.boolean() })).optional(),
 });
 
 usersRouter.get('/me', requireAuth, async (c) => {

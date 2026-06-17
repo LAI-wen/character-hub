@@ -34,7 +34,7 @@ const features = {
   permissions: 'permissions',
 };
 
-const jsonObject = z.record(z.unknown());
+const jsonObject = z.record(z.string(), z.unknown());
 const optionalJsonObject = jsonObject.nullable().optional();
 const optionalStringArray = z.array(z.string()).optional();
 
@@ -2466,9 +2466,9 @@ function mapPublicPage(row: PublicPageRow) {
 
 const updatePublicPageSchema = z.object({
   status: z.enum(['draft', 'published', 'disabled']).optional(),
-  draftJson: z.record(z.unknown()).optional(),
-  settings: z.record(z.unknown()).optional(),
-  theme: z.record(z.unknown()).optional(),
+  draftJson: z.record(z.string(), z.unknown()).optional(),
+  settings: z.record(z.string(), z.unknown()).optional(),
+  theme: z.record(z.string(), z.unknown()).optional(),
 });
 
 appApiRouter.get('/projects/:projectId/public-page', async (c) => {
@@ -2788,7 +2788,7 @@ const prefsSchema = z.object({
     cap:       z.enum(['2', '3', '5', '0']).optional(),
     usage:     z.enum(['personal', 'commercial']).optional(),
     autoReply: z.string().max(800).optional(),
-    perms:     z.record(z.boolean()).optional(),
+    perms:     z.record(z.string(), z.boolean()).optional(),
   }).optional(),
   privacy: z.object({
     defaultVisibility: z.enum(['public', 'unlisted', 'password', 'private']).optional(),
@@ -2796,7 +2796,7 @@ const prefsSchema = z.object({
     seo:       z.boolean().optional(),
     branding:  z.boolean().optional(),
   }).optional(),
-  notifications: z.record(z.object({ email: z.boolean(), discord: z.boolean() })).optional(),
+  notifications: z.record(z.string(), z.object({ email: z.boolean(), discord: z.boolean() })).optional(),
 }).strict();
 
 appApiRouter.get('/account/preferences', async (c) => {
