@@ -131,7 +131,7 @@ export function MyProjectsPage() {
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-h">
               <h2>建立新企劃</h2>
-              <button className="modal-close" onClick={() => setShowModal(false)}>✕</button>
+              <button className="modal-close" aria-label="關閉" onClick={() => setShowModal(false)}>✕</button>
             </div>
             <div className="modal-body">
               <div className="set-row set-row-compact" style={{ paddingTop: 0 }}>
@@ -200,7 +200,7 @@ export function MyProjectsPage() {
           <div className="modal modal-sm" onClick={e => e.stopPropagation()}>
             <div className="modal-h">
               <h2>刪除企劃？</h2>
-              <button className="modal-close" onClick={() => setDeleteId(null)}>✕</button>
+              <button className="modal-close" aria-label="關閉" onClick={() => setDeleteId(null)}>✕</button>
             </div>
             <div className="modal-body">
               <p style={{ fontSize: 14, color: "var(--text-dim)" }}>

@@ -267,7 +267,7 @@ export function TimelinePage() {
           <div className="modal modal-sm" onClick={e => e.stopPropagation()}>
             <div className="modal-h">
               <h2>刪除這個事件？</h2>
-              <button className="modal-close" onClick={() => setDeleteId(null)}><Icon name="x" size={15} /></button>
+              <button className="modal-close" aria-label="關閉" onClick={() => setDeleteId(null)}><Icon name="x" size={15} /></button>
             </div>
             <div className="modal-foot">
               <button className="btn btn-ghost" onClick={() => setDeleteId(null)}>取消</button>

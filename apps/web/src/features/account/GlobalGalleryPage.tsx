@@ -134,7 +134,7 @@ export function GlobalGalleryPage() {
       {preview && (
         <div className="gal-lb" onClick={() => setPreview(null)}>
           <div className="gal-lb-box" onClick={e => e.stopPropagation()}>
-            <button className="gal-lb-close" onClick={() => setPreview(null)}><Icon name="x" size={16} /></button>
+            <button className="gal-lb-close" aria-label="關閉" onClick={() => setPreview(null)}><Icon name="x" size={16} /></button>
             <img src={preview.url} alt={preview.title} />
             <div className="gal-lb-foot">
               <div>

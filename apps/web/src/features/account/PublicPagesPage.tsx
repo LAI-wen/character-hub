@@ -89,7 +89,7 @@ function SlugEditModal({
       <div className="modal modal-sm" onClick={e => e.stopPropagation()}>
         <div className="modal-h">
           <h2>更改自訂網址</h2>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button className="modal-close" aria-label="關閉" onClick={onClose}>✕</button>
         </div>
         <div className="modal-body">
           <div className="field">

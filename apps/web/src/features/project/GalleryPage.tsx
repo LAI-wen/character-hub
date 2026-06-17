@@ -447,7 +447,7 @@ export function GalleryPage() {
           <div className="modal modal-sm" onClick={e => e.stopPropagation()}>
             <div className="modal-h">
               <h2>刪除圖片？</h2>
-              <button className="modal-close" onClick={() => setDeleteId(null)}>
+              <button className="modal-close" aria-label="關閉" onClick={() => setDeleteId(null)}>
                 <Icon name="x" size={15} />
               </button>
             </div>

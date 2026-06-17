@@ -467,7 +467,7 @@ export function StoryPage() {
           <div className="modal modal-sm" onClick={e => e.stopPropagation()}>
             <div className="modal-h">
               <h2>新增故事</h2>
-              <button className="modal-close" onClick={() => setCreateOpen(false)}><Icon name="x" size={15} /></button>
+              <button className="modal-close" aria-label="關閉" onClick={() => setCreateOpen(false)}><Icon name="x" size={15} /></button>
             </div>
             <div className="modal-body" style={{ display: "flex", flexDirection: "column", gap: "var(--s4)" }}>
               <div>
@@ -499,7 +499,7 @@ export function StoryPage() {
           <div className="modal modal-sm" onClick={e => e.stopPropagation()}>
             <div className="modal-h">
               <h2>故事設定 · {curStory.title}</h2>
-              <button className="modal-close" onClick={() => setEditStoryOpen(false)}><Icon name="x" size={15} /></button>
+              <button className="modal-close" aria-label="關閉" onClick={() => setEditStoryOpen(false)}><Icon name="x" size={15} /></button>
             </div>
             <div className="modal-body" style={{ display: "flex", flexDirection: "column", gap: "var(--s4)" }}>
               <div>

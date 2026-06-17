@@ -407,7 +407,7 @@ export function MyCharactersPage() {
           <div className="modal modal-sm" onClick={e => e.stopPropagation()}>
             <div className="modal-h">
               <h2>刪除「{deleteName}」？</h2>
-              <button className="modal-close" onClick={() => setDeleteId(null)}>✕</button>
+              <button className="modal-close" aria-label="關閉" onClick={() => setDeleteId(null)}>✕</button>
             </div>
             <div className="modal-body">
               <p style={{ fontSize: 14, color: "var(--text-dim)" }}>

@@ -36,7 +36,7 @@ export function AssetPickerModal({ onSelect, onClose }: Props) {
       >
         <div className="modal-h">
           <h2>從圖庫選圖片</h2>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button className="modal-close" aria-label="關閉" onClick={onClose}>✕</button>
         </div>
 
         <div style={{ padding: "var(--s3) var(--s5)", borderBottom: "1px solid var(--border)" }}>
