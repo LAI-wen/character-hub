@@ -194,7 +194,8 @@ async function findExistingOAuthUser(
   const existing = await getOAuthAccount(db, provider, providerId);
   if (existing) {
     const user = await getUserById(db, existing.user_id);
-    return { id: user!.id, handle: user!.username };
+    if (!user) return null;
+    return { id: user.id, handle: user.username };
   }
   const byEmail = await getUserByEmail(db, email);
   if (byEmail) {

@@ -39,7 +39,8 @@ usersRouter.patch('/me', requireAuth, async (c) => {
   });
 
   const updated = await getUserById(c.env.DB, sub);
-  return c.json({ id: updated!.id, email: updated!.email, username: updated!.username, display_name: updated!.display_name });
+  if (!updated) return errorResponse(c, 404, 'NOT_FOUND', 'User not found');
+  return c.json({ id: updated.id, email: updated.email, username: updated.username, display_name: updated.display_name });
 });
 
 usersRouter.get('/:username', async (c) => {
