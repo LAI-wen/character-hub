@@ -665,6 +665,7 @@ export function CharacterDetailPage() {
       qc.invalidateQueries({ queryKey: ["characters"] })
       navigate("/characters")
     },
+    onError: () => alert("刪除失敗，請稍後再試"),
   })
 
   const character = data?.character

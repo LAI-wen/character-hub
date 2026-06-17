@@ -224,6 +224,7 @@ export function GalleryPage() {
       if (drawerAsset?.id === deleteId) setDrawerAsset(null)
       setDeleteId(null)
     },
+    onError: () => alert("刪除失敗，請稍後再試"),
   })
 
   // derive type filter options

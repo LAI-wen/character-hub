@@ -692,6 +692,9 @@ export function CharacterStoreProvider({
             if (typeof obj.id !== 'string' || typeof obj.name !== 'string') {
               alert('檔案格式不正確：缺少必要欄位 id / name'); return
             }
+            if (!Array.isArray(obj.sections)) {
+              alert('檔案格式不正確：缺少 sections 欄位'); return
+            }
             const c = obj as Character
             setChar(() => c)
             patchUi({ selBlock: null })

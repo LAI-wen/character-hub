@@ -3,31 +3,13 @@ import { useNavigate } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { apiClient } from "@/lib/api/client"
 import { charColor } from "@/lib/charColor"
+import { Icon } from "@/components/Icon"
 import type { CharacterListResponse, ProjectListResponse } from "@oc-tools/contracts"
-
-const ICONS: Record<string, string> = {
-  home:   '<path d="M3 11l9-7 9 7"/><path d="M5 10v9h14v-9"/>',
-  mask:   '<path d="M4 5c0 8 4 13 8 13s8-5 8-13c-3 1-5 1-8 1s-5 0-8-1Z"/>',
-  box:    '<path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/>',
-  window: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/>',
-  star:   '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
-  ruler:  '<rect x="3" y="8" width="18" height="8" rx="1.5"/><path d="M7 8v3M11 8v4M15 8v3M19 8v4"/>',
-  gear:   '<circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.3 1a7 7 0 0 0-1.7-1l-.4-2.5H9.5l-.4 2.5a7 7 0 0 0-1.7 1l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 1.7 1l.4 2.5h4.9l.4-2.5a7 7 0 0 0 1.7-1l2.3 1 2-3.4-2-1.5a7 7 0 0 0 .1-1Z"/>',
-  search: '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/>',
-  globe:  '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3c-2.5 2.5-2.5 15 0 18"/>',
-}
 
 const ENTRY_COLORS: Record<string, string> = {
   nation: "#3B5E6B", place: "#5E7E55", org: "#B5654A", event: "#9E332B",
   race: "#8A6FA0", item: "#C9A24B", faction: "#4A7B8C", concept: "#7B5EA7",
   lore: "#6B4A1E", location: "#5E7E55", other: "#8A857C",
-}
-
-function SvgIcon({ k }: { k: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"
-      dangerouslySetInnerHTML={{ __html: ICONS[k] ?? "" }} />
-  )
 }
 
 type CmdItem = {
@@ -189,7 +171,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
     <div className="cmdk" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div className="box">
         <div className="field">
-          <span className="ic"><SvgIcon k="search" /></span>
+          <span className="ic"><Icon name="search" size={16} /></span>
           <input
             ref={inputRef}
             placeholder="搜尋角色、世界觀、企劃…"
@@ -227,7 +209,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
                       ) : item.av != null ? (
                         <span className="av" style={{ background: item.color }}>{item.av}</span>
                       ) : (
-                        <span className="ico"><SvgIcon k={item.icon ?? "globe"} /></span>
+                        <span className="ico"><Icon name={item.icon ?? "globe"} size={16} /></span>
                       )}
                       <span className="tx">
                         <span className="lb">{item.label}</span>

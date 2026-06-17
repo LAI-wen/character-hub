@@ -26,7 +26,7 @@ function buildCanvasCharacter(ch: Character): CanvasCharacter {
 }
 
 function splitLines(val: string) {
-  return val.split(/[\n|]+/).map(s => s.trim()).filter(Boolean)
+  return val.split(/\n+/).map(s => s.trim()).filter(Boolean)
 }
 
 // ── Sticky topbar ──────────────────────────────────────────────────────────────

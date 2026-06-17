@@ -215,6 +215,7 @@ export function TimelinePage() {
       qc.invalidateQueries({ queryKey: ["project", projectId, "story-events"] })
       setDeleteId(null)
     },
+    onError: () => alert("刪除失敗，請稍後再試"),
   })
 
   const events = data?.events ?? []

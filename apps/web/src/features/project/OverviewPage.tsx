@@ -9,6 +9,7 @@ import type { ProjectCharacterLinkListResponse } from "@oc-tools/contracts"
 import type { WorldEntryListResponse } from "@oc-tools/contracts"
 import { charColor } from "@/lib/charColor"
 import { typeColor } from "@/lib/worldviewTypes"
+import { Icon } from "@/components/Icon"
 
 function CopyPublicUrlButton({ slug }: { slug: string }) {
   const [copied, setCopied] = useState(false)
@@ -28,19 +29,6 @@ function CopyPublicUrlButton({ slug }: { slug: string }) {
   )
 }
 
-function SvgIcon({ d, size = 16 }: { d: string; size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
-      dangerouslySetInnerHTML={{ __html: d }} />
-  )
-}
-
-const ICONS = {
-  mask:  '<path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><circle cx="9" cy="10" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1" fill="currentColor" stroke="none"/>',
-  globe: '<circle cx="12" cy="12" r="9"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/>',
-  nodes: '<circle cx="6" cy="12" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M9 11l6-3.5M9 13l6 3.5"/>',
-  plus:  '<path d="M12 5v14M5 12h14"/>',
-}
 
 export function OverviewPage() {
   const { projectId } = useParams<{ projectId: string }>()
@@ -93,13 +81,13 @@ export function OverviewPage() {
       {/* Quick actions */}
       <div className="qc-row">
         <button className="qc" onClick={() => navigate(`/p/${projectId}/roster/new`)}>
-          <SvgIcon d={ICONS.plus} />加入角色
+          <Icon name="plus" size={14} />加入角色
         </button>
         <button className="qc" onClick={() => navigate(`/p/${projectId}/worldview/new`)}>
-          <SvgIcon d={ICONS.plus} />新增世界觀
+          <Icon name="plus" size={14} />新增世界觀
         </button>
         <button className="qc" onClick={() => navigate(`/p/${projectId}/relationships`)}>
-          <SvgIcon d={ICONS.plus} />新增關係
+          <Icon name="plus" size={14} />新增關係
         </button>
       </div>
 
@@ -114,7 +102,7 @@ export function OverviewPage() {
           {/* Characters */}
           <Link to={`/p/${projectId}/roster`} className="ovc">
             <div className="ovc-h">
-              <div className="ovc-t"><SvgIcon d={ICONS.mask} size={14} />角色</div>
+              <div className="ovc-t"><Icon name="mask" size={14} />角色</div>
               <div className="ovc-n">{stats?.characters ?? roster.length}<span className="ovc-u">位</span></div>
             </div>
             <div className="ovc-list">
@@ -136,7 +124,7 @@ export function OverviewPage() {
           {/* World entries */}
           <Link to={`/p/${projectId}/worldview`} className="ovc">
             <div className="ovc-h">
-              <div className="ovc-t"><SvgIcon d={ICONS.globe} size={14} />世界觀</div>
+              <div className="ovc-t"><Icon name="globe" size={14} />世界觀</div>
               <div className="ovc-n">{stats?.worldEntries ?? world.length}<span className="ovc-u">條</span></div>
             </div>
             <div className="ovc-list">
@@ -156,7 +144,7 @@ export function OverviewPage() {
           {/* Relationships */}
           <Link to={`/p/${projectId}/relationships`} className="ovc">
             <div className="ovc-h">
-              <div className="ovc-t"><SvgIcon d={ICONS.nodes} size={14} />關係圖</div>
+              <div className="ovc-t"><Icon name="nodes" size={14} />關係圖</div>
               <div className="ovc-n">—<span className="ovc-u">組</span></div>
             </div>
             <div className="ovc-list">

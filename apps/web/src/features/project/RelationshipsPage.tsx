@@ -485,6 +485,7 @@ export function RelationshipsPage() {
       qc.invalidateQueries({ queryKey: ["project", projectId, "relationships"] })
       if (selRelId === relId) setSelRelId(null)
     },
+    onError: () => alert("刪除失敗，請稍後再試"),
   })
 
   // Layout save mutation (don't invalidate — positions already in localPositions)
