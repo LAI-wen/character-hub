@@ -128,7 +128,7 @@ export function CharBackupModal({ charName: _charName, sections, onExport, onImp
                 </div>
                 <button style={{ ...softBtn, padding: '8px 14px' }} onClick={() => applyTemplate(t)}>套用</button>
                 {!t.builtin && (
-                  <button onClick={() => removeTemplate(t.id)} style={{ flexShrink: 0, width: 34, height: 34, borderRadius: 9, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-dim)', cursor: 'pointer', fontSize: 16, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+                  <button aria-label="刪除格式" onClick={() => removeTemplate(t.id)} style={{ flexShrink: 0, width: 34, height: 34, borderRadius: 9, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-dim)', cursor: 'pointer', fontSize: 16, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
                 )}
               </div>
             ))}

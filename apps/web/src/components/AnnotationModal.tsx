@@ -121,7 +121,7 @@ export function AnnotationModal({ imageUrl, initialAnnotations, onUpdate, onClos
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 7 }}>
                       <span style={{ width: 20, height: 20, borderRadius: '50%', background: 'var(--accent)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0 }}>{i + 1}</span>
                       <span style={{ fontSize: 11, color: 'var(--text-dim)', background: 'var(--surface)', borderRadius: 6, padding: '2px 7px' }}>{an.kind === 'pin' ? 'Pin' : '框選'}</span>
-                      <button onClick={() => remove(an.id)} style={{ marginLeft: 'auto', width: 26, height: 26, borderRadius: 7, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-dim)', cursor: 'pointer', fontSize: 13 }}>×</button>
+                      <button aria-label="刪除標記" onClick={() => remove(an.id)} style={{ marginLeft: 'auto', width: 26, height: 26, borderRadius: 7, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-dim)', cursor: 'pointer', fontSize: 13 }}>×</button>
                     </div>
                     <input value={an.label} onChange={(e) => patch(an.id, 'label', e.target.value)}
                       placeholder="標記標題"
