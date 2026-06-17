@@ -2771,7 +2771,7 @@ function genInviteCode(): string {
   return `${s.slice(0, 4)}-${s.slice(4)}`;
 }
 
-function getInviteLimit(c: any): number | null {
+function getInviteLimit(c: AppContext): number | null {
   const adminIds = (c.env.INVITE_ADMIN_IDS ?? '').split(',').map((s: string) => s.trim()).filter(Boolean);
   if (adminIds.includes(c.get('user').sub)) return null; // unlimited
   const limit = parseInt(c.env.INVITE_LIMIT ?? '5', 10);

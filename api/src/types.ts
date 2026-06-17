@@ -121,6 +121,7 @@ export type WorldviewRel = {
   kind: string;
 };
 
-export function errorResponse(c: any, status: number, code: string, message: string) {
-  return c.json({ error: { code, message } }, status as any);
+type JsonCtx = { json(body: unknown, status: number): Response };
+export function errorResponse(c: JsonCtx, status: number, code: string, message: string): Response {
+  return c.json({ error: { code, message } }, status);
 }

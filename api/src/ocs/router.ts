@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import type { Context } from 'hono';
 import { z } from 'zod';
 import { requireAuth } from '../middleware/auth';
 import { checkVisibility } from './visibility';
@@ -8,7 +9,10 @@ import { verifyToken } from '../auth/jwt';
 import { errorResponse } from '../types';
 import type { Env, Variables } from '../types';
 
-export const ocsRouter = new Hono<{ Bindings: Env; Variables: Variables }>();
+type OcsRouteEnv = { Bindings: Env; Variables: Variables };
+type OcsContext = Context<OcsRouteEnv>;
+
+export const ocsRouter = new Hono<OcsRouteEnv>();
 
 const createSchema = z.object({
   name: z.string().min(1).max(64),
@@ -39,7 +43,7 @@ const patchSchema = z.object({
   password: z.string().min(4).optional(),
 });
 
-async function getRequestingUserId(c: any): Promise<string | null> {
+async function getRequestingUserId(c: OcsContext): Promise<string | null> {
   const header = c.req.header('Authorization') ?? '';
   if (!header.startsWith('Bearer ')) return null;
   try {

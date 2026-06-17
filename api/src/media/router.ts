@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import type { Context } from 'hono';
 import { z } from 'zod';
 import { requireAuth } from '../middleware/auth';
 import { checkVisibility } from '../ocs/visibility';
@@ -8,7 +9,10 @@ import { verifyToken } from '../auth/jwt';
 import { errorResponse } from '../types';
 import type { Env, Variables } from '../types';
 
-export const mediaRouter = new Hono<{ Bindings: Env; Variables: Variables }>();
+type MediaRouteEnv = { Bindings: Env; Variables: Variables };
+type MediaContext = Context<MediaRouteEnv>;
+
+export const mediaRouter = new Hono<MediaRouteEnv>();
 
 const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const MAX_SIZE = 10 * 1024 * 1024;
@@ -26,7 +30,7 @@ const patchSchema = z.object({
   category: z.string().min(1).optional(),
 });
 
-async function getRequestingUserId(c: any): Promise<string | null> {
+async function getRequestingUserId(c: MediaContext): Promise<string | null> {
   const header = c.req.header('Authorization') ?? '';
   if (!header.startsWith('Bearer ')) return null;
   try {

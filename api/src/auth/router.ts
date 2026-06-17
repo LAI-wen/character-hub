@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import type { Context } from 'hono';
 import { z } from 'zod';
 import { hashPassword, verifyPassword } from './password';
 import { signAccessToken, signRefreshToken, signSessionToken, verifyToken } from './jwt';
@@ -7,7 +8,10 @@ import { createUser, getUserByEmail, getUserById, getOAuthAccount, createOAuthAc
 import { errorResponse } from '../types';
 import type { Env, Variables } from '../types';
 
-export const authRouter = new Hono<{ Bindings: Env; Variables: Variables }>();
+type AuthRouteEnv = { Bindings: Env; Variables: Variables };
+type AuthContext = Context<AuthRouteEnv>;
+
+export const authRouter = new Hono<AuthRouteEnv>();
 
 const REFRESH_MAX_AGE = 30 * 24 * 60 * 60;
 
@@ -33,7 +37,7 @@ function sessionCookie(token: string, maxAge: number, isLocal: boolean) {
   return `session=${token}; HttpOnly${secure}; SameSite=Lax; Path=/; Max-Age=${maxAge}`;
 }
 
-function isLocalRequest(c: any): boolean {
+function isLocalRequest(c: AuthContext): boolean {
   const appEnv = c.env.APP_ENV?.toLowerCase();
   const hostname = new URL(c.req.url).hostname;
   return appEnv === 'local' || appEnv === 'test' || hostname === 'localhost' || hostname === '127.0.0.1';
@@ -250,7 +254,7 @@ async function consumeInvite(db: D1Database, invite: string | null, newUserId: s
   return null;
 }
 
-async function issueTokensAndRedirect(c: any, userId: string, handle: string, frontendUrl: string) {
+async function issueTokensAndRedirect(c: AuthContext, userId: string, handle: string, frontendUrl: string) {
   const [accessToken, refreshToken, sessionToken] = await Promise.all([
     signAccessToken(userId, handle, c.env.JWT_SECRET),
     signRefreshToken(userId, handle, c.env.JWT_SECRET),

@@ -698,8 +698,8 @@ export function CharacterStoreProvider({
             if (!obj || typeof obj !== 'object' || Array.isArray(obj)) {
               alert('檔案格式不正確：不是有效的角色備份'); return
             }
-            if (typeof obj.id !== 'string' || typeof obj.name !== 'string') {
-              alert('檔案格式不正確：缺少必要欄位 id / name'); return
+            if (typeof obj.name !== 'string') {
+              alert('檔案格式不正確：缺少必要欄位 name'); return
             }
             if (!Array.isArray(obj.sections)) {
               alert('檔案格式不正確：缺少 sections 欄位'); return
