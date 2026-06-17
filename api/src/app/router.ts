@@ -43,7 +43,6 @@ const createProjectSchema = z.object({
   preset: z.enum(['personal_organization', 'public_showcase', 'private_collaboration', 'public_collaboration']).optional(),
   slug: z.string().min(1).max(120).optional(),
   description: z.string().max(4000).optional(),
-  color: z.string().max(32).optional(),
   themeColor: z.string().max(32).optional(),
   visibility: z.enum(['private', 'unlisted', 'public']).optional(),
   collaborationMode: z.enum(['solo', 'collaborative']).optional(),
@@ -941,7 +940,7 @@ appApiRouter.post('/projects', async (c) => {
   const id = crypto.randomUUID();
   const preset = input.preset ?? 'public_showcase';
   const slug = slugify(input.slug ?? input.name, 'project');
-  const themeColor = input.themeColor ?? input.color ?? '#8FA3B0';
+  const themeColor = input.themeColor ?? '#8FA3B0';
   const duplicate = await first<{ id: string }>(db, 'SELECT id FROM projects WHERE slug = ?', [slug]);
   if (duplicate) throw new AppHttpError(409, 'CONFLICT', 'Project slug already exists');
 
@@ -1078,7 +1077,6 @@ appApiRouter.patch('/projects/:projectId', async (c) => {
     name: { column: 'name' },
     slug: { column: 'slug', value: (value) => slugify(String(value), 'project') },
     description: { column: 'description' },
-    color: { column: 'theme_color' },
     themeColor: { column: 'theme_color' },
     visibility: { column: 'visibility' },
     collaborationMode: { column: 'collaboration_mode' },
