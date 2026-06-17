@@ -843,7 +843,7 @@ export function TemplateCanvas(props: CanvasProps) {
                   : undefined
               }
             >
-              {col.length ? col.map((cb) => BlockEl({ b: cb, nested: true })) : editable ? <div style={{ textAlign: 'center', color: 'var(--text-2,#8d7c69)', fontSize: 12, padding: '18px 4px' }}>此欄為空</div> : <div />}
+              {col.length ? col.map((cb) => <BlockEl key={cb.id} b={cb} nested={true} />) : editable ? <div style={{ textAlign: 'center', color: 'var(--text-2,#8d7c69)', fontSize: 12, padding: '18px 4px' }}>此欄為空</div> : <div />}
             </div>,
           )
           if (editable && ci < cols.length - 1)
@@ -1151,7 +1151,7 @@ export function TemplateCanvas(props: CanvasProps) {
         ) : null}
 
         <div style={contentStyle}>
-          {blocksSrc.map((b) => BlockEl({ b }))}
+          {blocksSrc.map((b) => <BlockEl key={b.id} b={b} />)}
           {blocksSrc.length === 0 ? (
             <div style={{ width: '100%', border: '1.5px dashed var(--border,#d8c9b3)', borderRadius: 16, padding: 46, textAlign: 'center', color: 'var(--text-2,#8d7c69)', fontSize: 14 }}>
               {editable ? '從上方加入積木，開始設計這個模板' : '這個模板還沒有內容'}

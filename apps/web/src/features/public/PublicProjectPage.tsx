@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query"
 import { useParams, Link, useNavigate } from "react-router-dom"
 import { apiClient } from "@/lib/api/client"
 import { charColor } from "@/lib/charColor"
+import { typeLabel, typeColor } from "@/lib/worldviewTypes"
 import { useAuth } from "@/lib/auth/context"
 import type { Project, Character, WorldEntry } from "@oc-tools/contracts"
 
@@ -10,17 +11,6 @@ type PublicProjectResponse = {
   project: Project
   characters: Character[]
   worldEntries: WorldEntry[]
-}
-
-const TYPE_LABELS: Record<string, string> = {
-  nation: "國家", place: "地點", org: "組織", event: "事件",
-  race: "種族", item: "道具", faction: "勢力", concept: "概念",
-  lore: "世界觀", character: "角色", other: "其他",
-}
-const TYPE_COLORS: Record<string, string> = {
-  nation: "#3B5E6B", place: "#5E7E55", org: "#B5654A", event: "#9E332B",
-  race: "#8A6FA0", item: "#C9A24B", faction: "#4A7B8C", concept: "#7B5EA7",
-  lore: "#6B4A1E", other: "#8A857C",
 }
 
 export function PublicProjectPage() {
@@ -205,10 +195,10 @@ export function PublicProjectPage() {
                 <div key={type}>
                   <p style={{
                     fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase",
-                    color: TYPE_COLORS[type] ?? "var(--text-faint)",
+                    color: typeColor(type),
                     marginBottom: "var(--s3)",
                   }}>
-                    {TYPE_LABELS[type] ?? type}
+                    {typeLabel(type)}
                   </p>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "var(--s3)" }}>
                     {entries.map(entry => (
@@ -216,7 +206,7 @@ export function PublicProjectPage() {
                         <div style={{ display: "flex", gap: "var(--s3)", alignItems: "flex-start" }}>
                           <div style={{
                             width: 28, height: 28, borderRadius: "var(--r-sm)",
-                            background: TYPE_COLORS[type] ?? "#8A857C",
+                            background: typeColor(type),
                             display: "grid", placeItems: "center",
                             color: "#fff", fontSize: 13, fontWeight: 700, flexShrink: 0,
                           }}>

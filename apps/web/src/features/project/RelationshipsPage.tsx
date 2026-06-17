@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react"
+import { useRef, useState, useEffect, useReducer } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Link, useParams, useSearchParams } from "react-router-dom"
 import { apiClient } from "@/lib/api/client"
@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/PageHeader"
 import { ContextHeader } from "@/components/ContextHeader"
 import { useProjectContext } from "@/routes/layouts/ProjectLayout"
 import { CreateRelationshipModal } from "./CreateRelationshipModal"
+import { typeColor } from "@/lib/worldviewTypes"
 import type {
   Relationship,
   RelationshipGroup,
@@ -26,16 +27,11 @@ function charColor(id: string): string {
   return P[Math.abs(h) % P.length]
 }
 
-const TYPE_COLORS: Record<string, string> = {
-  nation:"#3B5E6B", place:"#5E7E55", org:"#B5654A", event:"#9E332B",
-  race:"#8A6FA0", item:"#C9A24B", faction:"#4A7B8C", concept:"#7B5EA7",
-  lore:"#6B4A1E",
-}
 const ENTITY_GLYPH: Record<string, string> = {
   org:"▣", event:"✦", place:"⬟", nation:"◉", faction:"◈",
 }
 function worldColor(e: WorldEntry) {
-  return TYPE_COLORS[e.type] ?? "#8A857C"
+  return typeColor(e.type)
 }
 
 function circularPos(ids: string[], W: number, H: number) {
@@ -425,7 +421,9 @@ export function RelationshipsPage() {
   const [q,              setQ]              = useState("")
   const [typeFilter,     setTypeFilter]     = useState("*")
   const [viewMode,       setViewMode]       = useState<"map"|"list">("map")
-  const [localPositions, setLocalPositions] = useState<Record<string, {x:number;y:number}> | null>(null)
+  const localPositionsRef = useRef<Record<string, {x:number;y:number}> | null>(null)
+  const [, forceUpdate] = useReducer((x: number) => x + 1, 0)
+  const rafRef = useRef<number | null>(null)
   const dragRef = useRef<{
     nodeId: string; startX: number; startY: number
     origX: number; origY: number; moved: boolean
@@ -527,9 +525,9 @@ export function RelationshipsPage() {
     positions = circularPos(nodeIds, W, H)
   }
 
-  // Effective positions: local drag overrides saved positions
-  const effectivePositions = localPositions
-    ? { ...positions, ...localPositions }
+  // Effective positions: local drag overrides saved positions (ref-based, no extra renders)
+  const effectivePositions = localPositionsRef.current
+    ? { ...positions, ...localPositionsRef.current }
     : positions
 
   // Select helpers
@@ -566,7 +564,10 @@ export function RelationshipsPage() {
     const id = dragRef.current.nodeId
     const nx = Math.max(20, Math.min(W - 20, dragRef.current.origX + dx))
     const ny = Math.max(20, Math.min(H - 20, dragRef.current.origY + dy))
-    setLocalPositions(prev => ({ ...(prev ?? positions), [id]: { x: nx, y: ny } }))
+    localPositionsRef.current = { ...(localPositionsRef.current ?? positions), [id]: { x: nx, y: ny } }
+    if (rafRef.current === null) {
+      rafRef.current = requestAnimationFrame(() => { rafRef.current = null; forceUpdate() })
+    }
   }
   function handleMapMouseUp() {
     if (!dragRef.current) return
@@ -576,7 +577,7 @@ export function RelationshipsPage() {
       handleFocusNode(focusNodeId === nodeId ? null : nodeId)
       return
     }
-    const finalPos = localPositions?.[nodeId]
+    const finalPos = localPositionsRef.current?.[nodeId]
     if (finalPos) {
       layoutMutation.mutate({ [nodeId]: { x: finalPos.x / W, y: finalPos.y / H } })
     }

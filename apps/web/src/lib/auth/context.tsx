@@ -1,18 +1,11 @@
 import {
   createContext,
   useContext,
-  useEffect,
-  useState,
   type ReactNode,
 } from "react"
-import { apiClient } from "@/lib/api/client"
-import { clearCsrfToken } from "@/lib/api/client"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { apiClient, clearCsrfToken } from "@/lib/api/client"
 import type { Viewer } from "@oc-tools/contracts"
-
-type AuthState =
-  | { status: "loading" }
-  | { status: "unauthenticated" }
-  | { status: "authenticated"; viewer: Viewer }
 
 type AuthContextValue = {
   viewer: Viewer | null
@@ -22,24 +15,27 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AuthState>({ status: "loading" })
+export const viewerQueryKey = ["viewer"] as const
 
-  useEffect(() => {
-    apiClient<{ data: Viewer }>("/api/v1/auth/me")
-      .then((res) => setState({ status: "authenticated", viewer: res.data }))
-      .catch(() => setState({ status: "unauthenticated" }))
-  }, [])
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient()
+
+  const { data, isPending } = useQuery({
+    queryKey: viewerQueryKey,
+    queryFn: () => apiClient<{ data: Viewer }>("/api/v1/auth/me").then((r) => r.data),
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+  })
 
   async function logout() {
     await apiClient("/api/v1/auth/logout", { method: "POST" })
     clearCsrfToken()
-    setState({ status: "unauthenticated" })
+    queryClient.setQueryData(viewerQueryKey, undefined)
   }
 
   const value: AuthContextValue = {
-    viewer: state.status === "authenticated" ? state.viewer : null,
-    isLoading: state.status === "loading",
+    viewer: data ?? null,
+    isLoading: isPending,
     logout,
   }
 

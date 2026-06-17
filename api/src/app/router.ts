@@ -818,15 +818,34 @@ async function validateWorldEntryRefs(db: D1Database, params: {
   relatedCharacterIds?: string[];
   relatedEntryIds?: string[];
 }) {
-  for (const characterId of params.relatedCharacterIds ?? []) {
-    const link = await getProjectLinkForCharacter(db, params.projectId, characterId);
-    if (!link) throw new AppHttpError(422, 'UNPROCESSABLE_ENTITY', `Related character is not linked to this project: ${characterId}`);
+  const charIds = params.relatedCharacterIds ?? [];
+  const entryIds = params.relatedEntryIds ?? [];
+
+  if (charIds.length > 0) {
+    const placeholders = charIds.map(() => '?').join(',');
+    const rows = await all<{ character_id: string }>(
+      db,
+      `SELECT character_id FROM project_character_links WHERE project_id = ? AND character_id IN (${placeholders}) AND removed_at IS NULL`,
+      [params.projectId, ...charIds],
+    );
+    const found = new Set(rows.map((r) => r.character_id));
+    for (const characterId of charIds) {
+      if (!found.has(characterId)) throw new AppHttpError(422, 'UNPROCESSABLE_ENTITY', `Related character is not linked to this project: ${characterId}`);
+    }
   }
 
-  for (const targetEntryId of params.relatedEntryIds ?? []) {
-    if (targetEntryId === params.entryId) throw new AppHttpError(422, 'UNPROCESSABLE_ENTITY', 'World entry cannot link to itself');
-    const target = await getWorldEntryRow(db, params.projectId, targetEntryId);
-    if (!target) throw new AppHttpError(422, 'UNPROCESSABLE_ENTITY', `Related world entry is not in this project: ${targetEntryId}`);
+  if (entryIds.length > 0) {
+    if (entryIds.includes(params.entryId)) throw new AppHttpError(422, 'UNPROCESSABLE_ENTITY', 'World entry cannot link to itself');
+    const placeholders = entryIds.map(() => '?').join(',');
+    const rows = await all<{ id: string }>(
+      db,
+      `SELECT id FROM world_entries WHERE project_id = ? AND id IN (${placeholders}) AND archived_at IS NULL`,
+      [params.projectId, ...entryIds],
+    );
+    const found = new Set(rows.map((r) => r.id));
+    for (const targetEntryId of entryIds) {
+      if (!found.has(targetEntryId)) throw new AppHttpError(422, 'UNPROCESSABLE_ENTITY', `Related world entry is not in this project: ${targetEntryId}`);
+    }
   }
 }
 
@@ -1337,12 +1356,14 @@ appApiRouter.post('/characters/:characterId/avatar', async (c) => {
   if (file.size > 10 * 1024 * 1024) throw new AppHttpError(400, 'VALIDATION_ERROR', 'Max 10 MB');
   const ext = file.type.split('/')[1].replace('jpeg', 'jpg');
   const r2Key = `avatars/${character.id}/${crypto.randomUUID()}.${ext}`;
+  const oldR2Key = character.avatar_r2_key;
   await c.env.BUCKET.put(r2Key, await file.arrayBuffer(), { httpMetadata: { contentType: file.type } });
   const assetId = crypto.randomUUID();
   const now = nowIso();
   await run(db, `INSERT INTO assets (id, owner_user_id, r2_key, original_name, mime_type, size_bytes, asset_type, title, visibility, upload_status, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
     [assetId, user.sub, r2Key, file.name, file.type, file.size, 'avatar', character.name + ' avatar', 'private', 'uploaded', now, now]);
   await run(db, `UPDATE characters SET avatar_asset_id = ?, updated_at = ? WHERE id = ?`, [assetId, now, character.id]);
+  if (oldR2Key) await c.env.BUCKET.delete(oldR2Key);
   const updated = await getCharacterRow(db, character.id);
   return c.json({ character: mapCharacter(updated!), avatarUrl: r2PublicUrl(r2Key) });
 });
@@ -1426,19 +1447,35 @@ appApiRouter.post('/apply', async (c) => {
 appApiRouter.get('/projects/:projectId/characters', async (c) => {
   const db = getDb(c);
   await getVisibleProject(c, c.req.param('projectId'), 'project:view');
-  const links = await all<ProjectCharacterLinkRow & CharacterRow>(
+  const rows = await all<ProjectCharacterLinkRow & CharacterRow>(
     db,
-    `SELECT pcl.*, c.id AS character_row_id
+    `SELECT pcl.*,
+            c.id AS character_id, c.owner_user_id, c.slug, c.name, c.romaji, c.nickname,
+            c.species, c.summary, c.avatar_asset_id, c.theme_color, c.visibility,
+            c.height_cm, c.tags_json, c.general_profile_json, c.artist_profile_json,
+            c.writer_profile_json, c.created_at AS c_created_at, c.updated_at AS c_updated_at,
+            c.archived_at AS c_archived_at,
+            av.r2_key AS avatar_r2_key
      FROM project_character_links pcl
      JOIN characters c ON c.id = pcl.character_id
+     ${CHAR_AVATAR_JOIN}
      WHERE pcl.project_id = ? AND pcl.removed_at IS NULL AND c.archived_at IS NULL
      ORDER BY pcl.updated_at DESC`,
     [c.req.param('projectId')],
   );
-  const roster = await Promise.all(links.map(async (link) => {
-    const character = await getCharacterRow(db, link.character_id);
-    return { projectLink: mapProjectLink(link), character: character ? mapCharacter(character) : null };
-  }));
+  const roster = rows.map((row) => {
+    const charRow: CharacterRow = {
+      id: row.character_id, owner_user_id: row.owner_user_id, slug: row.slug,
+      name: row.name, romaji: row.romaji, nickname: row.nickname, species: row.species,
+      summary: row.summary, avatar_asset_id: row.avatar_asset_id, avatar_r2_key: row.avatar_r2_key,
+      theme_color: row.theme_color, visibility: row.visibility, height_cm: row.height_cm,
+      tags_json: row.tags_json, general_profile_json: row.general_profile_json,
+      artist_profile_json: row.artist_profile_json, writer_profile_json: row.writer_profile_json,
+      created_at: (row as any).c_created_at, updated_at: (row as any).c_updated_at,
+      archived_at: (row as any).c_archived_at,
+    };
+    return { projectLink: mapProjectLink(row), character: mapCharacter(charRow) };
+  });
   return c.json({ roster, nextCursor: null });
 });
 
@@ -1684,6 +1721,13 @@ const createStorySchema = z.object({
   description: z.string().max(1000).optional(),
 });
 
+const patchStorySchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+  description: z.string().max(1000).nullable().optional(),
+  status: z.enum(['draft', 'ongoing', 'complete', 'hiatus']).optional(),
+  visibility: z.enum(['private', 'unlisted', 'public']).optional(),
+});
+
 const createChapterSchema = z.object({
   title: z.string().min(1).max(200),
   content: z.string().max(200000).optional(),
@@ -1729,6 +1773,27 @@ appApiRouter.post('/projects/:projectId/stories', async (c) => {
   await run(db, `INSERT INTO stories (id, project_id, created_by_user_id, slug, title, description, status, visibility, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)`,
     [id, project.id, user.sub, slug, input.title, input.description ?? null, 'draft', 'private', now, now]);
   return c.json({ story: { id, projectId: project.id, slug, title: input.title, description: input.description ?? null, status: 'draft', visibility: 'private', chapterCount: 0, createdAt: now, updatedAt: now } }, 201);
+});
+
+appApiRouter.patch('/projects/:projectId/stories/:storyId', async (c) => {
+  const db = getDb(c);
+  const { project } = await getVisibleProject(c, c.req.param('projectId'), 'story:update');
+  const story = await first<{ id: string }>(db, `SELECT id FROM stories WHERE id = ? AND project_id = ? AND archived_at IS NULL`, [c.req.param('storyId'), project.id]);
+  if (!story) throw new AppHttpError(404, 'NOT_FOUND', 'Story not found');
+  const input = await validateJson(c, patchStorySchema);
+  const now = nowIso();
+  const sets: string[] = ['updated_at = ?'];
+  const vals: unknown[] = [now];
+  if (input.title !== undefined) { sets.push('title = ?'); vals.push(input.title); }
+  if (input.description !== undefined) { sets.push('description = ?'); vals.push(input.description); }
+  if (input.status !== undefined) { sets.push('status = ?'); vals.push(input.status); }
+  if (input.visibility !== undefined) { sets.push('visibility = ?'); vals.push(input.visibility); }
+  vals.push(story.id);
+  await run(db, `UPDATE stories SET ${sets.join(', ')} WHERE id = ?`, vals);
+  const updated = await first<StoryRow>(db,
+    `SELECT s.*, (SELECT COUNT(*) FROM story_chapters sc WHERE sc.story_id = s.id AND sc.archived_at IS NULL) AS chapter_count FROM stories s WHERE s.id = ?`,
+    [story.id]);
+  return c.json({ story: mapStory(updated!) });
 });
 
 appApiRouter.delete('/projects/:projectId/stories/:storyId', async (c) => {

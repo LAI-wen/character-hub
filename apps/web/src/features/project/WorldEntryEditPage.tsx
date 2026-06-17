@@ -8,13 +8,7 @@ import { apiClient } from "@/lib/api/client"
 import { ContextHeader } from "@/components/ContextHeader"
 import { useProjectContext } from "@/routes/layouts/ProjectLayout"
 import type { WorldEntryResponse } from "@oc-tools/contracts"
-
-const TYPE_COLORS: Record<string, string> = {
-  nation: "#3B5E6B", place: "#5E7E55", org: "#B5654A", event: "#9E332B",
-  race: "#8A6FA0", item: "#C9A24B", faction: "#4A7B8C", concept: "#7B5EA7",
-  lore: "#6B4A1E", location: "#5E7E55", other: "#8A857C",
-}
-function typeColor(t: string) { return TYPE_COLORS[t] ?? "#8A857C" }
+import { typeColor } from "@/lib/worldviewTypes"
 
 const ENTRY_TYPES = [
   { value: "faction", label: "勢力" },

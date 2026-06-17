@@ -16,6 +16,7 @@ export type Env = {
 
 export type Variables = {
   user: JWTPayload;
+  authVia: 'bearer' | 'cookie' | 'demo';
 };
 
 export type JWTPayload = {

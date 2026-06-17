@@ -24,7 +24,11 @@ export async function verifyPassword(password: string, stored: string): Promise<
     { name: 'PBKDF2', hash: 'SHA-256', salt, iterations: 100_000 },
     keyMaterial, 256
   );
-  const newHashHex = Array.from(new Uint8Array(bits))
-    .map(b => b.toString(16).padStart(2, '0')).join('');
-  return newHashHex === hashHex;
+  const newHash = new Uint8Array(bits);
+  const storedHash = new Uint8Array(hashHex.match(/.{2}/g)!.map(b => parseInt(b, 16)));
+  // Constant-time comparison to prevent timing attacks
+  if (newHash.length !== storedHash.length) return false;
+  let diff = 0;
+  for (let i = 0; i < newHash.length; i++) diff |= newHash[i] ^ storedHash[i];
+  return diff === 0;
 }

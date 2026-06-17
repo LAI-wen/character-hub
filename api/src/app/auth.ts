@@ -83,6 +83,8 @@ export function isDemoAuthAllowed(c: AppContext) {
   return explicitDemo || appEnv === 'local' || appEnv === 'demo' || appEnv === 'test' || isLocalHostname(hostname);
 }
 
+const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+
 export const attachAppAuth = createMiddleware<{ Bindings: Env; Variables: Variables }>(async (c, next) => {
   // Try Bearer token (for programmatic/script access)
   const authHeader = c.req.header('Authorization') ?? '';
@@ -93,6 +95,7 @@ export const attachAppAuth = createMiddleware<{ Bindings: Env; Variables: Variab
       const blacklisted = await c.env.KV.get(`blacklist:${payload.jti}`);
       if (blacklisted) throw new AppHttpError(401, 'UNAUTHENTICATED', 'Token revoked');
       c.set('user', payload);
+      c.set('authVia', 'bearer');
       await next();
       return;
     } catch (err) {
@@ -111,6 +114,18 @@ export const attachAppAuth = createMiddleware<{ Bindings: Env; Variables: Variab
       const blacklisted = await c.env.KV.get(`blacklist:${payload.jti}`);
       if (blacklisted) throw new AppHttpError(401, 'UNAUTHENTICATED', 'Session revoked');
       c.set('user', payload);
+      c.set('authVia', 'cookie');
+
+      // CSRF check: mutating requests via cookie auth must include a valid CSRF token
+      if (MUTATING_METHODS.has(c.req.method)) {
+        const csrfToken = c.req.header('X-CSRF-Token');
+        if (!csrfToken) throw new AppHttpError(403, 'CSRF_REQUIRED', 'X-CSRF-Token header required');
+        const stored = await c.env.KV.get(`csrf:${csrfToken}`);
+        if (!stored || stored !== sessionMatch[1].slice(-16)) {
+          throw new AppHttpError(403, 'CSRF_INVALID', 'CSRF token invalid or expired');
+        }
+      }
+
       await next();
       return;
     } catch (err) {
@@ -147,6 +162,7 @@ export const attachAppAuth = createMiddleware<{ Bindings: Env; Variables: Variab
     exp: timestamp + 60 * 60,
     iat: timestamp,
   });
+  c.set('authVia', 'demo');
 
   await next();
 });

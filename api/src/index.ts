@@ -9,6 +9,7 @@ import { relationshipsRouter } from './relationships/router';
 import { worldviewRouter } from './worldview/router';
 import { demoRouter } from './demo/router';
 import { appApiRouter, publicApiRouter } from './app/router';
+import { handleAppError } from './app/http';
 import { verifyToken } from './auth/jwt';
 import type { Env, Variables } from './types';
 
@@ -17,6 +18,7 @@ const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 app.use('*', corsMiddleware);
 
 const api = new Hono<{ Bindings: Env; Variables: Variables }>();
+api.onError(handleAppError);
 
 api.route('/auth', authRouter);
 api.route('/users', usersRouter);

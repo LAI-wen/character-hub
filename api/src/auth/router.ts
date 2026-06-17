@@ -259,7 +259,10 @@ async function issueTokensAndRedirect(c: any, userId: string, handle: string, fr
   c.header('Set-Cookie', refreshCookie(refreshToken, REFRESH_MAX_AGE));
   c.header('Set-Cookie', sessionCookie(sessionToken, REFRESH_MAX_AGE, isLocalRequest(c)));
   const base = frontendUrl.replace(/\/$/, '');
-  return c.redirect(`${base}/auth/callback?token=${encodeURIComponent(accessToken)}`);
+  // Session cookie is already set above; access token is not passed via URL
+  // to avoid leaking it into server logs or browser history.
+  void accessToken;
+  return c.redirect(`${base}/auth/callback`);
 }
 
 authRouter.get('/google', async (c) => {

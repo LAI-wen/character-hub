@@ -8,13 +8,7 @@ import { apiClient } from "@/lib/api/client"
 import { ContextHeader } from "@/components/ContextHeader"
 import { useProjectContext } from "@/routes/layouts/ProjectLayout"
 import type { CharacterResponse, CharacterListResponse, ProjectCharacterLinkListResponse, ProjectCharacterLinkResponse } from "@oc-tools/contracts"
-
-const PALETTE = ["#4A6FA5","#C0392B","#27AE60","#8E44AD","#E67E22","#16A085","#2C3E50","#7F8C8D","#D35400","#1A5276"]
-function charColor(id: string): string {
-  let h = 0
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0
-  return PALETTE[h % PALETTE.length]
-}
+import { charColor } from "@/lib/charColor"
 
 const NewSchema = z.object({
   name: z.string().min(1, "名稱為必填").max(120),

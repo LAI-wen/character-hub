@@ -7,6 +7,8 @@ import { ContextHeader } from "@/components/ContextHeader"
 import { recordView } from "@/lib/recentlyViewed"
 import type { ProjectCharacterLinkListResponse } from "@oc-tools/contracts"
 import type { WorldEntryListResponse } from "@oc-tools/contracts"
+import { charColor } from "@/lib/charColor"
+import { typeColor } from "@/lib/worldviewTypes"
 
 function CopyPublicUrlButton({ slug }: { slug: string }) {
   const [copied, setCopied] = useState(false)
@@ -25,19 +27,6 @@ function CopyPublicUrlButton({ slug }: { slug: string }) {
     </button>
   )
 }
-
-const PALETTE = ["#4A6FA5","#C0392B","#27AE60","#8E44AD","#E67E22","#16A085","#2C3E50","#7F8C8D","#D35400","#1A5276"]
-function charColor(id: string): string {
-  let h = 0
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0
-  return PALETTE[h % PALETTE.length]
-}
-
-const TYPE_COLORS: Record<string, string> = {
-  faction: "#4A7B8C", location: "#5E7E55", concept: "#7B5EA7",
-  lore: "#6B4A1E", item: "#C9A24B", event: "#9E332B",
-}
-function typeColor(t: string) { return TYPE_COLORS[t] ?? "#8A857C" }
 
 function SvgIcon({ d, size = 16 }: { d: string; size?: number }) {
   return (

@@ -6,7 +6,11 @@ export function AuthGuard({ children }: { children: ReactNode }) {
   const { viewer, isLoading } = useAuth()
   const location = useLocation()
 
-  if (isLoading) return null
+  if (isLoading) return (
+    <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "var(--bg)" }}>
+      <span style={{ color: "var(--text-faint)", fontSize: 14 }}>載入中⋯</span>
+    </div>
+  )
 
   if (!viewer) {
     return (

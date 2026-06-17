@@ -1,12 +1,9 @@
 import { useEffect } from "react"
-import { useSearchParams } from "react-router-dom"
 
 export function OAuthCallbackPage() {
-  const [searchParams] = useSearchParams()
-
   useEffect(() => {
     window.location.replace("/workspace")
-  }, [searchParams])
+  }, [])
 
   return (
     <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "var(--bg)" }}>

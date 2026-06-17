@@ -23,8 +23,10 @@ function fromB64url(s: string): Uint8Array {
 }
 
 function encodeObj(obj: object): string {
-  return btoa(JSON.stringify(obj))
-    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  const bytes = new TextEncoder().encode(JSON.stringify(obj));
+  let str = '';
+  for (const byte of bytes) str += String.fromCharCode(byte);
+  return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 
 async function sign(payload: JWTPayload, secret: string): Promise<string> {
