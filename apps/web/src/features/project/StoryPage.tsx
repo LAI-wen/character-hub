@@ -296,11 +296,13 @@ export function StoryPage() {
     mutationFn: ({ id, ...body }: { id: string; title?: string; content?: string }) =>
       apiClient(`/api/app/projects/${pid}/stories/${curStoryId}/chapters/${id}`, { method: "PATCH", json: body }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["project", pid, "story", curStoryId] }),
+    onError: () => alert('儲存章節失敗，請稍後再試'),
   })
 
   const reorderChaptersMutation = useMutation({
     mutationFn: (ids: string[]) =>
       apiClient(`/api/app/projects/${pid}/stories/${curStoryId}/chapters/reorder`, { method: "PUT", json: { ids } }),
+    onError: () => alert('排序更新失敗，請稍後再試'),
   })
 
   const patchStoryMutation = useMutation({
@@ -310,6 +312,7 @@ export function StoryPage() {
       qc.invalidateQueries({ queryKey: ["project", pid, "stories"] })
       setEditStoryOpen(false)
     },
+    onError: () => alert('故事設定儲存失敗，請稍後再試'),
   })
 
   function handleReorder(chId: string, dir: -1 | 1) {
