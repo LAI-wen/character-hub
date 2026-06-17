@@ -14,19 +14,26 @@ export type ProjectRole = z.infer<typeof ProjectRoleSchema>
 
 export const RelationshipDirectionSchema = z.enum([
   "undirected",
-  "a_to_b",
-  "b_to_a",
-  "bidirectional",
+  "one-way",
+  "two-way",
+  "many",
 ])
 export type RelationshipDirection = z.infer<typeof RelationshipDirectionSchema>
 
 export const FeatureSchema = z.enum([
+  "characters",
   "worldview",
   "relationships",
   "story",
   "gallery",
-  "commissions",
-  "public_page",
+  "inbox",
+  "publicPage",
+  "template",
+  "roster",
+  "applications",
+  "submissions",
+  "participants",
+  "permissions",
 ])
 export type Feature = z.infer<typeof FeatureSchema>
 

@@ -147,7 +147,6 @@ export interface CharacterStore {
   formTemplates: FormTemplate[]
   exportChar: () => void
   importCharFile: () => void
-  saveFormTemplate: () => void
   applyFormTemplate: (tpl: FormTemplate) => void
   removeFormTemplate: (id: string) => void
   exportFormTemplate: () => void
@@ -170,6 +169,16 @@ const DEFAULT_UI: UIState = {
 }
 
 const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v))
+
+function normalizeAlbums(albums: unknown): Album[] {
+  if (!Array.isArray(albums)) return []
+  return albums.map((a) => ({
+    ...a,
+    images: Array.isArray(a.images)
+      ? a.images.map((im: AlbumImage) => ({ ...im, annotations: im.annotations ?? [] }))
+      : [],
+  }))
+}
 
 const DEMO: Character = {
   name: '莉央', nickname: '小央',
@@ -241,7 +250,7 @@ export function CharacterStoreProvider({
       mainVisualUrl: String(gp.mainVisualUrl ?? ''),
       palette: (gp.palette as Swatch[] | undefined) ?? [],
       sections: (gp.sections as Section[] | undefined) ?? [],
-      albums: (gp.albums as Album[] | undefined) ?? [],
+      albums: normalizeAlbums(gp.albums),
       templates: tpls,
     })
     if (tpls.length > 0) {
@@ -695,7 +704,7 @@ export function CharacterStoreProvider({
             if (!Array.isArray(obj.sections)) {
               alert('檔案格式不正確：缺少 sections 欄位'); return
             }
-            const c = obj as Character
+            const c = { ...obj as Character, albums: normalizeAlbums((obj as Character).albums) }
             setChar(() => c)
             patchUi({ selBlock: null })
           } catch { alert('檔案讀取失敗：JSON 格式錯誤') }
@@ -703,12 +712,6 @@ export function CharacterStoreProvider({
         fr.readAsText(f)
       }
       inp.click()
-    },
-    saveFormTemplate: () => {
-      const name = prompt('表單格式名稱：', '我的格式'); if (!name) return
-      const tpl: FormTemplate = { id: 'f' + Date.now().toString(36), name, sections: schemaFromSections(char.sections as Parameters<typeof schemaFromSections>[0]) }
-      const next = [...formTemplates, tpl]
-      persistForms(next)
     },
     applyFormTemplate: async (tpl) => {
       if (!await showConfirm('這會換掉目前的設定區塊（但不影響模板和圖庫）。', { title: `套用「${tpl.name || ''}」格式？`, confirmLabel: '套用' })) return

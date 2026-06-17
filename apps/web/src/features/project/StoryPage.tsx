@@ -6,6 +6,7 @@ import { ContextHeader } from "@/components/ContextHeader"
 import { apiClient } from "@/lib/api/client"
 import type { StoryListResponse, StoryDetailResponse, Story, Chapter } from "@oc-tools/contracts"
 import { Icon } from "@/components/Icon"
+import { LoadingSpinner } from "@/components/LoadingSpinner"
 
 function storyStatusLabel(s: string | undefined) {
   return { draft: "草稿", ongoing: "連載中", completed: "已完結", archived: "已封存" }[s ?? ""] ?? (s ?? "草稿")
