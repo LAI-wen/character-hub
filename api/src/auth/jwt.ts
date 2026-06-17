@@ -48,7 +48,7 @@ export async function verifyToken(token: string, secret: string): Promise<JWTPay
     new TextEncoder().encode(`${header}.${body}`)
   );
   if (!valid) throw new Error('Invalid signature');
-  const payload: JWTPayload = JSON.parse(atob(body.replace(/-/g, '+').replace(/_/g, '/')));
+  const payload: JWTPayload = JSON.parse(new TextDecoder().decode(fromB64url(body)));
   if (payload.exp < Math.floor(Date.now() / 1000)) throw new Error('Token expired');
   return payload;
 }
