@@ -67,6 +67,7 @@ export function HeightComparePage() {
     mutationFn: ({ id, heightCm }: { id: string; heightCm: number }) =>
       apiClient(`/api/app/characters/${id}`, { method: "PATCH", body: { heightCm } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["characters"] }),
+    onError: () => alert('儲存身高失敗，請稍後再試'),
   })
 
   const entries = useMemo<CharEntry[]>(() => {
