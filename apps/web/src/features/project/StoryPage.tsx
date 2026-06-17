@@ -7,6 +7,7 @@ import { apiClient } from "@/lib/api/client"
 import type { StoryListResponse, StoryDetailResponse, Story, Chapter } from "@oc-tools/contracts"
 import { Icon } from "@/components/Icon"
 import { LoadingSpinner } from "@/components/LoadingSpinner"
+import { showConfirm } from "@/components/ConfirmModal"
 
 function storyStatusLabel(s: string | undefined) {
   return { draft: "草稿", ongoing: "連載中", completed: "已完結", archived: "已封存" }[s ?? ""] ?? (s ?? "草稿")
@@ -315,6 +316,21 @@ export function StoryPage() {
     onError: () => alert('故事設定儲存失敗，請稍後再試'),
   })
 
+  const deleteChapterMutation = useMutation({
+    mutationFn: (id: string) =>
+      apiClient(`/api/app/projects/${pid}/stories/${curStoryId}/chapters/${id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["project", pid, "story", curStoryId] })
+      setCurChapterId(null)
+    },
+    onError: () => alert('刪除章節失敗，請稍後再試'),
+  })
+
+  async function handleDeleteChapter(id: string, title: string) {
+    if (!await showConfirm(`封存「${title || "（未命名）"}」？此操作可在後台還原。`, { title: "封存章節", confirmLabel: "封存" })) return
+    deleteChapterMutation.mutate(id)
+  }
+
   function handleReorder(chId: string, dir: -1 | 1) {
     const ids = chapters.map(c => c.id)
     const fi = ids.indexOf(chId)
@@ -407,6 +423,7 @@ export function StoryPage() {
                 index={curChapterIndex}
                 onEdit={() => {}}
                 onSaveContent={content => curChapterId && patchChapterMutation.mutate({ id: curChapterId, content })}
+                onArchive={curChapterId && curChapter ? () => handleDeleteChapter(curChapterId, curChapter.title ?? "") : undefined}
               />
               <SidePanel projectId={pid} chapter={curChapter} />
             </div>
