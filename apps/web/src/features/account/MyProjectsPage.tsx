@@ -84,8 +84,8 @@ export function MyProjectsPage() {
             const visLabel = VIS_LABELS[project.visibility] ?? project.visibility
             const visClass = project.visibility === "public" ? "badge public" : "badge"
             const visDot = project.visibility === "public" ? "var(--must)" : "var(--text-faint)"
-            const collabLabel = project.collaborationMode === "open" ? "公開招募"
-              : project.collaborationMode === "closed" ? "私人共創" : "個人企劃"
+            const collabLabel = project.collaborationMode !== "collaborative" ? "個人企劃"
+              : project.joinPolicy === "open" ? "公開招募" : "私人共創"
             return (
               <div key={project.id} className="mp">
                 <div className="mp-cv" style={{ background: col }}>
