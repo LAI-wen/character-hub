@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { apiClient } from "@/lib/api/client"
 import { PageHeader } from "@/components/PageHeader"
@@ -7,6 +7,7 @@ import { ContextHeader } from "@/components/ContextHeader"
 import { LoadingSpinner } from "@/components/LoadingSpinner"
 import { useProjectContext } from "@/routes/layouts/ProjectLayout"
 import { charColor } from "@/lib/charColor"
+import { showConfirm } from "@/components/ConfirmModal"
 import type {
   ProjectCharacterLinkListResponse,
   RelationshipListResponse,
@@ -16,10 +17,13 @@ import type {
 function DetailPanel({
   linkId,
   projectId,
+  onRemoved,
 }: {
   linkId: string | null
   projectId: string
+  onRemoved: () => void
 }) {
+  const qc = useQueryClient()
   const { data } = useQuery({
     queryKey: ["project", projectId, "roster"],
     queryFn: () =>
@@ -27,6 +31,15 @@ function DetailPanel({
         `/api/app/projects/${projectId}/characters`,
       ),
     enabled: !!projectId,
+  })
+
+  const removeMutation = useMutation({
+    mutationFn: (id: string) =>
+      apiClient(`/api/app/projects/${projectId}/characters/${id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["project", projectId, "roster"] })
+      onRemoved()
+    },
   })
 
   if (!linkId) {
@@ -42,6 +55,14 @@ function DetailPanel({
   const { projectLink, character } = row
   if (!character) return null
   const color = character.themeColor ?? charColor(character.id)
+
+  async function handleRemove() {
+    if (!await showConfirm(
+      `從企劃移除「${character!.name}」？角色本體不受影響，可重新加入。`,
+      { title: "移除角色", confirmLabel: "移除" }
+    )) return
+    removeMutation.mutate(projectLink.id)
+  }
 
   return (
     <div className="dp">
@@ -119,6 +140,15 @@ function DetailPanel({
         >
           關係圖 →
         </Link>
+        <button
+          className="btn btn-sm"
+          style={{ color: "var(--avoid)" }}
+          disabled={removeMutation.isPending}
+          onClick={handleRemove}
+          title="從企劃移除此角色"
+        >
+          移除
+        </button>
       </div>
     </div>
   )
@@ -360,7 +390,7 @@ export function RosterPage() {
 
           {/* Detail panel */}
           <div className="rs-detail">
-            <DetailPanel linkId={effectiveSel} projectId={projectId!} />
+            <DetailPanel linkId={effectiveSel} projectId={projectId!} onRemoved={() => setSelId(null)} />
           </div>
         </div>
       )}
