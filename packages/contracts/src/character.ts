@@ -28,8 +28,8 @@ export type Character = z.infer<typeof CharacterSchema>
 export const CreateCharacterSchema = z.object({
   name: z.string().min(1).max(100),
   slug: z.string().min(1).max(50).regex(/^[a-z0-9-]+$/).optional(),
-  summary: z.string().max(5000).optional(),
-  species: z.string().max(100).optional(),
+  summary: z.string().max(4000).optional(),
+  species: z.string().max(120).optional(),
   themeColor: z.string().max(32).nullable().optional(),
   visibility: VisibilitySchema.default("private"),
 })

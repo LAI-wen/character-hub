@@ -10,8 +10,8 @@ import { charColor } from "@/lib/charColor"
 
 const Schema = z.object({
   name:       z.string().min(1, "必填"),
-  species:    z.string().max(100).optional(),
-  summary:    z.string().max(5000).optional(),
+  species:    z.string().max(120).optional(),
+  summary:    z.string().max(4000).optional(),
   visibility: z.enum(["private", "unlisted", "public"]),
 })
 type Fields = z.infer<typeof Schema>
