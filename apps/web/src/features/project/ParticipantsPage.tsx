@@ -8,6 +8,7 @@ import { useProjectContext } from "@/routes/layouts/ProjectLayout"
 import { useAuth } from "@/lib/auth/context"
 import { apiClient } from "@/lib/api/client"
 import { fmtDate } from "@/lib/formatDate"
+import { showConfirm } from "@/components/ConfirmModal"
 
 type Member = {
   id: string
@@ -190,11 +191,31 @@ function MemberListPane({
 
 function MemberDetailPane({
   member,
+  projectId,
 }: {
   member: Member | null
+  projectId: string
   projectName?: string
-  onRefetch?: () => void
 }) {
+  const qc = useQueryClient()
+  const [editRole, setEditRole] = useState(false)
+  const [newRole, setNewRole] = useState("")
+
+  const removeMutation = useMutation({
+    mutationFn: (memberId: string) =>
+      apiClient(`/api/app/projects/${projectId}/members/${memberId}`, { method: "DELETE" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["project", projectId, "members"] }),
+  })
+
+  const changeRoleMutation = useMutation({
+    mutationFn: ({ memberId, role }: { memberId: string; role: string }) =>
+      apiClient(`/api/app/projects/${projectId}/members/${memberId}`, { method: "PATCH", body: { role } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["project", projectId, "members"] })
+      setEditRole(false)
+    },
+  })
+
   if (!member) {
     return (
       <div className="pt-pane">
@@ -207,6 +228,16 @@ function MemberDetailPane({
   }
 
   const roleLabel = ROLE_LABEL[member.role] ?? member.role
+
+  async function handleRemove() {
+    if (!await showConfirm(`移除「${member!.displayName}」？他們將失去企劃存取權，角色本體不受影響。`, { title: "移除成員", confirmLabel: "移除" })) return
+    removeMutation.mutate(member!.id)
+  }
+
+  async function handleLeave() {
+    if (!await showConfirm("確定離開這個企劃？你的角色本體不受影響。", { title: "離開企劃", confirmLabel: "離開" })) return
+    removeMutation.mutate(member!.id)
+  }
 
   return (
     <div className="pt-pane">
@@ -252,14 +283,41 @@ function MemberDetailPane({
 
       <div className="md-actions">
         {!member.isCurrentUser && member.role !== "owner" && (
-          <button className="btn btn-sm" disabled title="角色管理功能即將推出">
-            變更角色
-          </button>
+          editRole ? (
+            <div style={{ display: "flex", gap: "var(--s2)", alignItems: "center" }}>
+              <select
+                className="inp"
+                style={{ fontSize: 13 }}
+                value={newRole || member.role}
+                onChange={e => setNewRole(e.target.value)}
+              >
+                {(["host", "cohost", "member", "viewer"] as const).map(r => (
+                  <option key={r} value={r}>{ROLE_LABEL[r]}</option>
+                ))}
+              </select>
+              <button
+                className="btn btn-sm btn-accent"
+                disabled={changeRoleMutation.isPending}
+                onClick={() => changeRoleMutation.mutate({ memberId: member.id, role: newRole || member.role })}
+              >
+                確認
+              </button>
+              <button className="btn btn-sm" onClick={() => setEditRole(false)}>取消</button>
+            </div>
+          ) : (
+            <button className="btn btn-sm" onClick={() => { setNewRole(member.role); setEditRole(true) }}>
+              變更角色
+            </button>
+          )
         )}
         <button className="btn btn-sm" disabled title="查看企劃角色">
           查看其角色
         </button>
       </div>
+
+      {removeMutation.isError && (
+        <p style={{ fontSize: 12, color: "var(--avoid)", padding: "0 var(--s3)" }}>操作失敗，請再試一次。</p>
+      )}
 
       {/* Danger zone */}
       {(member.isCurrentUser || member.role !== "owner") && (
@@ -267,12 +325,26 @@ function MemberDetailPane({
           <h3>危險操作</h3>
           <div style={{ display: "flex", gap: "var(--s2)", flexWrap: "wrap" }}>
             {member.isCurrentUser && member.role !== "owner" && (
-              <button className="btn btn-sm">離開企劃</button>
+              <button
+                className="btn btn-sm"
+                disabled={removeMutation.isPending}
+                onClick={handleLeave}
+              >
+                離開企劃
+              </button>
             )}
             {!member.isCurrentUser && member.role !== "owner" && (
               <>
-                <button className="btn btn-sm">移除成員</button>
-                <button className="btn btn-sm">移交企劃擁有權</button>
+                <button
+                  className="btn btn-sm"
+                  disabled={removeMutation.isPending}
+                  onClick={handleRemove}
+                >
+                  移除成員
+                </button>
+                <button className="btn btn-sm" disabled title="移交功能即將推出">
+                  移交企劃擁有權
+                </button>
               </>
             )}
             {member.role === "owner" && member.isCurrentUser && (
@@ -429,6 +501,77 @@ function PermPane({ member, projectId }: { member: Member | null; projectId: str
   )
 }
 
+// ── Invite modal ───────────────────────────────────────────────────────────────
+
+function InviteModal({ projectId, onClose }: { projectId: string; onClose: () => void }) {
+  const qc = useQueryClient()
+  const [handle, setHandle] = useState("")
+  const [role, setRole] = useState<"host" | "cohost" | "member" | "viewer">("member")
+
+  const mutation = useMutation({
+    mutationFn: () =>
+      apiClient(`/api/app/projects/${projectId}/members/invite`, {
+        method: "POST",
+        body: { handle: handle.trim().replace(/^@/, ""), role },
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["project", projectId, "members"] })
+      onClose()
+    },
+  })
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!handle.trim()) return
+    mutation.mutate()
+  }
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal modal-sm" onClick={e => e.stopPropagation()}>
+        <div className="modal-h">
+          <h2>邀請成員</h2>
+          <button className="modal-close" aria-label="關閉" onClick={onClose}>✕</button>
+        </div>
+        <form className="modal-body" onSubmit={handleSubmit}>
+          <div className="field">
+            <label className="lbl">使用者帳號 Handle</label>
+            <input
+              className="inp"
+              placeholder="@handle"
+              value={handle}
+              autoFocus
+              onChange={e => setHandle(e.target.value)}
+            />
+          </div>
+          <div className="field">
+            <label className="lbl">角色</label>
+            <select className="inp" value={role} onChange={e => setRole(e.target.value as typeof role)}>
+              <option value="host">{ROLE_LABEL.host}</option>
+              <option value="cohost">{ROLE_LABEL.cohost}</option>
+              <option value="member">{ROLE_LABEL.member}</option>
+              <option value="viewer">{ROLE_LABEL.viewer}</option>
+            </select>
+          </div>
+          {mutation.isError && (
+            <p style={{ color: "var(--avoid)", fontSize: 13 }}>
+              {(mutation.error as Error)?.message?.includes("NOT_FOUND") ? "找不到該使用者" :
+               (mutation.error as Error)?.message?.includes("CONFLICT") ? "此使用者已是成員" :
+               "邀請失敗，請再試一次"}
+            </p>
+          )}
+          <div className="modal-foot">
+            <button type="button" className="btn" onClick={onClose}>取消</button>
+            <button type="submit" className="btn btn-accent" disabled={!handle.trim() || mutation.isPending}>
+              {mutation.isPending ? "邀請中⋯" : "送出邀請"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export function ParticipantsPage() {
@@ -436,6 +579,7 @@ export function ParticipantsPage() {
   const { project } = useProjectContext()
   const { viewer } = useAuth()
   const [selId, setSelId] = useState<string | null>(null)
+  const [showInvite, setShowInvite] = useState(false)
 
   const { data, status } = useQuery({
     queryKey: ["project", projectId, "members"],
@@ -458,7 +602,7 @@ export function ParticipantsPage() {
         sub={`「${project.name}」的成員與權限。角色預設只給初始權限，實際操作依 action permission 判斷，並仍受內容 ownership 限制。`}
         action={
           isOwner ? (
-            <button className="btn btn-accent" disabled title="邀請功能即將推出">
+            <button className="btn btn-accent" onClick={() => setShowInvite(true)}>
               ＋ 邀請成員
             </button>
           ) : undefined
@@ -483,11 +627,16 @@ export function ParticipantsPage() {
             />
             <MemberDetailPane
               member={selected}
+              projectId={projectId!}
               projectName={project.name}
             />
             <PermPane member={selected} projectId={projectId!} />
           </div>
         </>
+      )}
+
+      {showInvite && projectId && (
+        <InviteModal projectId={projectId} onClose={() => setShowInvite(false)} />
       )}
     </div>
   )

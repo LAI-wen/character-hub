@@ -1056,6 +1056,54 @@ appApiRouter.patch('/projects/:projectId/members/:memberId', async (c) => {
   return c.json({ ok: true });
 });
 
+appApiRouter.delete('/projects/:projectId/members/:memberId', async (c) => {
+  const db = getDb(c);
+  const user = c.get('user');
+  const { project, viewerRole } = await getVisibleProject(c, c.req.param('projectId'), 'project:view');
+  const memberId = c.req.param('memberId');
+  const member = await first<{ id: string; user_id: string; role: string }>(db,
+    'SELECT id, user_id, role FROM project_members WHERE id = ? AND project_id = ? AND removed_at IS NULL',
+    [memberId, project.id]);
+  if (!member) throw new AppHttpError(404, 'NOT_FOUND', 'Member not found');
+  if (member.role === 'owner') throw new AppHttpError(403, 'FORBIDDEN', 'Cannot remove the project owner');
+  const isSelf = member.user_id === user.sub;
+  if (!isSelf) await requirePermission(c, 'project:manage_settings', { projectId: project.id, viewerRole });
+  const now = nowIso();
+  await run(db, `UPDATE project_members SET removed_at = ?, updated_at = ? WHERE id = ?`, [now, now, memberId]);
+  return c.json({ ok: true });
+});
+
+const inviteMemberSchema = z.object({
+  handle: z.string().min(1).max(32),
+  role: z.enum(['host', 'cohost', 'member', 'viewer']).default('member'),
+});
+
+appApiRouter.post('/projects/:projectId/members/invite', async (c) => {
+  const db = getDb(c);
+  const user = c.get('user');
+  const { project, viewerRole } = await getVisibleProject(c, c.req.param('projectId'), 'project:view');
+  await requirePermission(c, 'project:manage_settings', { projectId: project.id, viewerRole });
+  const input = await validateJson(c, inviteMemberSchema);
+  const target = await first<{ id: string; handle: string; display_name: string | null }>(db,
+    'SELECT id, handle, display_name FROM users WHERE handle = ?', [input.handle]);
+  if (!target) throw new AppHttpError(404, 'NOT_FOUND', 'User not found');
+  if (target.id === project.owner_user_id) throw new AppHttpError(409, 'CONFLICT', 'User is already the owner');
+  const existing = await first<{ id: string; removed_at: string | null }>(db,
+    'SELECT id, removed_at FROM project_members WHERE project_id = ? AND user_id = ?',
+    [project.id, target.id]);
+  if (existing && !existing.removed_at) throw new AppHttpError(409, 'CONFLICT', 'User is already a member');
+  const now = nowIso();
+  if (existing?.removed_at) {
+    await run(db, `UPDATE project_members SET role = ?, status = ?, removed_at = NULL, invited_by = ?, joined_at = ?, updated_at = ? WHERE id = ?`,
+      [input.role, 'active', user.sub, now, now, existing.id]);
+  } else {
+    const id = crypto.randomUUID();
+    await run(db, `INSERT INTO project_members (id, project_id, user_id, role, status, permissions_json, invited_by, joined_at, removed_at, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+      [id, project.id, target.id, input.role, 'active', null, user.sub, now, null, now, now]);
+  }
+  return c.json({ ok: true, handle: target.handle, displayName: target.display_name ?? target.handle }, 201);
+});
+
 appApiRouter.patch('/projects/:projectId', async (c) => {
   const db = getDb(c);
   const { project, viewerRole } = await getVisibleProject(c, c.req.param('projectId'), 'project:view');
@@ -2602,7 +2650,7 @@ appApiRouter.get('/search', async (c) => {
     db,
     `SELECT p.id, p.name, p.slug, p.theme_color
      FROM projects p
-     JOIN project_members pm ON pm.project_id = p.id AND pm.user_id = ? AND pm.left_at IS NULL
+     JOIN project_members pm ON pm.project_id = p.id AND pm.user_id = ? AND pm.removed_at IS NULL
      WHERE p.archived_at IS NULL
        AND (p.name LIKE ? OR p.description LIKE ?)
      ORDER BY p.name ASC LIMIT 5`,
@@ -2614,7 +2662,7 @@ appApiRouter.get('/search', async (c) => {
     `SELECT we.id, we.title, we.type, we.project_id, p.name as project_name
      FROM world_entries we
      JOIN projects p ON p.id = we.project_id
-     JOIN project_members pm ON pm.project_id = p.id AND pm.user_id = ? AND pm.left_at IS NULL
+     JOIN project_members pm ON pm.project_id = p.id AND pm.user_id = ? AND pm.removed_at IS NULL
      WHERE we.archived_at IS NULL
        AND (we.title LIKE ? OR we.summary LIKE ?)
      ORDER BY we.title ASC LIMIT 8`,
