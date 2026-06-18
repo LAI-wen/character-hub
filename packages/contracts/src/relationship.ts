@@ -39,21 +39,25 @@ export const RelationshipSchema = z.object({
 })
 export type Relationship = z.infer<typeof RelationshipSchema>
 
+const EntityRefSchema = z.object({
+  type: z.enum(["character", "world_entry", "custom", "group"]),
+  id: z.string().min(1).max(180),
+})
+
 export const CreateRelationshipSchema = z.object({
-  sourceId: z.string().min(1),
-  targetId: z.string().min(1),
-  sourceType: z.string().default("character"),
-  targetType: z.string().default("character"),
-  label: z.string().max(120).optional(),
-  type: z.string().max(120).optional(),
-  description: z.string().max(2000).optional(),
-  srcView: z.string().max(500).optional(),
-  tgtView: z.string().max(500).optional(),
+  sourceRef: EntityRefSchema,
+  targetRef: EntityRefSchema,
+  label: z.string().min(1).max(160),
+  type: z.string().min(1).max(80),
+  description: z.string().max(4000).nullable().optional(),
+  srcView: z.string().max(500).nullable().optional(),
+  tgtView: z.string().max(500).nullable().optional(),
   mapStyle: z.enum(["line", "arrows"]).optional(),
   direction: z.enum(["undirected", "one-way", "two-way", "many"]).optional(),
-  groupId: z.string().optional(),
-  visibility: z.string().optional(),
+  groupId: z.string().nullable().optional(),
+  visibility: z.enum(["private", "unlisted", "public"]).optional(),
   timeline: z.array(RelationshipTimelineItemSchema).optional(),
+  sortOrder: z.number().int().optional(),
 })
 export type CreateRelationshipRequest = z.infer<typeof CreateRelationshipSchema>
 
