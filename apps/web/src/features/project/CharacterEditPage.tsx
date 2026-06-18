@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import { ContextHeader } from '@/components/ContextHeader'
 import { AvatarCropperModal } from '@/components/AvatarCropperModal'
 import { EyedropperModal } from '@/components/EyedropperModal'
@@ -39,12 +39,14 @@ function ProjectLinkCard({ projectId, linkId }: { projectId: string; linkId: str
       .catch(() => setLoaded(true))
   }, [projectId, linkId, loaded])
 
-  const save = async () => {
-    await apiClient(`/api/app/projects/${projectId}/characters/${linkId}`, {
+  const [saved, setSaved] = useState(false)
+  const saveMutation = useMutation({
+    mutationFn: () => apiClient(`/api/app/projects/${projectId}/characters/${linkId}`, {
       method: 'PATCH',
       body: { projectRole: projectRole || null, factionLabel: factionLabel || null },
-    })
-  }
+    }),
+    onSuccess: () => { setSaved(true); setTimeout(() => setSaved(false), 2000) },
+  })
 
   return (
     <div style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 16, padding: 16, marginBottom: 20 }}>
@@ -59,9 +61,16 @@ function ProjectLinkCard({ projectId, linkId }: { projectId: string; linkId: str
           <input value={factionLabel} onChange={e => setFactionLabel(e.target.value)} placeholder="例：帝國軍、反抗軍" style={inputStyle} />
         </div>
       </div>
-      <button onClick={save} style={{ fontFamily: 'inherit', fontSize: 12.5, fontWeight: 700, color: 'var(--accent)', background: 'var(--accent-soft)', border: 'none', borderRadius: 9, padding: '7px 14px', cursor: 'pointer' }}>
-        儲存項目資訊
-      </button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <button
+          onClick={() => saveMutation.mutate()}
+          disabled={saveMutation.isPending}
+          style={{ fontFamily: 'inherit', fontSize: 12.5, fontWeight: 700, color: 'var(--accent)', background: 'var(--accent-soft)', border: 'none', borderRadius: 9, padding: '7px 14px', cursor: saveMutation.isPending ? 'default' : 'pointer', opacity: saveMutation.isPending ? 0.6 : 1 }}
+        >
+          {saveMutation.isPending ? '儲存中⋯' : saved ? '✓ 已儲存' : '儲存項目資訊'}
+        </button>
+        {saveMutation.isError && <span style={{ fontSize: 12, color: 'var(--avoid)' }}>儲存失敗</span>}
+      </div>
     </div>
   )
 }
